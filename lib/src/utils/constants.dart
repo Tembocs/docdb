@@ -1,56 +1,119 @@
-// PATH: lib/src/utils/constants.dart
+/// Default timeout for operations in milliseconds.
+const int defaultTimeout = 5000;
 
-/// Default configuration constants
-const int defaultTimeout = 5000; // Timeout in milliseconds
-const String defaultRole = "user";
-const String errorMessageUnauthorized = "Unauthorized access.";
-const String defaultDatabaseVersion = "1.0.0";
+/// Default role assigned to new users.
+const String defaultRole = 'user';
 
-/// Logger name constants for various modules
-class LoggerNameConstants {
-  // Prevent instantiation.
-  LoggerNameConstants._();
+/// Error message returned for unauthorized access attempts.
+const String errorMessageUnauthorized = 'Unauthorized access.';
 
-  static const String docdbMain = "DocDbMain";
-  static const String authentication = "Authentication";
-  static const String authorization = "Authorization";
-  static const String backup = "Backup";
-  static const String document = "Document";
-  static const String dataCollection = "DataCollection";
-  static const String userCollection = "UserCollection";
-  static const String encryption = "Encryption";
-  static const String exception = "Exception";
-  static const String index = "Index";
-  static const String migration = "Migration";
-  static const String query = "Query";
-  static const String schema = "Schema";
-  static const String dataFileStorage = "DataFileStorage";
-  static const String dataInMemoryStorage = "DataInMemoryStorage";
-  static const String userFileStorage = "UserFileStorage";
-  static const String userInMemoryStorage = "UserInMemoryStorage";
-  static const String transaction = "Transaction";
-  static const String typeRegistry = "TypeRegistry";
+/// Current database schema version.
+const String defaultDatabaseVersion = '1.0.0';
+
+/// Logger name constants for various DocDB modules.
+///
+/// These constants provide consistent naming for loggers across the system,
+/// enabling filtered log output and module-specific debugging.
+///
+/// Example usage:
+/// ```dart
+/// final logger = DocDBLogger(LoggerNameConstants.authentication);
+/// logger.info('User logged in successfully');
+/// ```
+abstract final class LoggerNameConstants {
+  /// Logger name for the main DocDB entry point.
+  static const String docdbMain = 'DocDbMain';
+
+  /// Logger name for authentication operations.
+  static const String authentication = 'Authentication';
+
+  /// Logger name for authorization and permission checks.
+  static const String authorization = 'Authorization';
+
+  /// Logger name for backup and restore operations.
+  static const String backup = 'Backup';
+
+  /// Logger name for document operations.
+  static const String document = 'Document';
+
+  /// Logger name for data collection operations.
+  static const String dataCollection = 'DataCollection';
+
+  /// Logger name for user collection operations.
+  static const String userCollection = 'UserCollection';
+
+  /// Logger name for encryption and decryption operations.
+  static const String encryption = 'Encryption';
+
+  /// Logger name for exception handling.
+  static const String exception = 'Exception';
+
+  /// Logger name for index operations.
+  static const String index = 'Index';
+
+  /// Logger name for migration operations.
+  static const String migration = 'Migration';
+
+  /// Logger name for query execution.
+  static const String query = 'Query';
+
+  /// Logger name for schema validation.
+  static const String schema = 'Schema';
+
+  /// Logger name for file-based data storage.
+  static const String dataFileStorage = 'DataFileStorage';
+
+  /// Logger name for in-memory data storage.
+  static const String dataInMemoryStorage = 'DataInMemoryStorage';
+
+  /// Logger name for file-based user storage.
+  static const String userFileStorage = 'UserFileStorage';
+
+  /// Logger name for in-memory user storage.
+  static const String userInMemoryStorage = 'UserInMemoryStorage';
+
+  /// Logger name for transaction operations.
+  static const String transaction = 'Transaction';
+
+  /// Logger name for type registry operations.
+  static const String typeRegistry = 'TypeRegistry';
 }
 
-/// Database file path constants.
-class DatabaseFilePaths {
-  // Prevent instantiation.
-  DatabaseFilePaths._();
+/// Default file paths for database storage.
+///
+/// These paths define the standard locations for database files,
+/// backups, and logs within the application's data directory.
+abstract final class DatabaseFilePaths {
+  /// Path to the main data storage file.
+  static const String dataPath = 'data/data.db';
 
-  static const String dataPath = "data/data.db";
-  static const String dataBackupPath = "data/data_backup.db";
-  static const String userPath = "data/user.db";
-  static const String userBackupPath = "data/user_backup.db";
-  static const String logPath = "logs/docdb.log";
+  /// Path to the data backup file.
+  static const String dataBackupPath = 'data/data_backup.db';
+
+  /// Path to the user authentication storage file.
+  static const String userPath = 'data/user.db';
+
+  /// Path to the user backup file.
+  static const String userBackupPath = 'data/user_backup.db';
+
+  /// Path to the application log file.
+  static const String logPath = 'logs/docdb.log';
 }
 
-/// Migration file path constants
-class MigrationFilePaths {
-  // Prevent instantiation.
-  MigrationFilePaths._();
+/// File paths for migration-related data.
+///
+/// These paths define the locations for schema definitions and
+/// migration logs used during database upgrades.
+abstract final class MigrationFilePaths {
+  /// Path to the data schema definition file.
+  static const String dataSchemaPath = 'data_schema.json';
 
-  static const String dataSchemaPath = "data_schema.json";
-  static const String userSchemaPath = "user_schema.json";
-  static const String dataMigrationLogPath = "data_migration_log.json";
-  static const String userMigrationLogPath = "user_migration_log.json";
+  /// Path to the user schema definition file.
+  static const String userSchemaPath = 'user_schema.json';
+
+  /// Path to the data migration log file.
+  static const String dataMigrationLogPath = 'data_migration_log.json';
+
+  /// Path to the user migration log file.
+  static const String userMigrationLogPath = 'user_migration_log.json';
 }
