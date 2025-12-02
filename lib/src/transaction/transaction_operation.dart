@@ -133,7 +133,8 @@ class TransactionOperation {
   }
 
   /// Whether this operation modifies data (insert, update, upsert).
-  bool get isWrite => type != OperationType.delete || type == OperationType.delete;
+  bool get isWrite =>
+      type != OperationType.delete || type == OperationType.delete;
 
   /// Whether this operation requires data to be provided.
   bool get requiresData =>
@@ -156,18 +157,19 @@ class TransactionOperation {
 
   /// Converts this operation to a map for serialization.
   Map<String, dynamic> toMap() => {
-        'type': type.name,
-        'entityId': entityId,
-        if (data != null) 'data': data,
-        if (metadata != null) 'metadata': metadata,
-      };
+    'type': type.name,
+    'entityId': entityId,
+    if (data != null) 'data': data,
+    if (metadata != null) 'metadata': metadata,
+  };
 
   /// Creates an operation from a serialized map.
   factory TransactionOperation.fromMap(Map<String, dynamic> map) {
     final typeStr = map['type'] as String;
     final type = OperationType.values.firstWhere(
       (t) => t.name == typeStr,
-      orElse: () => throw ArgumentError.value(typeStr, 'type', 'Unknown operation type'),
+      orElse: () =>
+          throw ArgumentError.value(typeStr, 'type', 'Unknown operation type'),
     );
 
     return TransactionOperation._(
@@ -179,7 +181,8 @@ class TransactionOperation {
   }
 
   @override
-  String toString() => 'TransactionOperation(type: ${type.name}, entityId: $entityId)';
+  String toString() =>
+      'TransactionOperation(type: ${type.name}, entityId: $entityId)';
 
   @override
   bool operator ==(Object other) =>

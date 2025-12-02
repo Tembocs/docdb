@@ -100,13 +100,13 @@ class Transaction<T extends Entity> {
     required Storage<T> storage,
     required IsolationLevel isolationLevel,
     required Map<String, Map<String, dynamic>> snapshot,
-  })  : _id = id,
-        _storage = storage,
-        _isolationLevel = isolationLevel,
-        _snapshot = snapshot,
-        _status = TransactionStatus.active,
-        _createdAt = DateTime.now(),
-        _logger = DocDBLogger(LoggerNameConstants.transaction);
+  }) : _id = id,
+       _storage = storage,
+       _isolationLevel = isolationLevel,
+       _snapshot = snapshot,
+       _status = TransactionStatus.active,
+       _createdAt = DateTime.now(),
+       _logger = DocDBLogger(LoggerNameConstants.transaction);
 
   /// Creates and starts a new transaction for the given storage.
   ///
