@@ -600,7 +600,10 @@ class Pager {
   /// Ensures the pager is open.
   void _ensureOpen() {
     if (!_isOpen) {
-      throw StorageNotOpenException('Pager is not open', path: filePath);
+      throw StorageNotOpenException.withMessage(
+        'Pager is not open',
+        path: filePath,
+      );
     }
   }
 

@@ -550,7 +550,7 @@ class BufferManager {
   /// Ensures the buffer manager is open.
   void _ensureOpen() {
     if (!_isOpen) {
-      throw StorageNotOpenException(
+      throw StorageNotOpenException.withMessage(
         'BufferManager is closed',
         path: _pager.filePath,
       );

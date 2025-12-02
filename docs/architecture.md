@@ -10,11 +10,12 @@ The architecture prioritizes **Data Integrity (ACID)**, **Performance**, **Scala
 
 1. **Layered Architecture**: Clear separation between storage, data, query, and API layers.
 2. **Type Safety**: Leverage Dart's strong typing with generic collections for compile-time guarantees.
-3. **Entity-First Design**: Store domain objects directly via the `Entity` interface—no manual wrapping required.
+3. **Entity-First Design**: Store domain objects directly via the `Entity` interface—no schema-less documents or manual wrapping.
 4. **Separation of Concerns**: Distinct modules for authentication, data, and system operations.
 5. **Extensibility**: Plugin-based design for storage backends, encryption, and custom types.
 6. **Testability**: Dependency injection and interface-based design for easy mocking.
 7. **No Code Generation**: Core functionality works without build_runner or code generation tools.
+8. **No Backward Compatibility**: Clean-slate design without legacy patterns or schema-less fallbacks.
 
 ## 2. High-Level Architecture
 
@@ -67,9 +68,9 @@ await pager.writePage(page);
 
 *   **File Structure**:
     *   **Header Page (Page 0)**: Contains database metadata (version, page size, encryption salt, pointer to schema root, pointer to free list).
-    *   **Data Pages**: Store actual document data.
+    *   **Data Pages**: Store actual entity data.
     *   **Index Pages**: Store B+ Tree nodes.
-    *   **Overflow Pages**: Handle documents larger than a single page.
+    *   **Overflow Pages**: Handle entities larger than a single page.
 
 #### 3.1.2. Buffer Manager (Page Cache)
 *   **Responsibility**: Minimizes disk I/O by caching frequently accessed pages in memory.
@@ -121,13 +122,13 @@ class Animal implements Entity {
 
 ### 3.2. Access Methods & Indexing
 
-#### 3.2.1. Heap File (Document Storage)
-*   **Structure**: An unordered collection of pages used to store the documents.
-*   **Row ID (RID)**: Each document is identified internally by `(PageID, SlotIndex)`.
+#### 3.2.1. Heap File (Entity Storage)
+*   **Structure**: An unordered collection of pages used to store serialized entities.
+*   **Row ID (RID)**: Each entity is identified internally by `(PageID, SlotIndex)`.
 
 #### 3.2.2. B+ Tree Indexes
 *   **Persistence**: Unlike V1, indexes are disk-resident structures managed by the Pager.
-*   **Clustered Index**: The Primary Key (`_id`) index may store the document data directly in the leaf nodes (Clustered) or point to the Heap File (Non-Clustered).
+*   **Clustered Index**: The Primary Key (`_id`) index may store the entity data directly in the leaf nodes (Clustered) or point to the Heap File (Non-Clustered).
 *   **Secondary Indexes**: B+ Trees mapping `Field Value -> Primary Key`.
 
 ```dart
@@ -172,7 +173,7 @@ try {
 
 #### 3.4.1. Parser & Planner
 *   **Parser**: Validates the query structure.
-*   **Optimizer**: Uses statistics (e.g., document count, index cardinality) to decide the execution plan.
+*   **Optimizer**: Uses statistics (e.g., entity count, index cardinality) to decide the execution plan.
     *   *Example*: "Should I use the 'Age' index or scan the table?"
 
 #### 3.4.2. Executor (Volcano Model)
@@ -215,8 +216,8 @@ final db = await DocDB.connect(
 
 ### Phase 2: Indexing & Data
 1.  Implement **B+ Tree** on top of the Pager.
-2.  Implement **Binary Document Serializer**.
-3.  Connect B+ Tree to Document Storage (Primary Key lookup).
+2.  Implement **Binary Entity Serializer**.
+3.  Connect B+ Tree to Entity Storage (Primary Key lookup).
 
 ### Phase 3: Transactions
 1.  Implement **WAL (Write-Ahead Log)**.
@@ -232,7 +233,7 @@ final db = await DocDB.connect(
 
 | Feature | V1 (Current) | V2 (Proposed Architecture) |
 | :--- | :--- | :--- |
-| **Storage** | One JSON file per document | Single binary file (Paged) |
+| **Storage** | One JSON file per entity | Single binary file (Paged) |
 | **Indexing** | In-memory only (rebuilt on boot) | Disk-resident B+ Trees |
 | **Transactions** | Full DB Snapshot/Restore | Write-Ahead Log (WAL) |
 | **Concurrency** | Global Lock | MVCC or Page-level Locking |
@@ -306,19 +307,7 @@ final widget = await products.findOne(QueryBuilder().whereEquals('name', 'Widget
 print(widget?.price);  // 29.99 - fully typed!
 ```
 
-#### Backward Compatibility
-
-The legacy `Document` class implements `Entity`, allowing gradual migration:
-
-```dart
-// Legacy approach still works
-final raw = await db.collection<Document>('products');
-await raw.insert(Document(data: {'name': 'Widget', 'price': 29.99}));
-
-// New typed approach
-final typed = await db.collection<Product>('products', fromMap: Product.fromMap);
-await typed.insert(Product(name: 'Widget', price: 29.99));
-```
+> **Note**: DocDB is Entity-only by design. There is no schema-less `Document` class or backward compatibility layer. All stored data must be represented by classes implementing the `Entity` interface. This enforces type safety and better code organization.
 
 ### 6.2. Separation of User and Data Storage
 
@@ -334,7 +323,7 @@ The architecture deliberately separates **User** (authentication) data from **Ap
 
 1. **Security Isolation**: Authentication data (password hashes, roles, tokens) requires stricter access control than application data. Separation prevents accidental exposure through generic query APIs.
 
-2. **Type Safety**: `User` is a strongly-typed entity with specific fields (`username`, `passwordHash`, `roles`), while `Document` is a flexible, schema-less container. Different type constraints require different handling.
+2. **Type Safety**: `User` is a strongly-typed entity with specific fields (`username`, `passwordHash`, `roles`). Different authentication constraints require specialized handling.
 
 3. **Independent Configuration**: User storage and data storage can have different encryption keys, backup schedules, and storage backends.
 
@@ -462,7 +451,7 @@ The low-level storage engine that provides the foundation for all data persisten
 ```dart
 // Page operations
 final page = Page(pageId);
-page.writeInt32(0, documentCount);
+page.writeInt32(0, entityCount);
 page.writeString(4, 'header', maxLength: 16);
 if (page.isDirty) await pager.writePage(page);
 ```
@@ -522,35 +511,14 @@ class Task implements Entity {
 }
 ```
 
-#### **document**
-Legacy document class for schema-less data (implements `Entity` for backward compatibility).
-
-| File | Purpose |
-|------|---------|
-| `document.dart` | The `Document` class implementing `Entity` for schema-less, JSON-like data. Provides backward compatibility for untyped storage. Features: auto-generated UUID, versioning, timestamps (`createdAt`, `updatedAt`), binary data support, and schema validation. |
-
-```dart
-// Document implements Entity for backward compatibility
-class Document implements Entity {
-  @override
-  final String? id;
-  final Map<String, dynamic> data;
-  
-  @override
-  Map<String, dynamic> toMap() => data;
-}
-
-// Legacy usage still works
-final doc = Document(data: {'name': 'John', 'age': 30});
-await collection.insert(doc);
-```
+> **Design Decision**: DocDB does not include a schema-less `Document` class. All data must be represented by typed entities implementing the `Entity` interface. This ensures compile-time type safety and encourages proper domain modeling.
 
 #### **schema**
-Defines validation rules and structure for documents.
+Defines validation rules and structure for entities.
 
 | File | Purpose |
 |------|---------|
-| `schema.dart` | The `Schema` class that validates documents against defined field rules. Supports required fields, type checking, and nested field validation. Provides serialization/deserialization via `toMap()` and `fromMap()`. |
+| `schema.dart` | The `Schema` class that validates entity data against defined field rules. Supports required fields, type checking, and nested field validation. Provides serialization/deserialization via `toMap()` and `fromMap()`. |
 
 ```dart
 // Defining and using schemas
@@ -558,7 +526,7 @@ final schema = Schema(fields: {
   'email': FieldSchema(expectedType: String, required: true),
   'age': FieldSchema(expectedType: int, required: false),
 });
-schema.validate(document.data); // Throws if invalid
+schema.validate(entity.toMap()); // Throws if invalid
 ```
 
 | `field_schema.dart` | Defines individual field validation rules including expected types, required flags, custom validators, and nested field schemas. |
@@ -613,14 +581,14 @@ Provides data-at-rest encryption services.
 ### 7.4. Indexing Layer
 
 #### **index**
-Implements indexing strategies for efficient document retrieval.
+Implements indexing strategies for efficient entity retrieval.
 
 | File | Purpose |
 |------|---------|
 | `i_index.dart` | Interface defining the contract for all index implementations (`insert`, `remove`, `search`, `clear`). |
 | `btree.dart` | B+ Tree index implementation for range queries and ordered access. |
 | `hash.dart` | Hash index implementation for fast equality lookups. |
-| `index_manager.dart` | Manages multiple indices per collection. Handles index creation/removal and coordinates document insertions/removals across all indices. Supports index type selection (`btree`, `hash`). |
+| `index_manager.dart` | Manages multiple indices per collection. Handles index creation/removal and coordinates entity insertions/removals across all indices. Supports index type selection (`btree`, `hash`). |
 
 ---
 
@@ -647,7 +615,7 @@ Handles query construction, parsing, and execution.
 
 | File | Purpose |
 |------|---------|
-| `query.dart` | Abstract `IQuery` interface and concrete implementations: `EqualsQuery`, `AndQuery`, `OrQuery`, `NotQuery`, `GreaterThanQuery`, `LessThanQuery`, `InQuery`, `RegexQuery`. Each query type implements `matches(Document)` for filtering and supports serialization via `toMap()`/`fromMap()`. |
+| `query.dart` | Abstract `IQuery` interface and concrete implementations: `EqualsQuery`, `AndQuery`, `OrQuery`, `NotQuery`, `GreaterThanQuery`, `LessThanQuery`, `InQuery`, `RegexQuery`. Each query type implements `matches(Entity)` for filtering and supports serialization via `toMap()`/`fromMap()`. |
 | `query_builder.dart` | Fluent API for constructing queries programmatically (e.g., `QueryBuilder().whereEquals('field', value).build()`). |
 
 ---
@@ -673,7 +641,7 @@ await products.insert(widget);
 // Create index for fast lookups
 await products.createIndex('name', 'hash');
 
-// Query returns List<Product>, not List<Document>
+// Query returns List<Product>, not List<Entity> or Map
 final query = QueryBuilder().whereEquals('name', 'Widget').build();
 final results = await products.find(query);  // List<Product>
 print(results.first.price);  // 29.99 - fully typed!
@@ -760,7 +728,7 @@ The primary entry point and public API for DocDB.
 // Quick start with secure defaults
 final db = await DocDB.open(path: './mydb');
 
-// Get a typed collection - no Document wrapper needed!
+// Get a typed collection - all data requires Entity implementation
 final animals = await db.collection<Animal>('animals', fromMap: Animal.fromMap);
 
 // Insert domain objects directly
@@ -772,10 +740,6 @@ final dogs = await animals.find(
   QueryBuilder().whereEquals('species', 'Dog').build()
 );
 print('Found ${dogs.length} dogs');  // dogs is List<Animal>
-
-// Legacy Document approach still works
-final raw = await db.collection<Document>('legacy');
-await raw.insert(Document(data: {'key': 'value'}));
 
 await db.close();
 ```
@@ -796,7 +760,7 @@ The following diagram illustrates the dependency relationships between modules, 
 ├─────────────────────────────────────────────────────────────┤
 │            index              schema           encryption   │
 ├─────────────────────────────────────────────────────────────┤
-│    entity         document         storage<T>    type_reg   │
+│       entity              storage<T>           type_reg     │
 ├─────────────────────────────────────────────────────────────┤
 │                  engine (Pager, Page)                       │
 ├─────────────────────────────────────────────────────────────┤
@@ -804,7 +768,7 @@ The following diagram illustrates the dependency relationships between modules, 
 └─────────────────────────────────────────────────────────────┘
 ```
 
-> **Note**: `entity` is the core interface. `document` implements `Entity` for backward compatibility. All collections and storage are generic over `T extends Entity`.
+> **Note**: `entity` is the core interface. All collections and storage are generic over `T extends Entity`. There is no schema-less `Document` class.
 
 ## 8. Developer Workflow & Call Stack
 
@@ -868,11 +832,11 @@ DocDB.open(path: './myapp')
     │        └── Generates or loads encryption key
     │        └── Initializes AES-GCM cipher
     │
-    ├──► Storage<Document>.init()
+    ├──► Storage.init()
     │        │
     │        ├──► FileStorage.init()
     │        │        └── Creates data directory if not exists
-    │        │        └── Loads existing documents into memory index
+    │        │        └── Loads existing entities into memory index
     │        │
     │        └──► Pager.open() (future: page-based storage)
     │                 └── Opens/creates database file
