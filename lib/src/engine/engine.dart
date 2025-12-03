@@ -1,7 +1,8 @@
 /// DocDB Storage Engine.
 ///
 /// This module provides the low-level storage infrastructure for DocDB,
-/// including page-based storage, buffer management, and disk I/O.
+/// including page-based storage, buffer management, disk I/O, and
+/// write-ahead logging for durability.
 ///
 /// ## Architecture Overview
 ///
@@ -17,6 +18,9 @@
 /// ├─────────────────────────────────────────────────────────────┤
 /// │                        Page                                 │
 /// │              (Fixed-Size Data Blocks)                       │
+/// ├─────────────────────────────────────────────────────────────┤
+/// │                         WAL                                 │
+/// │           (Write-Ahead Logging, Recovery)                   │
 /// ├─────────────────────────────────────────────────────────────┤
 /// │                    File System                              │
 /// └─────────────────────────────────────────────────────────────┘
@@ -74,11 +78,17 @@
 ///
 /// A generic least-recently-used cache used by the buffer manager.
 ///
+/// ### WAL (Write-Ahead Log)
+///
+/// Provides durability guarantees through write-ahead logging. The WAL
+/// records all modifications before they are applied, enabling crash
+/// recovery.
+///
 /// ## Constants
 ///
 /// Engine-wide constants are defined in [PageConstants], [BufferConstants],
-/// [FileHeaderConstants], etc. These control page sizes, buffer pool
-/// settings, and file format details.
+/// [FileHeaderConstants], [WalConstants], etc. These control page sizes,
+/// buffer pool settings, WAL sync modes, and file format details.
 library;
 
 // Storage components
@@ -89,6 +99,9 @@ export 'storage/pager.dart';
 // Buffer management
 export 'buffer/buffer_manager.dart';
 export 'buffer/lru_cache.dart';
+
+// Write-Ahead Log
+export 'wal/wal.dart';
 
 // Constants
 export 'constants.dart';

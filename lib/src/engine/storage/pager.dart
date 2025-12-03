@@ -309,22 +309,22 @@ class Pager {
   }
 
   /// Clears the dirty shutdown flag in the file header.
+  ///
+  /// **Note:** Caller must hold the lock.
   Future<void> _clearDirtyShutdownFlag() async {
-    await _lock.synchronized(() async {
-      final file = _file!;
-      await file.setPosition(FileHeaderOffsets.flags);
-      final flagsBytes = await file.read(4);
-      final flags = ByteData.sublistView(
-        Uint8List.fromList(flagsBytes),
-      ).getUint32(0, Endian.little);
-      final newFlags = flags & ~FileHeaderFlags.dirtyShutdown;
+    final file = _file!;
+    await file.setPosition(FileHeaderOffsets.flags);
+    final flagsBytes = await file.read(4);
+    final flags = ByteData.sublistView(
+      Uint8List.fromList(flagsBytes),
+    ).getUint32(0, Endian.little);
+    final newFlags = flags & ~FileHeaderFlags.dirtyShutdown;
 
-      await file.setPosition(FileHeaderOffsets.flags);
-      final newFlagsBytes = Uint8List(4);
-      ByteData.sublistView(newFlagsBytes).setUint32(0, newFlags, Endian.little);
-      await file.writeFrom(newFlagsBytes);
-      await file.flush();
-    });
+    await file.setPosition(FileHeaderOffsets.flags);
+    final newFlagsBytes = Uint8List(4);
+    ByteData.sublistView(newFlagsBytes).setUint32(0, newFlags, Endian.little);
+    await file.writeFrom(newFlagsBytes);
+    await file.flush();
   }
 
   // ============================================================
