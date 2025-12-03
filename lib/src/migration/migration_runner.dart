@@ -5,6 +5,8 @@ library;
 
 import 'dart:convert';
 
+import '../backup/backup_service.dart';
+import '../backup/snapshot.dart';
 import '../entity/entity.dart';
 import '../exceptions/migration_exceptions.dart';
 import '../logger/docdb_logger.dart';
@@ -20,10 +22,10 @@ import 'versioned_data.dart';
 ///
 /// The migration runner handles the complete migration lifecycle including:
 /// - Determining the migration path from current to target version
-/// - Creating backups before migration (optional)
+/// - Creating backups before migration (optional, using BackupService)
 /// - Executing migration steps in order
 /// - Logging migration results
-/// - Rolling back on failure
+/// - Rolling back on failure with integrity verification
 ///
 /// ## Usage
 ///
@@ -46,6 +48,25 @@ import 'versioned_data.dart';
 /// }
 /// ```
 ///
+/// ## Backup Integration
+///
+/// The runner integrates with [BackupService] for robust backup/restore:
+///
+/// ```dart
+/// final runner = MigrationRunner<Product>(
+///   storage: productStorage,
+///   config: MigrationConfig(
+///     currentVersion: '2.0.0',
+///     migrations: [...],
+///     createBackupBeforeMigration: true,
+///   ),
+///   backupService: BackupService<Product>(
+///     storage: productStorage,
+///     config: BackupConfig.migration('/backups/products'),
+///   ),
+/// );
+/// ```
+///
 /// ## Migration Path Resolution
 ///
 /// The runner automatically determines the shortest path between the
@@ -55,6 +76,7 @@ final class MigrationRunner<T extends Entity> {
   final Storage<T> _storage;
   final MigrationConfig _config;
   final DocDBLogger _logger;
+  final BackupService<T>? _backupService;
   final List<MigrationLog> _history = [];
 
   String? _currentVersion;
@@ -64,13 +86,17 @@ final class MigrationRunner<T extends Entity> {
   ///
   /// - [storage]: The entity storage to migrate.
   /// - [config]: Migration configuration.
+  /// - [backupService]: Optional backup service for robust backups.
+  ///   If not provided, uses simple in-memory backup.
   /// - [logger]: Optional custom logger.
   MigrationRunner({
     required Storage<T> storage,
     required MigrationConfig config,
+    BackupService<T>? backupService,
     DocDBLogger? logger,
   }) : _storage = storage,
        _config = config,
+       _backupService = backupService,
        _logger = logger ?? DocDBLogger(LoggerNameConstants.migration);
 
   /// The storage being migrated.
@@ -90,6 +116,9 @@ final class MigrationRunner<T extends Entity> {
   /// The migration history log.
   List<MigrationLog> get history => List.unmodifiable(_history);
 
+  /// Whether a backup service is configured.
+  bool get hasBackupService => _backupService != null;
+
   /// Initializes the migration runner.
   ///
   /// Loads the current schema version from storage metadata and
@@ -105,8 +134,14 @@ final class MigrationRunner<T extends Entity> {
           'event': 'migration_init',
           'storage': _storage.name,
           'targetVersion': targetVersion,
+          'hasBackupService': hasBackupService,
         }),
       );
+
+      // Initialize backup service if provided
+      if (_backupService != null) {
+        await _backupService.initialize();
+      }
 
       await _loadCurrentVersion();
 
@@ -228,9 +263,9 @@ final class MigrationRunner<T extends Entity> {
     }
 
     // Create backup if configured
-    Map<String, Map<String, dynamic>>? backup;
+    Snapshot? backupSnapshot;
     if (_config.createBackupBeforeMigration) {
-      backup = await _createBackup();
+      backupSnapshot = await _createBackup(fromVersion);
     }
 
     // Load all entity data
@@ -307,18 +342,8 @@ final class MigrationRunner<T extends Entity> {
       );
 
       // Attempt rollback
-      if (backup != null) {
-        try {
-          await _restoreBackup(backup);
-          _logger.info(jsonEncode({'event': 'migration_rolled_back'}));
-        } catch (rollbackError) {
-          _logger.error(
-            jsonEncode({
-              'event': 'rollback_failed',
-              'error': rollbackError.toString(),
-            }),
-          );
-        }
+      if (backupSnapshot != null) {
+        await _restoreBackup(backupSnapshot);
       }
 
       final log = MigrationLog.failed(
@@ -413,21 +438,66 @@ final class MigrationRunner<T extends Entity> {
     return 0;
   }
 
-  /// Creates a backup of all entity data.
-  Future<Map<String, Map<String, dynamic>>> _createBackup() async {
-    _logger.debug(jsonEncode({'event': 'creating_backup'}));
-    return await _storage.getAll();
+  /// Creates a backup before migration.
+  ///
+  /// Uses [BackupService] if available for robust, verified backups.
+  /// Falls back to simple in-memory snapshot otherwise.
+  Future<Snapshot> _createBackup(String version) async {
+    _logger.debug(
+      jsonEncode({
+        'event': 'creating_migration_backup',
+        'useBackupService': _backupService != null,
+      }),
+    );
+
+    if (_backupService != null) {
+      // Use BackupService for verified, file-persisted backup
+      return await _backupService.createMemoryBackup(
+        schemaVersion: version,
+        description: 'Pre-migration backup from v$version to v$targetVersion',
+      );
+    } else {
+      // Simple in-memory backup
+      final entities = await _storage.getAll();
+      return Snapshot.fromEntities(
+        entities: entities,
+        version: version,
+        description: 'Pre-migration backup',
+      );
+    }
   }
 
-  /// Restores entity data from a backup.
-  Future<void> _restoreBackup(Map<String, Map<String, dynamic>> backup) async {
-    _logger.debug(jsonEncode({'event': 'restoring_backup'}));
+  /// Restores from a backup snapshot.
+  ///
+  /// Uses [BackupService] if available for verified restore.
+  Future<void> _restoreBackup(Snapshot snapshot) async {
+    _logger.debug(jsonEncode({'event': 'restoring_migration_backup'}));
 
-    // Delete all current data
-    await _storage.deleteAll();
+    try {
+      // Verify snapshot integrity before restore
+      if (!snapshot.verifyIntegrity()) {
+        _logger.error(jsonEncode({'event': 'backup_integrity_failed'}));
+        throw MigrationException(
+          'Backup integrity verification failed - cannot rollback',
+        );
+      }
 
-    // Restore from backup
-    await _storage.insertMany(backup);
+      if (_backupService != null) {
+        await _backupService.restoreFromSnapshot(snapshot);
+      } else {
+        // Simple restore
+        final entities = snapshot.toEntities();
+        await _storage.deleteAll();
+        await _storage.insertMany(entities);
+      }
+
+      _logger.info(jsonEncode({'event': 'migration_rolled_back'}));
+    } catch (e) {
+      _logger.error(
+        jsonEncode({'event': 'rollback_failed', 'error': e.toString()}),
+      );
+      // Don't rethrow - we already logged the failure
+    }
   }
 
   /// Saves migrated entities back to storage.
