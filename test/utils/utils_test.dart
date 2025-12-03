@@ -133,11 +133,17 @@ void main() {
 
     group('formatErrorMessage', () {
       test('should format error message with prefix', () {
-        expect(formatErrorMessage('something went wrong'), 'Error: Something went wrong');
+        expect(
+          formatErrorMessage('something went wrong'),
+          'Error: Something went wrong',
+        );
       });
 
       test('should handle already capitalized message', () {
-        expect(formatErrorMessage('Already capitalized'), 'Error: Already capitalized');
+        expect(
+          formatErrorMessage('Already capitalized'),
+          'Error: Already capitalized',
+        );
       });
 
       test('should handle empty message', () {
@@ -168,10 +174,7 @@ void main() {
       });
 
       test('should throw FormatException for empty string', () {
-        expect(
-          () => parseTimestamp(''),
-          throwsA(isA<FormatException>()),
-        );
+        expect(() => parseTimestamp(''), throwsA(isA<FormatException>()));
       });
 
       test('should throw FormatException for invalid format', () {

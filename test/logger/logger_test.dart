@@ -141,9 +141,7 @@ void main() {
     });
 
     test('should initialize successfully', () async {
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: logPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
       expect(DocDBLogger.isInitialized, isTrue);
       expect(DocDBLogger.logPath, logPath);
@@ -152,18 +150,14 @@ void main() {
     test('should create log directory if it does not exist', () async {
       final nestedPath = '${tempDir.path}/nested/deep/test.log';
 
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: nestedPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: nestedPath));
 
       expect(DocDBLogger.isInitialized, isTrue);
       expect(await Directory('${tempDir.path}/nested/deep').exists(), isTrue);
     });
 
     test('should be idempotent on multiple initialize calls', () async {
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: logPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
       await DocDBLogger.initialize(
         config: LoggerConfig(logPath: '${tempDir.path}/other.log'),
       );
@@ -173,18 +167,14 @@ void main() {
     });
 
     test('should create logger with module name', () async {
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: logPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
       final logger = DocDBLogger('TestModule');
       expect(logger.moduleName, 'TestModule');
     });
 
     test('should log info messages', () async {
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: logPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
       final logger = DocDBLogger('TestModule');
       await logger.info('Test info message');
@@ -197,9 +187,7 @@ void main() {
     });
 
     test('should log warning messages', () async {
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: logPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
       final logger = DocDBLogger('TestModule');
       await logger.warning('Test warning message');
@@ -211,15 +199,10 @@ void main() {
     });
 
     test('should log error messages with error object', () async {
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: logPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
       final logger = DocDBLogger('TestModule');
-      await logger.error(
-        'Test error message',
-        Exception('Test exception'),
-      );
+      await logger.error('Test error message', Exception('Test exception'));
       await DocDBLogger.flush();
 
       final content = await File(logPath).readAsString();
@@ -229,17 +212,11 @@ void main() {
     });
 
     test('should log error messages with stack trace', () async {
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: logPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
       final logger = DocDBLogger('TestModule');
       final stackTrace = StackTrace.current;
-      await logger.error(
-        'Test error',
-        Exception('Test'),
-        stackTrace,
-      );
+      await logger.error('Test error', Exception('Test'), stackTrace);
       await DocDBLogger.flush();
 
       final content = await File(logPath).readAsString();
@@ -248,10 +225,7 @@ void main() {
 
     test('should log debug messages with metadata', () async {
       await DocDBLogger.initialize(
-        config: LoggerConfig(
-          logPath: logPath,
-          minLevel: LogLevel.debug,
-        ),
+        config: LoggerConfig(logPath: logPath, minLevel: LogLevel.debug),
       );
 
       final logger = DocDBLogger('TestModule');
@@ -275,9 +249,7 @@ void main() {
     });
 
     test('should dispose correctly', () async {
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: logPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
       expect(DocDBLogger.isInitialized, isTrue);
 
@@ -287,15 +259,11 @@ void main() {
     });
 
     test('should allow re-initialization after dispose', () async {
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: logPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
       await DocDBLogger.dispose();
 
       final newPath = '${tempDir.path}/new.log';
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: newPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: newPath));
 
       expect(DocDBLogger.isInitialized, isTrue);
       expect(DocDBLogger.logPath, newPath);
@@ -314,9 +282,7 @@ void main() {
     });
 
     test('should flush pending writes', () async {
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: logPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
       final logger = DocDBLogger('TestModule');
       await logger.info('Message 1');
@@ -329,9 +295,7 @@ void main() {
     });
 
     test('should include timestamp in log messages', () async {
-      await DocDBLogger.initialize(
-        config: LoggerConfig(logPath: logPath),
-      );
+      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
       final logger = DocDBLogger('TestModule');
       await logger.info('Timestamped message');

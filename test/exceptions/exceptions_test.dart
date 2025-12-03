@@ -52,9 +52,7 @@ void main() {
     });
 
     test('should format message with storage name', () {
-      final exception = StorageInitializationException(
-        storageName: 'myDb',
-      );
+      final exception = StorageInitializationException(storageName: 'myDb');
       expect(exception.message, contains('myDb'));
     });
   });
@@ -895,10 +893,7 @@ void main() {
 
     test('should include cause in chain', () {
       final cause = Exception('Inner error');
-      final exception = TypeSerializationException(
-        type: List,
-        cause: cause,
-      );
+      final exception = TypeSerializationException(type: List, cause: cause);
       expect(exception.cause, cause);
     });
   });
