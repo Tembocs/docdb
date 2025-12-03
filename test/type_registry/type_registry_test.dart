@@ -24,8 +24,7 @@ class Point {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Point && x == other.x && y == other.y;
+      identical(this, other) || other is Point && x == other.x && y == other.y;
 
   @override
   int get hashCode => Object.hash(x, y);
@@ -173,13 +172,10 @@ void main() {
 
       test('should list registered type names', () {
         final names = registry.registeredTypeNames.toList();
-        expect(names, containsAll([
-          'DateTime',
-          'Duration',
-          'Uri',
-          'BigInt',
-          'RegExp',
-        ]));
+        expect(
+          names,
+          containsAll(['DateTime', 'Duration', 'Uri', 'BigInt', 'RegExp']),
+        );
       });
 
       test('should list registered types', () {
@@ -319,10 +315,7 @@ void main() {
       });
 
       test('should throw for unregistered type name in deserialization', () {
-        final data = {
-          '__type': 'UnknownType',
-          '__value': 'some data',
-        };
+        final data = {'__type': 'UnknownType', '__value': 'some data'};
 
         expect(
           () => registry.deserializeIfCustom(data),
@@ -493,7 +486,9 @@ void main() {
       });
 
       test('should roundtrip Uri', () {
-        final original = Uri.parse('https://example.com:8080/api?key=value#fragment');
+        final original = Uri.parse(
+          'https://example.com:8080/api?key=value#fragment',
+        );
         final serialized = serializer.serialize(original);
         final deserialized = serializer.deserialize(serialized);
 

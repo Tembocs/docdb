@@ -789,7 +789,11 @@ void main() {
         await storage.insert('prod-2', {'name': 'Widget 2', 'price': 20});
         await storage.insert('prod-3', {'name': 'Widget 3', 'price': 30});
 
-        final deleted = await storage.deleteMany(['prod-1', 'prod-3', 'missing']);
+        final deleted = await storage.deleteMany([
+          'prod-1',
+          'prod-3',
+          'missing',
+        ]);
         expect(deleted, 2);
         expect(await storage.count, 1);
       });
@@ -1000,20 +1004,14 @@ void main() {
 
     group('StorageRecord', () {
       test('should have correct id and data', () {
-        const record = StorageRecord(
-          id: 'test-id',
-          data: {'key': 'value'},
-        );
+        const record = StorageRecord(id: 'test-id', data: {'key': 'value'});
 
         expect(record.id, 'test-id');
         expect(record.data, {'key': 'value'});
       });
 
       test('should have meaningful toString', () {
-        const record = StorageRecord(
-          id: 'test-id',
-          data: {'key': 'value'},
-        );
+        const record = StorageRecord(id: 'test-id', data: {'key': 'value'});
 
         expect(record.toString(), contains('test-id'));
         expect(record.toString(), contains('key'));

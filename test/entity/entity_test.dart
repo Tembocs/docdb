@@ -223,7 +223,8 @@ class NestedObjectEntity implements Entity {
       id: id,
       name: map['name'] as String,
       address: Address.fromMap(map['address'] as Map<String, dynamic>),
-      previousAddresses: (map['previousAddresses'] as List?)
+      previousAddresses:
+          (map['previousAddresses'] as List?)
               ?.map((a) => Address.fromMap(a as Map<String, dynamic>))
               .toList() ??
           [],
@@ -282,7 +283,8 @@ class EnumEntity implements Entity {
     return EnumEntity(
       id: id,
       status: Status.values.byName(map['status'] as String),
-      statusHistory: (map['statusHistory'] as List?)
+      statusHistory:
+          (map['statusHistory'] as List?)
               ?.map((s) => Status.values.byName(s as String))
               .toList() ??
           [],
@@ -510,14 +512,20 @@ void main() {
           id: 'coll-1',
           stringList: ['a', 'b', 'c'],
           intList: [1, 2, 3],
-          metadata: {'key': 'value', 'nested': {'deep': true}},
+          metadata: {
+            'key': 'value',
+            'nested': {'deep': true},
+          },
           tags: {'tag1', 'tag2'},
         );
 
         final map = entity.toMap();
         expect(map['stringList'], ['a', 'b', 'c']);
         expect(map['intList'], [1, 2, 3]);
-        expect(map['metadata'], {'key': 'value', 'nested': {'deep': true}});
+        expect(map['metadata'], {
+          'key': 'value',
+          'nested': {'deep': true},
+        });
         expect(map['tags'], containsAll(['tag1', 'tag2']));
       });
 
@@ -747,9 +755,7 @@ void main() {
       });
 
       test('should deserialize with defaults for missing fields', () {
-        final entity = DefaultValuesEntity.fromMap('test', {
-          'name': 'Test',
-        });
+        final entity = DefaultValuesEntity.fromMap('test', {'name': 'Test'});
 
         expect(entity.priority, 0);
         expect(entity.isActive, true);
@@ -780,10 +786,7 @@ void main() {
       });
 
       test('should handle unicode characters', () {
-        const entity = SimpleEntity(
-          name: '日本語テスト 🚀 émojis ñ',
-          count: 1,
-        );
+        const entity = SimpleEntity(name: '日本語テスト 🚀 émojis ñ', count: 1);
 
         final map = entity.toMap();
         final restored = SimpleEntity.fromMap('test', map);
