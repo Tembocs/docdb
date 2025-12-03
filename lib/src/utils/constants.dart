@@ -33,14 +33,8 @@ abstract final class LoggerNameConstants {
   /// Logger name for backup and restore operations.
   static const String backup = 'Backup';
 
-  /// Logger name for document operations.
-  static const String document = 'Document';
-
-  /// Logger name for data collection operations.
-  static const String dataCollection = 'DataCollection';
-
-  /// Logger name for user collection operations.
-  static const String userCollection = 'UserCollection';
+  /// Logger name for generic collection operations.
+  static const String collection = 'Collection';
 
   /// Logger name for encryption and decryption operations.
   static const String encryption = 'Encryption';
@@ -60,17 +54,8 @@ abstract final class LoggerNameConstants {
   /// Logger name for schema validation.
   static const String schema = 'Schema';
 
-  /// Logger name for file-based data storage.
-  static const String dataFileStorage = 'DataFileStorage';
-
-  /// Logger name for in-memory data storage.
-  static const String dataInMemoryStorage = 'DataInMemoryStorage';
-
-  /// Logger name for file-based user storage.
-  static const String userFileStorage = 'UserFileStorage';
-
-  /// Logger name for in-memory user storage.
-  static const String userInMemoryStorage = 'UserInMemoryStorage';
+  /// Logger name for storage operations.
+  static const String storage = 'Storage';
 
   /// Logger name for transaction operations.
   static const String transaction = 'Transaction';

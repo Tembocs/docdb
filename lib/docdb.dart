@@ -3,6 +3,7 @@
 /// DocDB provides a feature-rich document database with support for:
 ///
 /// - **Entity Storage**: Generic, type-safe storage for any Entity
+/// - **Collections**: Type-safe collections with indexing and queries
 /// - **Transactions**: ACID-compliant transactions with isolation levels
 /// - **Indexing**: BTree and Hash indexes for fast queries
 /// - **Encryption**: Optional AES-GCM encryption at rest
@@ -15,9 +16,37 @@
 /// ```dart
 /// import 'package:docdb/docdb.dart';
 ///
-/// // Create storage and start using it
-/// final storage = MemoryStorage<Product>();
-/// await storage.set(product.id, product.toMap());
+/// // Define your entity
+/// class Product implements Entity {
+///   @override
+///   final String? id;
+///   final String name;
+///   final double price;
+///
+///   Product({this.id, required this.name, required this.price});
+///
+///   @override
+///   Map<String, dynamic> toMap() => {'name': name, 'price': price};
+///
+///   factory Product.fromMap(String id, Map<String, dynamic> map) =>
+///     Product(id: id, name: map['name'], price: map['price']);
+/// }
+///
+/// // Create a collection
+/// final storage = MemoryStorage<Product>(name: 'products');
+/// await storage.open();
+///
+/// final products = Collection<Product>(
+///   storage: storage,
+///   fromMap: Product.fromMap,
+///   name: 'products',
+/// );
+///
+/// // Insert and query
+/// await products.insert(Product(name: 'Widget', price: 29.99));
+/// final results = await products.find(
+///   QueryBuilder().whereGreaterThan('price', 20.0).build(),
+/// );
 /// ```
 ///
 /// See individual module documentation for detailed usage.
@@ -28,6 +57,10 @@ export 'src/entity/entity.dart';
 
 // Storage implementations
 export 'src/storage/storage.dart';
+export 'src/storage/memory_storage.dart';
+
+// Collection module - type-safe entity collections with indexing
+export 'src/collection/collection.dart';
 
 // Backup module - point-in-time snapshots, integrity verification
 export 'src/backup/backup.dart';
