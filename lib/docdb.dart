@@ -28,18 +28,20 @@
 ///   @override
 ///   Map<String, dynamic> toMap() => {'name': name, 'price': price};
 ///
-///   factory Product.fromMap(String id, Map<String, dynamic> map) =>
+///   static Product fromMap(String id, Map<String, dynamic> map) =>
 ///     Product(id: id, name: map['name'], price: map['price']);
 /// }
 ///
-/// // Create a collection
-/// final storage = MemoryStorage<Product>(name: 'products');
-/// await storage.open();
+/// // Open database
+/// final db = await DocDB.open(
+///   path: './myapp_data',
+///   config: DocDBConfig.production(),
+/// );
 ///
-/// final products = Collection<Product>(
-///   storage: storage,
+/// // Get a collection
+/// final products = await db.collection<Product>(
+///   'products',
 ///   fromMap: Product.fromMap,
-///   name: 'products',
 /// );
 ///
 /// // Insert and query
@@ -47,10 +49,16 @@
 /// final results = await products.find(
 ///   QueryBuilder().whereGreaterThan('price', 20.0).build(),
 /// );
+///
+/// // Close when done
+/// await db.close();
 /// ```
 ///
 /// See individual module documentation for detailed usage.
 library;
+
+// Main DocDB class - primary entry point
+export 'src/docdb.dart';
 
 // Core entity interface
 export 'src/entity/entity.dart';
@@ -58,6 +66,7 @@ export 'src/entity/entity.dart';
 // Storage implementations
 export 'src/storage/storage.dart';
 export 'src/storage/memory_storage.dart';
+export 'src/storage/paged_storage.dart';
 
 // Collection module - type-safe entity collections with indexing
 export 'src/collection/collection.dart';

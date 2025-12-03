@@ -21,6 +21,7 @@ export 'authentication_exceptions.dart';
 export 'authorization_exceptions.dart';
 export 'backup_exceptions.dart';
 export 'collection_exceptions.dart';
+export 'database_exceptions.dart';
 export 'docdb_exception.dart';
 export 'document_exceptions.dart';
 export 'encryption_exceptions.dart';

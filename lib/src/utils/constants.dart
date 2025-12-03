@@ -24,6 +24,9 @@ abstract final class LoggerNameConstants {
   /// Logger name for the main DocDB entry point.
   static const String docdbMain = 'DocDbMain';
 
+  /// Logger name for the DocDB database class.
+  static const String docdb = 'DocDB';
+
   /// Logger name for authentication operations.
   static const String authentication = 'Authentication';
 
