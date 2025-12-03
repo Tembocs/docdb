@@ -57,8 +57,8 @@
 /// See individual module documentation for detailed usage.
 library;
 
-// Main DocDB class - primary entry point
-export 'src/docdb.dart';
+// Main DocDB module - primary entry point (DocDB, DocDBConfig, StorageBackend, DocDBStats, CollectionStats)
+export 'src/main/main.dart';
 
 // Core entity interface
 export 'src/entity/entity.dart';
