@@ -88,3 +88,9 @@ export 'src/encryption/encryption.dart';
 
 // Type registry for serialization
 export 'src/type_registry/type_registry.dart';
+
+// Authentication module - user management, login, tokens
+export 'src/authentication/authentication.dart';
+
+// Authorization module - roles, permissions, access control
+export 'src/authorization/authorization.dart';
