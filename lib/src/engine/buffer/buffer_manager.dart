@@ -492,8 +492,15 @@ class BufferManager {
         );
       }
 
-      // Flush all dirty pages
-      final flushed = await flushAll();
+      // Flush all dirty pages (inline to avoid lock re-entry)
+      var flushed = 0;
+      for (final entry in _cache.entries.toList()) {
+        if (entry.value.isDirty) {
+          await _flushDescriptor(entry.key, entry.value);
+          flushed++;
+        }
+      }
+      await _pager.flush();
 
       // Clear the cache
       _cache.clear();
