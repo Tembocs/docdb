@@ -4,8 +4,9 @@
 /// crash recovery and transaction durability.
 library;
 
-import 'dart:convert';
 import 'dart:typed_data';
+
+import 'package:cbor/cbor.dart';
 
 import '../constants.dart';
 import 'wal_constants.dart';
@@ -262,25 +263,34 @@ class DataOperationPayload {
     this.afterImage,
   });
 
-  /// Serializes to bytes.
+  /// Serializes to CBOR bytes.
   Uint8List toBytes() {
-    final map = <String, dynamic>{
-      'collection': collectionName,
-      'entityId': entityId,
-      if (beforeImage != null) 'before': beforeImage,
-      if (afterImage != null) 'after': afterImage,
-    };
-    return Uint8List.fromList(utf8.encode(jsonEncode(map)));
+    final map = CborMap({
+      CborString('collection'): CborString(collectionName),
+      CborString('entityId'): CborString(entityId),
+      if (beforeImage != null) CborString('before'): _mapToCbor(beforeImage!),
+      if (afterImage != null) CborString('after'): _mapToCbor(afterImage!),
+    });
+    return Uint8List.fromList(cbor.encode(map));
   }
 
-  /// Deserializes from bytes.
+  /// Deserializes from CBOR bytes.
   factory DataOperationPayload.fromBytes(Uint8List bytes) {
-    final map = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    final cborValue = cbor.decode(bytes);
+    if (cborValue is! CborMap) {
+      throw const WalCorruptedException('Invalid payload: expected CBOR map');
+    }
+
+    final collection = cborValue[CborString('collection')];
+    final entityId = cborValue[CborString('entityId')];
+    final before = cborValue[CborString('before')];
+    final after = cborValue[CborString('after')];
+
     return DataOperationPayload(
-      collectionName: map['collection'] as String,
-      entityId: map['entityId'] as String,
-      beforeImage: map['before'] as Map<String, dynamic>?,
-      afterImage: map['after'] as Map<String, dynamic>?,
+      collectionName: (collection as CborString).toString(),
+      entityId: (entityId as CborString).toString(),
+      beforeImage: before != null ? _cborToMap(before) : null,
+      afterImage: after != null ? _cborToMap(after) : null,
     );
   }
 
@@ -346,26 +356,154 @@ class CheckpointPayload {
     required this.dirtyPages,
   });
 
-  /// Serializes to bytes.
+  /// Serializes to CBOR bytes.
   Uint8List toBytes() {
-    final map = <String, dynamic>{
-      'timestamp': timestamp.toIso8601String(),
-      'activeTxns': activeTransactions,
-      'dirtyPages': dirtyPages.map((k, v) => MapEntry(k.toString(), v)),
-    };
-    return Uint8List.fromList(utf8.encode(jsonEncode(map)));
+    final map = CborMap({
+      CborString('timestamp'): CborDateTimeInt(timestamp),
+      CborString('activeTxns'): CborList(
+        activeTransactions.map((t) => CborSmallInt(t)).toList(),
+      ),
+      CborString('dirtyPages'): CborMap({
+        for (final entry in dirtyPages.entries)
+          CborSmallInt(entry.key): CborSmallInt(entry.value),
+      }),
+    });
+    return Uint8List.fromList(cbor.encode(map));
   }
 
-  /// Deserializes from bytes.
+  /// Deserializes from CBOR bytes.
   factory CheckpointPayload.fromBytes(Uint8List bytes) {
-    final map = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-    final dirtyPagesRaw = map['dirtyPages'] as Map<String, dynamic>;
+    final cborValue = cbor.decode(bytes);
+    if (cborValue is! CborMap) {
+      throw const WalCorruptedException(
+        'Invalid checkpoint payload: expected CBOR map',
+      );
+    }
+
+    final timestampValue = cborValue[CborString('timestamp')];
+    final activeTxnsValue = cborValue[CborString('activeTxns')];
+    final dirtyPagesValue = cborValue[CborString('dirtyPages')];
+
+    DateTime timestamp;
+    if (timestampValue is CborDateTimeInt) {
+      timestamp = timestampValue.toDateTime();
+    } else if (timestampValue is CborSmallInt) {
+      timestamp = DateTime.fromMillisecondsSinceEpoch(
+        timestampValue.value * 1000,
+      );
+    } else {
+      throw const WalCorruptedException('Invalid timestamp in checkpoint');
+    }
+
+    final activeTransactions = <int>[];
+    if (activeTxnsValue is CborList) {
+      for (final item in activeTxnsValue) {
+        if (item is CborSmallInt) {
+          activeTransactions.add(item.value);
+        } else if (item is CborInt) {
+          activeTransactions.add(item.toInt());
+        }
+      }
+    }
+
+    final dirtyPages = <int, int>{};
+    if (dirtyPagesValue is CborMap) {
+      for (final entry in dirtyPagesValue.entries) {
+        final key = entry.key;
+        final value = entry.value;
+        int keyInt = 0;
+        int valueInt = 0;
+
+        if (key is CborSmallInt) {
+          keyInt = key.value;
+        } else if (key is CborInt) {
+          keyInt = key.toInt();
+        }
+
+        if (value is CborSmallInt) {
+          valueInt = value.value;
+        } else if (value is CborInt) {
+          valueInt = value.toInt();
+        }
+
+        dirtyPages[keyInt] = valueInt;
+      }
+    }
+
     return CheckpointPayload(
-      timestamp: DateTime.parse(map['timestamp'] as String),
-      activeTransactions: (map['activeTxns'] as List).cast<int>(),
-      dirtyPages: dirtyPagesRaw.map((k, v) => MapEntry(int.parse(k), v as int)),
+      timestamp: timestamp,
+      activeTransactions: activeTransactions,
+      dirtyPages: dirtyPages,
     );
   }
+}
+
+// CBOR conversion helper functions
+
+/// Converts a Dart Map to CBOR value.
+CborValue _mapToCbor(Map<String, dynamic> map) {
+  final cborMap = <CborValue, CborValue>{};
+  for (final entry in map.entries) {
+    cborMap[CborString(entry.key)] = _valueToCbor(entry.value);
+  }
+  return CborMap(cborMap);
+}
+
+/// Converts a Dart value to CBOR value.
+CborValue _valueToCbor(dynamic value) {
+  return switch (value) {
+    null => const CborNull(),
+    bool b => CborBool(b),
+    int i => CborInt(BigInt.from(i)),
+    double d => CborFloat(d),
+    String s => CborString(s),
+    DateTime dt => CborDateTimeInt(dt),
+    Uint8List bytes => CborBytes(bytes),
+    List list => CborList(list.map(_valueToCbor).toList()),
+    Map<String, dynamic> map => _mapToCbor(map),
+    _ => CborString(value.toString()),
+  };
+}
+
+/// Converts a CBOR value to Dart Map.
+Map<String, dynamic> _cborToMap(CborValue value) {
+  if (value is! CborMap) {
+    throw const WalCorruptedException('Expected CBOR map');
+  }
+
+  final result = <String, dynamic>{};
+  for (final entry in value.entries) {
+    final key = entry.key;
+    if (key is! CborString) {
+      throw const WalCorruptedException('Map keys must be strings');
+    }
+    result[key.toString()] = _cborToValue(entry.value);
+  }
+  return result;
+}
+
+/// Converts a CBOR value to Dart value.
+dynamic _cborToValue(CborValue value) {
+  // Handle DateTime types first
+  if (value is CborDateTimeInt) {
+    return value.toDateTime();
+  }
+  if (value is CborDateTimeFloat) {
+    return value.toDateTime();
+  }
+
+  return switch (value) {
+    CborNull() => null,
+    CborBool b => b.value,
+    CborSmallInt i => i.value,
+    CborInt i => i.toInt(),
+    CborFloat f => f.value,
+    CborString s => s.toString(),
+    CborBytes b => Uint8List.fromList(b.bytes),
+    CborList l => l.map(_cborToValue).toList(),
+    CborMap m => _cborToMap(m),
+    _ => value.toString(),
+  };
 }
 
 /// Exception thrown when WAL data is corrupted.

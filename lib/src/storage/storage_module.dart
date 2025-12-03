@@ -73,5 +73,7 @@ library;
 export 'file_storage.dart' show FileStorage, FileStorageConfig;
 export 'memory_storage.dart' show MemoryStorage;
 export 'paged_storage.dart' show PagedStorage, PagedStorageConfig;
+export 'serialization.dart'
+    show BinarySerializer, SerializationConfig, SerializationFlags;
 export 'storage.dart'
     show EntityFromMap, Storage, StorageRecord, TransactionalStorage;

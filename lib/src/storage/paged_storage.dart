@@ -61,11 +61,12 @@
 library;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cbor/cbor.dart';
 import 'package:meta/meta.dart';
 
+import '../encryption/encryption_service.dart';
 import '../engine/buffer/buffer_manager.dart';
 import '../engine/constants.dart';
 import '../engine/storage/page.dart';
@@ -93,6 +94,13 @@ class PagedStorageConfig {
   /// Maximum entity size in bytes.
   final int maxEntitySize;
 
+  /// Encryption service for data-at-rest encryption (null = no encryption).
+  final EncryptionService? encryptionService;
+
+  /// Whether encryption is enabled.
+  bool get encryptionEnabled =>
+      encryptionService != null && encryptionService!.isEnabled;
+
   /// Creates a PagedStorage configuration.
   const PagedStorageConfig({
     this.bufferPoolSize = 1024,
@@ -100,6 +108,7 @@ class PagedStorageConfig {
     this.verifyChecksums = true,
     this.pageSize = 4096,
     this.maxEntitySize = 1024 * 1024, // 1MB
+    this.encryptionService,
   });
 
   /// Default configuration.
@@ -116,6 +125,25 @@ class PagedStorageConfig {
     bufferPoolSize: 4096,
     maxEntitySize: 4 * 1024 * 1024,
   );
+
+  /// Creates a configuration with encryption.
+  factory PagedStorageConfig.encrypted({
+    required EncryptionService encryptionService,
+    int bufferPoolSize = 1024,
+    bool enableTransactions = true,
+    bool verifyChecksums = true,
+    int pageSize = 4096,
+    int maxEntitySize = 1024 * 1024,
+  }) {
+    return PagedStorageConfig(
+      bufferPoolSize: bufferPoolSize,
+      enableTransactions: enableTransactions,
+      verifyChecksums: verifyChecksums,
+      pageSize: pageSize,
+      maxEntitySize: maxEntitySize,
+      encryptionService: encryptionService,
+    );
+  }
 }
 
 /// High-performance page-based storage implementation.
@@ -170,9 +198,6 @@ final class PagedStorage<T extends Entity> extends Storage<T>
 
   /// The root catalog page ID.
   int _catalogPageId = 0;
-
-  /// JSON encoder for serialization.
-  static const _jsonEncoder = JsonEncoder();
 
   /// Creates a new PagedStorage instance.
   ///
@@ -709,6 +734,110 @@ final class PagedStorage<T extends Entity> extends Storage<T>
     }
   }
 
+  /// Serializes entity data to CBOR bytes with optional encryption.
+  Future<Uint8List> _serializeData(Map<String, dynamic> data) async {
+    // Convert to CBOR
+    final cborValue = _mapToCbor(data);
+    final cborBytes = Uint8List.fromList(cbor.encode(cborValue));
+
+    // Encrypt if configured
+    if (config.encryptionEnabled) {
+      final result = await config.encryptionService!.encrypt(cborBytes);
+      // Format: iv (12) + ciphertext
+      return result.combined;
+    }
+
+    return cborBytes;
+  }
+
+  /// Deserializes entity data from CBOR bytes with optional decryption.
+  Future<Map<String, dynamic>> _deserializeData(Uint8List bytes) async {
+    Uint8List cborBytes;
+
+    // Decrypt if encryption is enabled
+    if (config.encryptionEnabled) {
+      cborBytes = await config.encryptionService!.decryptCombined(bytes);
+    } else {
+      cborBytes = bytes;
+    }
+
+    // Decode CBOR
+    final cborValue = cbor.decode(cborBytes);
+    return _cborToMap(cborValue);
+  }
+
+  /// Converts a Dart Map to CBOR value.
+  CborValue _mapToCbor(Map<String, dynamic> map) {
+    final cborMap = <CborValue, CborValue>{};
+    for (final entry in map.entries) {
+      cborMap[CborString(entry.key)] = _valueToCbor(entry.value);
+    }
+    return CborMap(cborMap);
+  }
+
+  /// Converts a Dart value to CBOR value.
+  CborValue _valueToCbor(dynamic value) {
+    return switch (value) {
+      null => const CborNull(),
+      bool b => CborBool(b),
+      int i => CborInt(BigInt.from(i)),
+      double d => CborFloat(d),
+      String s => CborString(s),
+      DateTime dt => CborDateTimeInt(dt),
+      Uint8List bytes => CborBytes(bytes),
+      List list => CborList(list.map(_valueToCbor).toList()),
+      Map<String, dynamic> map => _mapToCbor(map),
+      _ => CborString(value.toString()),
+    };
+  }
+
+  /// Converts a CBOR value to Dart Map.
+  Map<String, dynamic> _cborToMap(CborValue value) {
+    if (value is! CborMap) {
+      throw StorageCorruptedException(
+        'Expected CBOR map at root',
+        path: filePath,
+      );
+    }
+
+    final result = <String, dynamic>{};
+    for (final entry in value.entries) {
+      final key = entry.key;
+      if (key is! CborString) {
+        throw StorageCorruptedException(
+          'Map keys must be strings',
+          path: filePath,
+        );
+      }
+      result[key.toString()] = _cborToValue(entry.value);
+    }
+    return result;
+  }
+
+  /// Converts a CBOR value to Dart value.
+  dynamic _cborToValue(CborValue value) {
+    // Handle DateTime types first (they extend CborInt/CborFloat)
+    if (value is CborDateTimeInt) {
+      return value.toDateTime();
+    }
+    if (value is CborDateTimeFloat) {
+      return value.toDateTime();
+    }
+
+    return switch (value) {
+      CborNull() => null,
+      CborBool b => b.value,
+      CborSmallInt i => i.value,
+      CborInt i => i.toInt(),
+      CborFloat f => f.value,
+      CborString s => s.toString(),
+      CborBytes b => Uint8List.fromList(b.bytes),
+      CborList l => l.map(_cborToValue).toList(),
+      CborMap m => _cborToMap(m),
+      _ => value.toString(),
+    };
+  }
+
   Future<Map<String, dynamic>> _readEntity(_EntityLocation location) async {
     final page = await _bufferManager!.fetchPage(location.pageId);
 
@@ -726,7 +855,7 @@ final class PagedStorage<T extends Entity> extends Storage<T>
       }
 
       // Read entity data
-      // Format: id_len (2) | id (var) | data_len (4) | json_data (var)
+      // Format: id_len (2) | id (var) | data_len (4) | data (var)
       int offset = dataOffset;
 
       // Skip ID (we already know it)
@@ -734,27 +863,25 @@ final class PagedStorage<T extends Entity> extends Storage<T>
       offset += 2 + idLen;
 
       // Read data
-      final jsonLen = page.readUint32(offset);
+      final dataLen = page.readUint32(offset);
       offset += 4;
 
-      final jsonBytes = page.readBytes(offset, jsonLen);
-      final jsonStr = utf8.decode(jsonBytes);
+      final dataBytes = page.readBytes(offset, dataLen);
 
-      return jsonDecode(jsonStr) as Map<String, dynamic>;
+      return await _deserializeData(dataBytes);
     } finally {
       _bufferManager!.unpinPage(location.pageId);
     }
   }
 
   Future<void> _writeEntity(String id, Map<String, dynamic> data) async {
-    // Serialize data
-    final jsonStr = _jsonEncoder.convert(data);
-    final jsonBytes = utf8.encode(jsonStr);
+    // Serialize data (CBOR + optional encryption)
+    final dataBytes = await _serializeData(data);
 
     // Calculate required space
-    // Format: id_len (2) | id (var) | data_len (4) | json_data (var)
-    final idBytes = utf8.encode(id);
-    final requiredSpace = 2 + idBytes.length + 4 + jsonBytes.length;
+    // Format: id_len (2) | id (var) | data_len (4) | data (var)
+    final idBytes = Uint8List.fromList(id.codeUnits);
+    final requiredSpace = 2 + idBytes.length + 4 + dataBytes.length;
 
     if (requiredSpace > config.maxEntitySize) {
       throw StorageWriteException(
@@ -768,21 +895,15 @@ final class PagedStorage<T extends Entity> extends Storage<T>
     }
 
     // Find or allocate a page with enough space
-    final (page, slot) = await _allocateSlot(requiredSpace);
+    final (page, slot, lowestDataOffset) = await _allocateSlot(requiredSpace);
 
     try {
       // Write entity data
       final slotOffset = _getSlotOffset(slot);
 
-      // Find data offset (grow from end of page)
-      int dataOffset = page.freeSpaceOffset;
-      if (dataOffset < slotOffset + _slotEntrySize) {
-        // Need more space, use end of slot directory
-        dataOffset = slotOffset + _slotEntrySize;
-      }
-
-      // Write to end of used space
-      dataOffset = page.pageSize - requiredSpace;
+      // Data grows from end of page towards the slot directory
+      // lowestDataOffset is the start of the lowest existing data (or pageSize if empty)
+      final dataOffset = lowestDataOffset - requiredSpace;
 
       // Update slot directory
       page.writeUint16(slotOffset, dataOffset);
@@ -795,13 +916,13 @@ final class PagedStorage<T extends Entity> extends Storage<T>
       // ID
       page.writeUint16(offset, idBytes.length);
       offset += 2;
-      page.writeBytes(offset, Uint8List.fromList(idBytes));
+      page.writeBytes(offset, idBytes);
       offset += idBytes.length;
 
-      // JSON data
-      page.writeUint32(offset, jsonBytes.length);
+      // Serialized data (CBOR, optionally encrypted)
+      page.writeUint32(offset, dataBytes.length);
       offset += 4;
-      page.writeBytes(offset, Uint8List.fromList(jsonBytes));
+      page.writeBytes(offset, dataBytes);
 
       // Update entity index
       _entityIndex[id] = _EntityLocation(pageId: page.pageId, slot: slot);
@@ -839,7 +960,13 @@ final class PagedStorage<T extends Entity> extends Storage<T>
     }
   }
 
-  Future<(Page, int)> _allocateSlot(int requiredSpace) async {
+  /// Allocates a slot for an entity on a data page.
+  ///
+  /// Returns a tuple of (page, slot, lowestDataOffset).
+  /// - page: The page to write to
+  /// - slot: The slot number for the new entity
+  /// - lowestDataOffset: The current lowest data offset (where to write new data below)
+  Future<(Page, int, int)> _allocateSlot(int requiredSpace) async {
     // Try to find space in existing data pages
     for (final pageId in _dataPages) {
       final page = await _bufferManager!.fetchPage(pageId);
@@ -868,7 +995,7 @@ final class PagedStorage<T extends Entity> extends Storage<T>
         // Update slot count in data page header
         page.writeUint32(PageConstants.pageHeaderSize, slotCount + 1);
 
-        return (page, slot);
+        return (page, slot, lowestDataOffset);
       }
 
       _bufferManager!.unpinPage(pageId);
@@ -881,7 +1008,8 @@ final class PagedStorage<T extends Entity> extends Storage<T>
     // Initialize data page header
     page.writeUint32(PageConstants.pageHeaderSize, 1); // Slot count = 1
 
-    return (page, 0);
+    // For new page, lowestDataOffset is the page size (no data yet)
+    return (page, 0, page.pageSize);
   }
 
   int _getSlotOffset(int slot) {
