@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the BackupService class from the docdb library, for the Dart programming language.">
+  <title>BackupService class - docdb library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">docdb</a></li>
+    <li><a href="../docdb/">docdb.dart</a></li>
+    <li class="self-crumb">BackupService<span class="signature">&lt;<wbr><span class="type-parameter">T extends <a href="../docdb/Entity-class.html">Entity</a></span>&gt;</span> class</li>
+  </ol>
+  <div class="self-name">BackupService</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="docdb&#47;docdb-library-sidebar.html"
+    data-below-sidebar="docdb&#47;BackupService-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">BackupService&lt;<wbr><span class="type-parameter">T extends Entity</span>&gt;</span> class 
+    <a href="https://dart.dev/language/class-modifiers#final" class="feature feature-final" title="This class can neither be extended, implemented, nor mixed in.">final</a>
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>A robust backup service for entity storage.</p>
+<p>Provides comprehensive backup and restore capabilities including:</p>
+<ul>
+<li>Full storage backups with integrity verification</li>
+<li>Snapshot-based backup format with checksums</li>
+<li>Optional compression for storage efficiency</li>
+<li>Backup retention policies</li>
+<li>Metadata tracking for backup management</li>
+</ul>
+<h2 id="basic-usage">Basic Usage</h2>
+<pre class="language-dart"><code class="language-dart">final backupService = BackupService&lt;Product&gt;(
+  storage: productStorage,
+  config: BackupConfig(backupDirectory: '/backups/products'),
+);
+
+// Create a backup
+final result = await backupService.createBackup(
+  description: 'Before price update',
+);
+
+if (result.isSuccess) {
+  print('Backup saved: ${result.filePath}');
+}
+
+// Restore from backup
+final restoreResult = await backupService.restore(result.filePath!);
+</code></pre>
+<h2 id="migration-integration">Migration Integration</h2>
+<pre class="language-dart"><code class="language-dart">// Create backup before migration
+final backup = await backupService.createBackup(
+  type: BackupType.migration,
+  description: 'Pre-migration backup for v2.0',
+);
+
+try {
+  await migrationRunner.migrate();
+} catch (e) {
+  // Rollback on failure
+  await backupService.restore(backup.filePath!);
+}
+</code></pre>
+</section>
+
+
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="BackupService.new" class="callable">
+          <span class="name"><a href="../docdb/BackupService/BackupService.html">BackupService</a></span><span class="signature">({<span class="parameter" id="-param-storage"><span>required</span> <span class="type-annotation"><a href="../docdb/Storage-class.html">Storage</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">storage</span>, </span><span class="parameter" id="-param-config"><span>required</span> <span class="type-annotation"><a href="../docdb/BackupConfig-class.html">BackupConfig</a></span> <span class="parameter-name">config</span>, </span><span class="parameter" id="-param-logger"><span class="type-annotation"><a href="../docdb/DocDBLogger-class.html">DocDBLogger</a>?</span> <span class="parameter-name">logger</span></span>})</span>
+        </dt>
+        <dd>
+          Creates a new backup service.
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="config" class="property">
+  <span class="name"><a href="../docdb/BackupService/config.html">config</a></span>
+  <span class="signature">&#8594; <a href="../docdb/BackupConfig-class.html">BackupConfig</a></span>
+  
+
+</dt>
+<dd>
+  The backup configuration.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="storage" class="property">
+  <span class="name"><a href="../docdb/BackupService/storage.html">storage</a></span>
+  <span class="signature">&#8594; <a href="../docdb/Storage-class.html">Storage</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  The storage being backed up.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="createBackup" class="callable">
+  <span class="name"><a href="../docdb/BackupService/createBackup.html">createBackup</a></span><span class="signature">(<wbr>{<span class="parameter" id="createBackup-param-description"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">description</span>, </span><span class="parameter" id="createBackup-param-type"><span class="type-annotation"><a href="../docdb/BackupType.html">BackupType</a></span> <span class="parameter-name">type</span> = <span class="default-value">BackupType.full</span>, </span><span class="parameter" id="createBackup-param-schemaVersion"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">schemaVersion</span>, </span><span class="parameter" id="createBackup-param-metadata"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span>?</span> <span class="parameter-name">metadata</span></span>})
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../docdb/BackupResult-class.html">BackupResult</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates a backup of the current storage state.
+  
+
+</dd>
+
+        <dt id="createMemoryBackup" class="callable">
+  <span class="name"><a href="../docdb/BackupService/createMemoryBackup.html">createMemoryBackup</a></span><span class="signature">(<wbr>{<span class="parameter" id="createMemoryBackup-param-description"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">description</span>, </span><span class="parameter" id="createMemoryBackup-param-schemaVersion"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">schemaVersion</span></span>})
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../docdb/Snapshot-class.html">Snapshot</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates a quick in-memory backup for rollback scenarios.
+  
+
+</dd>
+
+        <dt id="deleteBackup" class="callable">
+  <span class="name"><a href="../docdb/BackupService/deleteBackup.html">deleteBackup</a></span><span class="signature">(<wbr><span class="parameter" id="deleteBackup-param-filePath"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">filePath</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../docdb/BackupResult-class.html">BackupResult</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Deletes a backup file.
+  
+
+</dd>
+
+        <dt id="findLatestBackup" class="callable">
+  <span class="name"><a href="../docdb/BackupService/findLatestBackup.html">findLatestBackup</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../docdb/BackupMetadata-class.html">BackupMetadata</a>?</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Finds the latest backup.
+  
+
+</dd>
+
+        <dt id="initialize" class="callable">
+  <span class="name"><a href="../docdb/BackupService/initialize.html">initialize</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Initializes the backup service.
+  
+
+</dd>
+
+        <dt id="listBackups" class="callable">
+  <span class="name"><a href="../docdb/BackupService/listBackups.html">listBackups</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../docdb/BackupMetadata-class.html">BackupMetadata</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Lists all available backups.
+  
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="restore" class="callable">
+  <span class="name"><a href="../docdb/BackupService/restore.html">restore</a></span><span class="signature">(<wbr><span class="parameter" id="restore-param-filePath"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">filePath</span>, {</span><span class="parameter" id="restore-param-clearExisting"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">clearExisting</span> = <span class="default-value">true</span></span>})
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../docdb/BackupResult-class.html">BackupResult</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Restores storage from a backup file.
+  
+
+</dd>
+
+        <dt id="restoreFromSnapshot" class="callable">
+  <span class="name"><a href="../docdb/BackupService/restoreFromSnapshot.html">restoreFromSnapshot</a></span><span class="signature">(<wbr><span class="parameter" id="restoreFromSnapshot-param-snapshot"><span class="type-annotation"><a href="../docdb/Snapshot-class.html">Snapshot</a></span> <span class="parameter-name">snapshot</span>, {</span><span class="parameter" id="restoreFromSnapshot-param-clearExisting"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">clearExisting</span> = <span class="default-value">true</span></span>})
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Restores storage from an in-memory snapshot.
+  
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="verify" class="callable">
+  <span class="name"><a href="../docdb/BackupService/verify.html">verify</a></span><span class="signature">(<wbr><span class="parameter" id="verify-param-filePath"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">filePath</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../docdb/BackupResult-class.html">BackupResult</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Verifies the integrity of a backup file.
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">docdb</a></li>
+    <li><a href="../docdb/">docdb</a></li>
+    <li class="self-crumb">BackupService<span class="signature">&lt;<wbr><span class="type-parameter">T extends <a href="../docdb/Entity-class.html">Entity</a></span>&gt;</span> class</li>
+</ol>
+
+    <h5>docdb library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    docdb
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

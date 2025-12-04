@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the SecurityConfig class from the docdb library, for the Dart programming language.">
+  <title>SecurityConfig class - docdb library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">docdb</a></li>
+    <li><a href="../docdb/">docdb.dart</a></li>
+    <li class="self-crumb">SecurityConfig class</li>
+  </ol>
+  <div class="self-name">SecurityConfig</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="docdb&#47;docdb-library-sidebar.html"
+    data-below-sidebar="docdb&#47;SecurityConfig-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">SecurityConfig</span> class 
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>Configuration for security-related operations.</p>
+<p>Defines parameters for password hashing, token generation,
+and other security settings.</p>
+</section>
+
+
+    <section>
+      <dl class="dl-horizontal">
+        
+
+        
+        
+
+
+        
+        
+  <dt>Annotations</dt>
+  <dd>
+    <ul class="annotation-list clazz-relationships">
+        <li>@<a href="https://pub.dev/documentation/meta/1.17.0/meta/immutable-constant.html">immutable</a></li>
+    </ul>
+  </dd>
+
+
+      </dl>
+    </section>
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="SecurityConfig.new" class="callable">
+          <span class="name"><a href="../docdb/SecurityConfig/SecurityConfig.html">SecurityConfig</a></span><span class="signature">({<span class="parameter" id="-param-jwtSecret"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">jwtSecret</span>, </span><span class="parameter" id="-param-jwtIssuer"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">jwtIssuer</span> = <span class="default-value">&#39;docdb&#39;</span>, </span><span class="parameter" id="-param-jwtAudience"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">jwtAudience</span>, </span><span class="parameter" id="-param-tokenExpiry"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Duration-class.html">Duration</a></span> <span class="parameter-name">tokenExpiry</span> = <span class="default-value">const Duration(hours: 1)</span>, </span><span class="parameter" id="-param-refreshTokenExpiry"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Duration-class.html">Duration</a></span> <span class="parameter-name">refreshTokenExpiry</span> = <span class="default-value">const Duration(days: 7)</span>, </span><span class="parameter" id="-param-bcryptCost"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span> <span class="parameter-name">bcryptCost</span> = <span class="default-value">10</span>, </span><span class="parameter" id="-param-maxFailedLoginAttempts"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span> <span class="parameter-name">maxFailedLoginAttempts</span> = <span class="default-value">5</span>, </span><span class="parameter" id="-param-lockoutDuration"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Duration-class.html">Duration</a></span> <span class="parameter-name">lockoutDuration</span> = <span class="default-value">const Duration(minutes: 15)</span>, </span><span class="parameter" id="-param-minPasswordLength"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span> <span class="parameter-name">minPasswordLength</span> = <span class="default-value">8</span>, </span><span class="parameter" id="-param-requireMixedCase"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">requireMixedCase</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-requireNumbers"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">requireNumbers</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-requireSpecialChars"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">requireSpecialChars</span> = <span class="default-value">false</span></span>})</span>
+        </dt>
+        <dd>
+          Creates a new <a href="../docdb/SecurityConfig-class.html">SecurityConfig</a>.
+            <div class="constructor-modifier features">const</div>
+        </dd>
+        <dt id="SecurityConfig.development" class="callable">
+          <span class="name"><a href="../docdb/SecurityConfig/SecurityConfig.development.html">SecurityConfig.development</a></span><span class="signature">({<span class="parameter" id="development-param-jwtSecret"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">jwtSecret</span></span>})</span>
+        </dt>
+        <dd>
+          Creates a development configuration with relaxed settings.
+            <div class="constructor-modifier features">factory</div>
+        </dd>
+        <dt id="SecurityConfig.production" class="callable">
+          <span class="name"><a href="../docdb/SecurityConfig/SecurityConfig.production.html">SecurityConfig.production</a></span><span class="signature">({<span class="parameter" id="production-param-jwtSecret"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">jwtSecret</span>, </span><span class="parameter" id="production-param-jwtIssuer"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">jwtIssuer</span> = <span class="default-value">&#39;docdb&#39;</span></span>})</span>
+        </dt>
+        <dd>
+          Creates a production configuration with strict settings.
+            <div class="constructor-modifier features">factory</div>
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="bcryptCost" class="property">
+  <span class="name"><a href="../docdb/SecurityConfig/bcryptCost.html">bcryptCost</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd>
+  BCrypt cost factor for password hashing.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="jwtAudience" class="property">
+  <span class="name"><a href="../docdb/SecurityConfig/jwtAudience.html">jwtAudience</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span>
+  
+
+</dt>
+<dd>
+  Audience claim for JWT tokens.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="jwtIssuer" class="property">
+  <span class="name"><a href="../docdb/SecurityConfig/jwtIssuer.html">jwtIssuer</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  Issuer claim for JWT tokens.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="jwtSecret" class="property">
+  <span class="name"><a href="../docdb/SecurityConfig/jwtSecret.html">jwtSecret</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  Secret key for signing JWT tokens.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="lockoutDuration" class="property">
+  <span class="name"><a href="../docdb/SecurityConfig/lockoutDuration.html">lockoutDuration</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Duration-class.html">Duration</a></span>
+  
+
+</dt>
+<dd>
+  Duration of account lockout after exceeding failed attempts.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="maxFailedLoginAttempts" class="property">
+  <span class="name"><a href="../docdb/SecurityConfig/maxFailedLoginAttempts.html">maxFailedLoginAttempts</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd>
+  Maximum consecutive failed login attempts before lockout.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="minPasswordLength" class="property">
+  <span class="name"><a href="../docdb/SecurityConfig/minPasswordLength.html">minPasswordLength</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd>
+  Minimum password length requirement.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="refreshTokenExpiry" class="property">
+  <span class="name"><a href="../docdb/SecurityConfig/refreshTokenExpiry.html">refreshTokenExpiry</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Duration-class.html">Duration</a></span>
+  
+
+</dt>
+<dd>
+  Duration until refresh tokens expire.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="requireMixedCase" class="property">
+  <span class="name"><a href="../docdb/SecurityConfig/requireMixedCase.html">requireMixedCase</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Whether to require mixed case in passwords.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="requireNumbers" class="property">
+  <span class="name"><a href="../docdb/SecurityConfig/requireNumbers.html">requireNumbers</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Whether to require numbers in passwords.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="requireSpecialChars" class="property">
+  <span class="name"><a href="../docdb/SecurityConfig/requireSpecialChars.html">requireSpecialChars</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Whether to require special characters in passwords.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="tokenExpiry" class="property">
+  <span class="name"><a href="../docdb/SecurityConfig/tokenExpiry.html">tokenExpiry</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Duration-class.html">Duration</a></span>
+  
+
+</dt>
+<dd>
+  Duration until access tokens expire.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="validate" class="callable">
+  <span class="name"><a href="../docdb/SecurityConfig/validate.html">validate</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Validates that the configuration is secure.
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">docdb</a></li>
+    <li><a href="../docdb/">docdb</a></li>
+    <li class="self-crumb">SecurityConfig class</li>
+</ol>
+
+    <h5>docdb library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    docdb
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

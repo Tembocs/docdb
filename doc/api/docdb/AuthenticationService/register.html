@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the register method from the AuthenticationService class, for the Dart programming language.">
+  <title>register method - AuthenticationService class - docdb library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">docdb</a></li>
+    <li><a href="../../docdb/">docdb.dart</a></li>
+    <li><a href="../../docdb/AuthenticationService-class.html">AuthenticationService</a></li>
+    <li class="self-crumb">register method</li>
+  </ol>
+  <div class="self-name">register</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="docdb&#47;AuthenticationService-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">register</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../docdb/User-class.html">User</a></span>&gt;</span></span>
+<span class="name ">register</span>(<wbr>{<ol class="parameter-list"> <li><span class="parameter" id="register-param-username"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">username</span>, </span></li>
+<li><span class="parameter" id="register-param-password"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">password</span>, </span></li>
+<li><span class="parameter" id="register-param-email"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">email</span>, </span></li>
+<li><span class="parameter" id="register-param-roles"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span>?</span> <span class="parameter-name">roles</span>, </span></li>
+<li><span class="parameter" id="register-param-displayName"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">displayName</span>, </span></li>
+<li><span class="parameter" id="register-param-metadata"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span>?</span> <span class="parameter-name">metadata</span>, </span></li>
+</ol>})
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Registers a new user.</p>
+<h2 id="parameters">Parameters</h2>
+<ul>
+<li><code>username</code>: Unique username for login.</li>
+<li><code>password</code>: Plain text password (will be hashed).</li>
+<li><code>email</code>: Optional email address.</li>
+<li><code>roles</code>: List of role names to assign.</li>
+<li><code>displayName</code>: Optional display name.</li>
+<li><code>metadata</code>: Optional additional data.</li>
+</ul>
+<h2 id="returns">Returns</h2>
+<p>The created <a href="../../docdb/User-class.html">User</a> entity.</p>
+<h2 id="throws">Throws</h2>
+<ul>
+<li><a href="../../docdb/UserAlreadyExistsException-class.html">UserAlreadyExistsException</a>: If username or email already exists.</li>
+<li><a href="../../docdb/UndefinedRoleException-class.html">UndefinedRoleException</a>: If any role is not defined.</li>
+<li><a href="../../docdb/AuthenticationException-class.html">AuthenticationException</a>: If password validation fails.</li>
+</ul>
+<h2 id="example">Example</h2>
+<pre class="language-dart"><code class="language-dart">final user = await auth.register(
+  username: 'john.doe',
+  password: 'SecurePass123!',
+  email: 'john@example.com',
+  roles: ['user'],
+);
+</code></pre>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Future&lt;User&gt; register({
+  required String username,
+  required String password,
+  String? email,
+  List&lt;String&gt;? roles,
+  String? displayName,
+  Map&lt;String, dynamic&gt;? metadata,
+}) async {
+  _checkInitialized();
+
+  return await _userLock.synchronized(() async {
+    &#47;&#47; Validate username format
+    _validateUsername(username);
+
+    &#47;&#47; Check for existing username
+    final existingByUsername = await _users.findOne(
+      QueryBuilder().whereEquals(&#39;username&#39;, username).build(),
+    );
+    if (existingByUsername != null) {
+      throw const UserAlreadyExistsException(&#39;Username already exists&#39;);
+    }
+
+    &#47;&#47; Check for existing email if provided
+    if (email != null &amp;&amp; email.isNotEmpty) {
+      _validateEmail(email);
+      final existingByEmail = await _users.findOne(
+        QueryBuilder().whereEquals(&#39;email&#39;, email).build(),
+      );
+      if (existingByEmail != null) {
+        throw const UserAlreadyExistsException(&#39;Email already exists&#39;);
+      }
+    }
+
+    &#47;&#47; Validate password
+    final passwordValidation = _security.validatePassword(password);
+    if (!passwordValidation.isValid) {
+      throw AuthenticationException(
+        &#39;Password validation failed: ${passwordValidation.errors.join(&quot;, &quot;)}&#39;,
+      );
+    }
+
+    &#47;&#47; Validate roles
+    final userRoles = roles ?? [defaultRole];
+    for (final role in userRoles) {
+      if (!_roleManager.isRoleDefined(role)) {
+        throw UndefinedRoleException(&#39;Undefined role: $role&#39;);
+      }
+    }
+
+    &#47;&#47; Create user
+    final user = User(
+      id: _uuid.v4(),
+      username: username,
+      email: email,
+      passwordHash: _security.hashPassword(password),
+      roles: userRoles,
+      status: UserStatus.active,
+      displayName: displayName,
+      passwordChangedAt: DateTime.now(),
+      metadata: metadata,
+    );
+
+    await _users.insert(user);
+    _logger.info(&#39;User registered: ${user.username}&#39;);
+
+    return user;
+  });
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">docdb</a></li>
+    <li><a href="../../docdb/">docdb</a></li>
+    <li><a href="../../docdb/AuthenticationService-class.html">AuthenticationService</a></li>
+    <li class="self-crumb">register method</li>
+</ol>
+
+    <h5>AuthenticationService class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    docdb
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the generateToken method from the SecurityService class, for the Dart programming language.">
+  <title>generateToken method - SecurityService class - docdb library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">docdb</a></li>
+    <li><a href="../../docdb/">docdb.dart</a></li>
+    <li><a href="../../docdb/SecurityService-class.html">SecurityService</a></li>
+    <li class="self-crumb">generateToken method</li>
+  </ol>
+  <div class="self-name">generateToken</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="docdb&#47;SecurityService-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">generateToken</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+<span class="name ">generateToken</span>(<wbr>{<ol class="parameter-list"> <li><span class="parameter" id="generateToken-param-userId"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">userId</span>, </span></li>
+<li><span class="parameter" id="generateToken-param-roles"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span> <span class="parameter-name">roles</span>, </span></li>
+<li><span class="parameter" id="generateToken-param-additionalClaims"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span>?</span> <span class="parameter-name">additionalClaims</span>, </span></li>
+</ol>})
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Generates a JWT access token.</p>
+<h2 id="parameters">Parameters</h2>
+<ul>
+<li><code>userId</code>: The user's unique identifier (becomes 'sub' claim).</li>
+<li><code>roles</code>: List of role names for the user.</li>
+<li><code>additionalClaims</code>: Optional additional JWT claims.</li>
+</ul>
+<h2 id="returns">Returns</h2>
+<p>A signed JWT token string.</p>
+<h2 id="throws">Throws</h2>
+<ul>
+<li><a href="../../docdb/JWTTokenException-class.html">JWTTokenException</a>: If token generation fails.</li>
+</ul>
+<h2 id="example">Example</h2>
+<pre class="language-dart"><code class="language-dart">final token = security.generateToken(
+  userId: 'user-123',
+  roles: ['user', 'admin'],
+);
+</code></pre>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">String generateToken({
+  required String userId,
+  required List&lt;String&gt; roles,
+  Map&lt;String, dynamic&gt;? additionalClaims,
+}) {
+  if (userId.isEmpty) {
+    throw const JWTTokenException(&#39;User ID cannot be empty&#39;);
+  }
+
+  try {
+    final payload = &lt;String, dynamic&gt;{
+      &#39;sub&#39;: userId,
+      &#39;roles&#39;: roles,
+      if (additionalClaims != null) ...additionalClaims,
+    };
+
+    final jwt = JWT(
+      payload,
+      issuer: _config.jwtIssuer,
+      jwtId: _generateJwtId(),
+    );
+
+    final token = jwt.sign(
+      SecretKey(_config.jwtSecret),
+      expiresIn: _config.tokenExpiry,
+    );
+
+    _logger.debug(&#39;Generated access token for user: $userId&#39;);
+    return token;
+  } catch (e, stackTrace) {
+    _logger.error(&#39;Failed to generate token&#39;, e, stackTrace);
+    throw JWTTokenException(&#39;Failed to generate token: $e&#39;, cause: e);
+  }
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">docdb</a></li>
+    <li><a href="../../docdb/">docdb</a></li>
+    <li><a href="../../docdb/SecurityService-class.html">SecurityService</a></li>
+    <li class="self-crumb">generateToken method</li>
+</ol>
+
+    <h5>SecurityService class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    docdb
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

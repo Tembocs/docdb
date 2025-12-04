@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the rangeSearch method from the BTreeIndex class, for the Dart programming language.">
+  <title>rangeSearch method - BTreeIndex class - docdb library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">docdb</a></li>
+    <li><a href="../../docdb/">docdb.dart</a></li>
+    <li><a href="../../docdb/BTreeIndex-class.html">BTreeIndex</a></li>
+    <li class="self-crumb">rangeSearch method</li>
+  </ol>
+  <div class="self-name">rangeSearch</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="docdb&#47;BTreeIndex-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">rangeSearch</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span>
+<span class="name ">rangeSearch</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="rangeSearch-param-lowerBound"><span class="type-annotation">dynamic</span> <span class="parameter-name">lowerBound</span>, </span></li>
+<li><span class="parameter" id="rangeSearch-param-upperBound"><span class="type-annotation">dynamic</span> <span class="parameter-name">upperBound</span>, {</span></li>
+<li><span class="parameter" id="rangeSearch-param-includeLower"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">includeLower</span> = <span class="default-value">true</span>, </span></li>
+<li><span class="parameter" id="rangeSearch-param-includeUpper"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">includeUpper</span> = <span class="default-value">false</span>, </span></li>
+</ol>})
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Performs a range search between <code>lowerBound</code> and <code>upperBound</code>.</p>
+<p>Returns entity IDs whose indexed values fall within the specified range.</p>
+<ul>
+<li><code>lowerBound</code>: The lower bound (inclusive). If null, starts from minimum.</li>
+<li><code>upperBound</code>: The upper bound (exclusive). If null, extends to maximum.</li>
+<li><code>includeLower</code>: Whether to include <code>lowerBound</code> in results (default: true).</li>
+<li><code>includeUpper</code>: Whether to include <code>upperBound</code> in results (default: false).</li>
+</ul>
+<p>Returns a list of matching entity IDs.</p>
+<h2 id="example">Example</h2>
+<pre class="language-dart"><code class="language-dart">// Find entities with age between 18 (inclusive) and 65 (exclusive)
+final adults = index.rangeSearch(18, 65);
+
+// Find entities with age &gt;= 21
+final over21 = index.rangeSearch(21, null);
+
+// Find entities with age &lt; 18
+final minors = index.rangeSearch(null, 18);
+</code></pre>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">List&lt;String&gt; rangeSearch(
+  dynamic lowerBound,
+  dynamic upperBound, {
+  bool includeLower = true,
+  bool includeUpper = false,
+}) {
+  final result = &lt;String&gt;{};
+
+  for (final entry in _index.entries) {
+    final key = entry.key;
+    final entityIds = entry.value;
+
+    &#47;&#47; Check lower bound
+    bool withinLower;
+    if (lowerBound == null) {
+      withinLower = true;
+    } else {
+      final comparison = Comparable.compare(key, lowerBound);
+      withinLower = includeLower ? comparison &gt;= 0 : comparison &gt; 0;
+    }
+
+    &#47;&#47; Check upper bound
+    bool withinUpper;
+    if (upperBound == null) {
+      withinUpper = true;
+    } else {
+      final comparison = Comparable.compare(key, upperBound);
+      withinUpper = includeUpper ? comparison &lt;= 0 : comparison &lt; 0;
+    }
+
+    if (withinLower &amp;&amp; withinUpper) {
+      result.addAll(entityIds);
+    }
+  }
+
+  return result.toList();
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">docdb</a></li>
+    <li><a href="../../docdb/">docdb</a></li>
+    <li><a href="../../docdb/BTreeIndex-class.html">BTreeIndex</a></li>
+    <li class="self-crumb">rangeSearch method</li>
+</ol>
+
+    <h5>BTreeIndex class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    docdb
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

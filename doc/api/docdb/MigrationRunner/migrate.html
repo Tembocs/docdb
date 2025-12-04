@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the migrate method from the MigrationRunner class, for the Dart programming language.">
+  <title>migrate method - MigrationRunner class - docdb library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">docdb</a></li>
+    <li><a href="../../docdb/">docdb.dart</a></li>
+    <li><a href="../../docdb/MigrationRunner-class.html">MigrationRunner<span class="signature">&lt;<wbr><span class="type-parameter">T extends Entity</span>&gt;</span></a></li>
+    <li class="self-crumb">migrate method</li>
+  </ol>
+  <div class="self-name">migrate</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="docdb&#47;MigrationRunner-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">migrate</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../docdb/MigrationLog-class.html">MigrationLog</a></span>&gt;</span></span>
+<span class="name ">migrate</span>(<wbr>)
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Performs the migration from current to target version.</p>
+<p>Returns a <a href="../../docdb/MigrationLog-class.html">MigrationLog</a> with the result of the migration.</p>
+<p>Throws <a href="../../docdb/MigrationException-class.html">MigrationException</a> if migration fails and cannot be rolled back.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Future&lt;MigrationLog&gt; migrate() async {
+  if (_currentVersion == null) {
+    await _loadCurrentVersion();
+  }
+
+  final fromVersion = _currentVersion!;
+  final stopwatch = Stopwatch()..start();
+
+  _logger.info(
+    jsonEncode({
+      &#39;event&#39;: &#39;migration_start&#39;,
+      &#39;from&#39;: fromVersion,
+      &#39;to&#39;: targetVersion,
+    }),
+  );
+
+  &#47;&#47; Skip if already at target version
+  if (fromVersion == targetVersion) {
+    final log = MigrationLog.skipped(
+      fromVersion: fromVersion,
+      toVersion: targetVersion,
+      reason: &#39;Already at target version&#39;,
+    );
+    _history.add(log);
+    return log;
+  }
+
+  &#47;&#47; Get migration path
+  List&lt;MigrationStep&gt; steps;
+  try {
+    steps = _buildMigrationPath(fromVersion, targetVersion);
+  } catch (e) {
+    final log = MigrationLog.failed(
+      fromVersion: fromVersion,
+      toVersion: targetVersion,
+      error: &#39;Failed to build migration path: $e&#39;,
+    );
+    _history.add(log);
+    throw MigrationException(
+      &#39;No migration path from $fromVersion to $targetVersion&#39;,
+    );
+  }
+
+  &#47;&#47; Create backup if configured
+  Snapshot? backupSnapshot;
+  if (_config.createBackupBeforeMigration) {
+    backupSnapshot = await _createBackup(fromVersion);
+  }
+
+  &#47;&#47; Load all entity data
+  Map&lt;String, Map&lt;String, dynamic&gt;&gt; entities;
+  try {
+    entities = await _storage.getAll();
+    &#47;&#47; Remove metadata entries
+    entities.remove(&#39;__schema_version__&#39;);
+    entities.remove(&#39;__migration_history__&#39;);
+  } catch (e) {
+    final log = MigrationLog.failed(
+      fromVersion: fromVersion,
+      toVersion: targetVersion,
+      error: &#39;Failed to load entities: $e&#39;,
+      durationMs: stopwatch.elapsedMilliseconds,
+    );
+    _history.add(log);
+    throw MigrationException(&#39;Failed to load entities for migration: $e&#39;);
+  }
+
+  &#47;&#47; Execute migration steps
+  try {
+    for (final step in steps) {
+      _logger.info(
+        jsonEncode({
+          &#39;event&#39;: &#39;migration_step&#39;,
+          &#39;description&#39;: step.description,
+          &#39;from&#39;: step.sourceVersion,
+          &#39;to&#39;: step.targetVersion,
+        }),
+      );
+
+      entities = await step.execute(entities);
+
+      if (_config.validateAfterEachStep) {
+        _validateMigratedData(entities);
+      }
+    }
+
+    &#47;&#47; Save migrated entities
+    await _saveMigratedEntities(entities);
+
+    &#47;&#47; Update version
+    _currentVersion = targetVersion;
+    await _saveCurrentVersion();
+
+    stopwatch.stop();
+
+    final log = MigrationLog.success(
+      fromVersion: fromVersion,
+      toVersion: targetVersion,
+      durationMs: stopwatch.elapsedMilliseconds,
+      entitiesAffected: entities.length,
+    );
+    _history.add(log);
+    await _persistHistory();
+
+    _logger.info(
+      jsonEncode({
+        &#39;event&#39;: &#39;migration_complete&#39;,
+        &#39;from&#39;: fromVersion,
+        &#39;to&#39;: targetVersion,
+        &#39;entities&#39;: entities.length,
+        &#39;durationMs&#39;: stopwatch.elapsedMilliseconds,
+      }),
+    );
+
+    return log;
+  } catch (e, stack) {
+    stopwatch.stop();
+
+    _logger.error(
+      jsonEncode({&#39;event&#39;: &#39;migration_failed&#39;, &#39;error&#39;: e.toString()}),
+    );
+
+    &#47;&#47; Attempt rollback
+    if (backupSnapshot != null) {
+      await _restoreBackup(backupSnapshot);
+    }
+
+    final log = MigrationLog.failed(
+      fromVersion: fromVersion,
+      toVersion: targetVersion,
+      error: e.toString(),
+      stackTrace: stack.toString(),
+      durationMs: stopwatch.elapsedMilliseconds,
+    );
+    _history.add(log);
+    await _persistHistory();
+
+    throw MigrationException(
+      &#39;Migration failed: $e&#39;,
+      cause: e,
+      stackTrace: stack,
+    );
+  }
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">docdb</a></li>
+    <li><a href="../../docdb/">docdb</a></li>
+    <li><a href="../../docdb/MigrationRunner-class.html">MigrationRunner<span class="signature">&lt;<wbr><span class="type-parameter">T extends Entity</span>&gt;</span></a></li>
+    <li class="self-crumb">migrate method</li>
+</ol>
+
+    <h5>MigrationRunner class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    docdb
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

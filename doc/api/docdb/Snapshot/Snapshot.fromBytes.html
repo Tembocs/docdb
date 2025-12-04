@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the Snapshot.fromBytes constructor from Class Snapshot from the docdb library, for the Dart programming language.">
+  <title>Snapshot.fromBytes constructor - Snapshot - docdb library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">docdb</a></li>
+    <li><a href="../../docdb/">docdb.dart</a></li>
+    <li><a href="../../docdb/Snapshot-class.html">Snapshot</a></li>
+    <li class="self-crumb">Snapshot.fromBytes factory constructor</li>
+  </ol>
+  <div class="self-name">Snapshot.fromBytes</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="docdb&#47;Snapshot-class-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-constructor">Snapshot.fromBytes</span> constructor 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+      <span class="name ">Snapshot.fromBytes</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="fromBytes-param-bytes"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-typed_data/Uint8List-class.html">Uint8List</a></span> <span class="parameter-name">bytes</span></span></li>
+</ol>)
+    </section>
+    
+<section class="desc markdown">
+  <p>Deserializes a snapshot from raw bytes.</p>
+<p>The bytes should have been created by <a href="../../docdb/Snapshot/toBytes.html">toBytes</a>.</p>
+<p>Throws <a href="https://api.flutter.dev/flutter/dart-core/FormatException-class.html">FormatException</a> if the bytes are invalid or corrupted.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">factory Snapshot.fromBytes(Uint8List bytes) {
+  try {
+    &#47;&#47; Read header
+    final view = ByteData.view(bytes.buffer, bytes.offsetInBytes);
+    var offset = 0;
+
+    &#47;&#47; Magic number (4 bytes)
+    final magic = view.getUint32(offset, Endian.big);
+    offset += 4;
+    if (magic != _magicNumber) {
+      throw FormatException(&#39;Invalid snapshot format: bad magic number&#39;);
+    }
+
+    &#47;&#47; Version (1 byte)
+    final formatVersion = view.getUint8(offset);
+    offset += 1;
+    if (formatVersion != _formatVersion) {
+      throw FormatException(
+        &#39;Unsupported snapshot format version: $formatVersion&#39;,
+      );
+    }
+
+    &#47;&#47; Flags (1 byte)
+    final flags = view.getUint8(offset);
+    offset += 1;
+    final compressed = (flags &amp; 0x01) != 0;
+
+    &#47;&#47; Timestamp (8 bytes)
+    final timestampMs = view.getInt64(offset, Endian.big);
+    offset += 8;
+    final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMs);
+
+    &#47;&#47; Entity count (4 bytes)
+    final entityCount = view.getUint32(offset, Endian.big);
+    offset += 4;
+
+    &#47;&#47; Checksum length (2 bytes) + checksum
+    final checksumLength = view.getUint16(offset, Endian.big);
+    offset += 2;
+    final checksumBytes = bytes.sublist(offset, offset + checksumLength);
+    final checksum = utf8.decode(checksumBytes);
+    offset += checksumLength;
+
+    &#47;&#47; Metadata length (4 bytes) + metadata
+    final metadataLength = view.getUint32(offset, Endian.big);
+    offset += 4;
+    Map&lt;String, dynamic&gt; metadata = {};
+    String? id;
+    String? version;
+    String? description;
+    if (metadataLength &gt; 0) {
+      final metadataBytes = bytes.sublist(offset, offset + metadataLength);
+      final metadataJson = utf8.decode(metadataBytes);
+      final decodedMeta = jsonDecode(metadataJson) as Map&lt;String, dynamic&gt;;
+      id = decodedMeta[&#39;id&#39;] as String?;
+      version = decodedMeta[&#39;version&#39;] as String?;
+      description = decodedMeta[&#39;description&#39;] as String?;
+      metadata = (decodedMeta[&#39;metadata&#39;] as Map&lt;String, dynamic&gt;?) ?? {};
+    }
+    offset += metadataLength;
+
+    &#47;&#47; Data (remaining bytes)
+    final data = Uint8List.fromList(bytes.sublist(offset));
+
+    return Snapshot(
+      id: id,
+      timestamp: timestamp,
+      data: data,
+      checksum: checksum,
+      compressed: compressed,
+      version: version,
+      entityCount: entityCount,
+      description: description,
+      metadata: metadata,
+    );
+  } catch (e) {
+    if (e is FormatException) rethrow;
+    throw FormatException(&#39;Failed to parse snapshot: $e&#39;);
+  }
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">docdb</a></li>
+    <li><a href="../../docdb/">docdb</a></li>
+    <li><a href="../../docdb/Snapshot-class.html">Snapshot</a></li>
+    <li class="self-crumb">Snapshot.fromBytes factory constructor</li>
+</ol>
+
+    <h5>Snapshot class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    docdb
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

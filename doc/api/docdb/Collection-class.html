@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the Collection class from the docdb library, for the Dart programming language.">
+  <title>Collection class - docdb library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">docdb</a></li>
+    <li><a href="../docdb/">docdb.dart</a></li>
+    <li class="self-crumb">Collection<span class="signature">&lt;<wbr><span class="type-parameter">T extends <a href="../docdb/Entity-class.html">Entity</a></span>&gt;</span> class</li>
+  </ol>
+  <div class="self-name">Collection</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="docdb&#47;docdb-library-sidebar.html"
+    data-below-sidebar="docdb&#47;Collection-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">Collection&lt;<wbr><span class="type-parameter">T extends Entity</span>&gt;</span> class 
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>A type-safe collection of entities with indexing and query support.</p>
+<p><a href="../docdb/Collection-class.html">Collection</a> provides the primary interface for storing and retrieving
+entities in DocDB. It wraps a <a href="../docdb/Storage-class.html">Storage</a> backend and adds:</p>
+<ul>
+<li>Type-safe operations with automatic serialization/deserialization</li>
+<li>Index management for efficient queries</li>
+<li>Optimistic concurrency control with version tracking</li>
+<li>Thread-safe operations with fine-grained locking</li>
+</ul>
+<h2 id="type-parameters">Type Parameters</h2>
+<ul>
+<li><code>T</code>: The entity type. Must implement <a href="../docdb/Entity-class.html">Entity</a>.</li>
+</ul>
+<h2 id="usage">Usage</h2>
+<pre class="language-dart"><code class="language-dart">final products = Collection&lt;Product&gt;(
+  storage: storage,
+  fromMap: Product.fromMap,
+  name: 'products',
+);
+
+// All operations are type-safe
+await products.insert(Product(name: 'Widget', price: 29.99));
+final product = await products.get('prod-1'); // Returns Product?
+final all = await products.find(AllQuery()); // Returns List&lt;Product&gt;
+</code></pre>
+<h2 id="thread-safety">Thread Safety</h2>
+<p>All public methods are thread-safe and use internal locking to prevent
+concurrent modification issues. The locking strategy is:</p>
+<ul>
+<li>Collection-level lock for schema changes (index creation/removal)</li>
+<li>Entity-level locks for individual entity operations</li>
+</ul>
+<h2 id="memory-management">Memory Management</h2>
+<p>Entity locks are automatically cleaned up when <a href="../docdb/Collection/dispose.html">dispose</a> is called.
+For long-running applications, consider periodic cleanup of stale locks.</p>
+</section>
+
+
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="Collection.new" class="callable">
+          <span class="name"><a href="../docdb/Collection/Collection.html">Collection</a></span><span class="signature">({<span class="parameter" id="-param-storage"><span>required</span> <span class="type-annotation"><a href="../docdb/Storage-class.html">Storage</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">storage</span>, </span><span class="parameter" id="-param-fromMap"><span>required</span> <span class="type-annotation"><a href="../docdb/EntityFromMap.html">EntityFromMap</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">fromMap</span>, </span><span class="parameter" id="-param-name"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span></span>})</span>
+        </dt>
+        <dd>
+          Creates a new collection backed by the given storage.
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="count" class="property">
+  <span class="name"><a href="../docdb/Collection/count.html">count</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  The number of entities in the collection.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="indexCount" class="property">
+  <span class="name"><a href="../docdb/Collection/indexCount.html">indexCount</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd>
+  The number of indexes on this collection.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="indexedFields" class="property">
+  <span class="name"><a href="../docdb/Collection/indexedFields.html">indexedFields</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  The list of indexed fields.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="name" class="property">
+  <span class="name"><a href="../docdb/Collection/name.html">name</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  The collection name.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="storage" class="property">
+  <span class="name"><a href="../docdb/Collection/storage.html">storage</a></span>
+  <span class="signature">&#8594; <a href="../docdb/Storage-class.html">Storage</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  The underlying storage backend.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="clearAllIndexEntries" class="callable">
+  <span class="name"><a href="../docdb/Collection/clearAllIndexEntries.html">clearAllIndexEntries</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Clears all indexes without removing them.
+  
+
+</dd>
+
+        <dt id="countWhere" class="callable">
+  <span class="name"><a href="../docdb/Collection/countWhere.html">countWhere</a></span><span class="signature">(<wbr>[<span class="parameter" id="countWhere-param-query"><span class="type-annotation"><a href="../docdb/IQuery-class.html">IQuery</a>?</span> <span class="parameter-name">query</span></span>])
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Counts entities matching the query.
+  
+
+</dd>
+
+        <dt id="createIndex" class="callable">
+  <span class="name"><a href="../docdb/Collection/createIndex.html">createIndex</a></span><span class="signature">(<wbr><span class="parameter" id="createIndex-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="createIndex-param-indexType"><span class="type-annotation"><a href="../docdb/IndexType.html">IndexType</a></span> <span class="parameter-name">indexType</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates an index on the specified field.
+  
+
+</dd>
+
+        <dt id="delete" class="callable">
+  <span class="name"><a href="../docdb/Collection/delete.html">delete</a></span><span class="signature">(<wbr><span class="parameter" id="delete-param-id"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">id</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Deletes an entity by ID.
+  
+
+</dd>
+
+        <dt id="deleteAll" class="callable">
+  <span class="name"><a href="../docdb/Collection/deleteAll.html">deleteAll</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Deletes all entities in the collection.
+  
+
+</dd>
+
+        <dt id="deleteMany" class="callable">
+  <span class="name"><a href="../docdb/Collection/deleteMany.html">deleteMany</a></span><span class="signature">(<wbr><span class="parameter" id="deleteMany-param-ids"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span> <span class="parameter-name">ids</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Deletes multiple entities by their IDs.
+  
+
+</dd>
+
+        <dt id="deleteOrThrow" class="callable">
+  <span class="name"><a href="../docdb/Collection/deleteOrThrow.html">deleteOrThrow</a></span><span class="signature">(<wbr><span class="parameter" id="deleteOrThrow-param-id"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">id</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Deletes an entity by ID, throwing if not found.
+  
+
+</dd>
+
+        <dt id="dispose" class="callable">
+  <span class="name"><a href="../docdb/Collection/dispose.html">dispose</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Disposes of the collection and releases resources.
+  
+
+</dd>
+
+        <dt id="exists" class="callable">
+  <span class="name"><a href="../docdb/Collection/exists.html">exists</a></span><span class="signature">(<wbr><span class="parameter" id="exists-param-id"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">id</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if an entity with the given ID exists.
+  
+
+</dd>
+
+        <dt id="find" class="callable">
+  <span class="name"><a href="../docdb/Collection/find.html">find</a></span><span class="signature">(<wbr><span class="parameter" id="find-param-query"><span class="type-annotation"><a href="../docdb/IQuery-class.html">IQuery</a></span> <span class="parameter-name">query</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Finds entities matching the given query.
+  
+
+</dd>
+
+        <dt id="findOne" class="callable">
+  <span class="name"><a href="../docdb/Collection/findOne.html">findOne</a></span><span class="signature">(<wbr><span class="parameter" id="findOne-param-query"><span class="type-annotation"><a href="../docdb/IQuery-class.html">IQuery</a></span> <span class="parameter-name">query</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">T?</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Finds a single entity matching the query.
+  
+
+</dd>
+
+        <dt id="findOneOrThrow" class="callable">
+  <span class="name"><a href="../docdb/Collection/findOneOrThrow.html">findOneOrThrow</a></span><span class="signature">(<wbr><span class="parameter" id="findOneOrThrow-param-query"><span class="type-annotation"><a href="../docdb/IQuery-class.html">IQuery</a></span> <span class="parameter-name">query</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Finds a single entity matching the query, throwing if not found.
+  
+
+</dd>
+
+        <dt id="flush" class="callable">
+  <span class="name"><a href="../docdb/Collection/flush.html">flush</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Flushes any pending writes to storage.
+  
+
+</dd>
+
+        <dt id="get" class="callable">
+  <span class="name"><a href="../docdb/Collection/get.html">get</a></span><span class="signature">(<wbr><span class="parameter" id="get-param-id"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">id</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">T?</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Retrieves an entity by its ID.
+  
+
+</dd>
+
+        <dt id="getAll" class="callable">
+  <span class="name"><a href="../docdb/Collection/getAll.html">getAll</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Retrieves all entities in the collection.
+  
+
+</dd>
+
+        <dt id="getMany" class="callable">
+  <span class="name"><a href="../docdb/Collection/getMany.html">getMany</a></span><span class="signature">(<wbr><span class="parameter" id="getMany-param-ids"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span> <span class="parameter-name">ids</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">T</span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Retrieves multiple entities by their IDs.
+  
+
+</dd>
+
+        <dt id="getOrThrow" class="callable">
+  <span class="name"><a href="../docdb/Collection/getOrThrow.html">getOrThrow</a></span><span class="signature">(<wbr><span class="parameter" id="getOrThrow-param-id"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">id</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Retrieves an entity by its ID, throwing if not found.
+  
+
+</dd>
+
+        <dt id="hasIndex" class="callable">
+  <span class="name"><a href="../docdb/Collection/hasIndex.html">hasIndex</a></span><span class="signature">(<wbr><span class="parameter" id="hasIndex-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if an index exists on the specified field.
+  
+
+</dd>
+
+        <dt id="hasIndexOfType" class="callable">
+  <span class="name"><a href="../docdb/Collection/hasIndexOfType.html">hasIndexOfType</a></span><span class="signature">(<wbr><span class="parameter" id="hasIndexOfType-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="hasIndexOfType-param-indexType"><span class="type-annotation"><a href="../docdb/IndexType.html">IndexType</a></span> <span class="parameter-name">indexType</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if an index of the specified type exists on the field.
+  
+
+</dd>
+
+        <dt id="insert" class="callable">
+  <span class="name"><a href="../docdb/Collection/insert.html">insert</a></span><span class="signature">(<wbr><span class="parameter" id="insert-param-entity"><span class="type-annotation">T</span> <span class="parameter-name">entity</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Inserts a new entity into the collection.
+  
+
+</dd>
+
+        <dt id="insertMany" class="callable">
+  <span class="name"><a href="../docdb/Collection/insertMany.html">insertMany</a></span><span class="signature">(<wbr><span class="parameter" id="insertMany-param-entities"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">entities</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Inserts multiple entities in a batch operation.
+  
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="rebuildAllIndexes" class="callable">
+  <span class="name"><a href="../docdb/Collection/rebuildAllIndexes.html">rebuildAllIndexes</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Rebuilds all indexes from current storage state.
+  
+
+</dd>
+
+        <dt id="removeAllIndexes" class="callable">
+  <span class="name"><a href="../docdb/Collection/removeAllIndexes.html">removeAllIndexes</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes all indexes from the collection.
+  
+
+</dd>
+
+        <dt id="removeIndex" class="callable">
+  <span class="name"><a href="../docdb/Collection/removeIndex.html">removeIndex</a></span><span class="signature">(<wbr><span class="parameter" id="removeIndex-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes the index on the specified field.
+  
+
+</dd>
+
+        <dt id="stream" class="callable">
+  <span class="name"><a href="../docdb/Collection/stream.html">stream</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Stream-class.html">Stream</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Streams all entities in the collection.
+  
+
+</dd>
+
+        <dt id="toString" class="callable">
+  <span class="name"><a href="../docdb/Collection/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  A string representation of this object.
+  <div class="features"><span class="feature">override</span></div>
+
+</dd>
+
+        <dt id="update" class="callable">
+  <span class="name"><a href="../docdb/Collection/update.html">update</a></span><span class="signature">(<wbr><span class="parameter" id="update-param-entity"><span class="type-annotation">T</span> <span class="parameter-name">entity</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Updates an existing entity.
+  
+
+</dd>
+
+        <dt id="updateWhere" class="callable">
+  <span class="name"><a href="../docdb/Collection/updateWhere.html">updateWhere</a></span><span class="signature">(<wbr><span class="parameter" id="updateWhere-param-id"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">id</span>, </span><span class="parameter" id="updateWhere-param-modifier"><span class="type-annotation">T</span> <span class="parameter-name">modifier</span>(<span class="parameter" id="param-current"><span class="type-annotation">T</span> <span class="parameter-name">current</span></span>)</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Updates an entity by ID with a modifier function.
+  
+
+</dd>
+
+        <dt id="upsert" class="callable">
+  <span class="name"><a href="../docdb/Collection/upsert.html">upsert</a></span><span class="signature">(<wbr><span class="parameter" id="upsert-param-entity"><span class="type-annotation">T</span> <span class="parameter-name">entity</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Inserts or updates an entity.
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">docdb</a></li>
+    <li><a href="../docdb/">docdb</a></li>
+    <li class="self-crumb">Collection<span class="signature">&lt;<wbr><span class="type-parameter">T extends <a href="../docdb/Entity-class.html">Entity</a></span>&gt;</span> class</li>
+</ol>
+
+    <h5>docdb library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    docdb
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

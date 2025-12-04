@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the toBytes method from the Snapshot class, for the Dart programming language.">
+  <title>toBytes method - Snapshot class - docdb library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">docdb</a></li>
+    <li><a href="../../docdb/">docdb.dart</a></li>
+    <li><a href="../../docdb/Snapshot-class.html">Snapshot</a></li>
+    <li class="self-crumb">toBytes method</li>
+  </ol>
+  <div class="self-name">toBytes</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="docdb&#47;Snapshot-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">toBytes</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="https://api.flutter.dev/flutter/dart-typed_data/Uint8List-class.html">Uint8List</a></span>
+<span class="name ">toBytes</span>(<wbr>)
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Serializes this snapshot to bytes for file storage.</p>
+<p>The resulting bytes can be restored using <a href="../../docdb/Snapshot/Snapshot.fromBytes.html">Snapshot.fromBytes</a>.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Uint8List toBytes() {
+  &#47;&#47; Prepare metadata
+  final metadataMap = {
+    if (id != null) &#39;id&#39;: id,
+    if (version != null) &#39;version&#39;: version,
+    if (description != null) &#39;description&#39;: description,
+    if (metadata.isNotEmpty) &#39;metadata&#39;: metadata,
+  };
+  final metadataBytes = metadataMap.isNotEmpty
+      ? Uint8List.fromList(utf8.encode(jsonEncode(metadataMap)))
+      : Uint8List(0);
+
+  final checksumBytes = Uint8List.fromList(utf8.encode(checksum));
+
+  &#47;&#47; Calculate total size
+  final headerSize =
+      4 + &#47;&#47; magic
+      1 + &#47;&#47; format version
+      1 + &#47;&#47; flags
+      8 + &#47;&#47; timestamp
+      4 + &#47;&#47; entity count
+      2 + &#47;&#47; checksum length
+      checksumBytes.length +
+      4 + &#47;&#47; metadata length
+      metadataBytes.length;
+
+  final totalSize = headerSize + data.length;
+  final buffer = Uint8List(totalSize);
+  final view = ByteData.view(buffer.buffer);
+
+  var offset = 0;
+
+  &#47;&#47; Write magic number
+  view.setUint32(offset, _magicNumber, Endian.big);
+  offset += 4;
+
+  &#47;&#47; Write format version
+  view.setUint8(offset, _formatVersion);
+  offset += 1;
+
+  &#47;&#47; Write flags
+  var flags = 0;
+  if (compressed) flags |= 0x01;
+  view.setUint8(offset, flags);
+  offset += 1;
+
+  &#47;&#47; Write timestamp
+  view.setInt64(offset, timestamp.millisecondsSinceEpoch, Endian.big);
+  offset += 8;
+
+  &#47;&#47; Write entity count
+  view.setUint32(offset, entityCount, Endian.big);
+  offset += 4;
+
+  &#47;&#47; Write checksum
+  view.setUint16(offset, checksumBytes.length, Endian.big);
+  offset += 2;
+  buffer.setAll(offset, checksumBytes);
+  offset += checksumBytes.length;
+
+  &#47;&#47; Write metadata
+  view.setUint32(offset, metadataBytes.length, Endian.big);
+  offset += 4;
+  if (metadataBytes.isNotEmpty) {
+    buffer.setAll(offset, metadataBytes);
+    offset += metadataBytes.length;
+  }
+
+  &#47;&#47; Write data
+  buffer.setAll(offset, data);
+
+  return buffer;
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">docdb</a></li>
+    <li><a href="../../docdb/">docdb</a></li>
+    <li><a href="../../docdb/Snapshot-class.html">Snapshot</a></li>
+    <li class="self-crumb">toBytes method</li>
+</ol>
+
+    <h5>Snapshot class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    docdb
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

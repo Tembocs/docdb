@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the MigrationRunner class from the docdb library, for the Dart programming language.">
+  <title>MigrationRunner class - docdb library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">docdb</a></li>
+    <li><a href="../docdb/">docdb.dart</a></li>
+    <li class="self-crumb">MigrationRunner<span class="signature">&lt;<wbr><span class="type-parameter">T extends <a href="../docdb/Entity-class.html">Entity</a></span>&gt;</span> class</li>
+  </ol>
+  <div class="self-name">MigrationRunner</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="docdb&#47;docdb-library-sidebar.html"
+    data-below-sidebar="docdb&#47;MigrationRunner-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">MigrationRunner&lt;<wbr><span class="type-parameter">T extends Entity</span>&gt;</span> class 
+    <a href="https://dart.dev/language/class-modifiers#final" class="feature feature-final" title="This class can neither be extended, implemented, nor mixed in.">final</a>
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>Executes migrations for an entity storage.</p>
+<p>The migration runner handles the complete migration lifecycle including:</p>
+<ul>
+<li>Determining the migration path from current to target version</li>
+<li>Creating backups before migration (optional, using BackupService)</li>
+<li>Executing migration steps in order</li>
+<li>Logging migration results</li>
+<li>Rolling back on failure with integrity verification</li>
+</ul>
+<h2 id="usage">Usage</h2>
+<pre class="language-dart"><code class="language-dart">final runner = MigrationRunner&lt;Product&gt;(
+  storage: productStorage,
+  config: MigrationConfig(
+    currentVersion: '2.0.0',
+    migrations: [
+      AddPriceFieldMigration(),
+      RenameSkuMigration(),
+    ],
+  ),
+);
+
+// Check if migration is needed
+if (await runner.needsMigration()) {
+  final result = await runner.migrate();
+  print('Migrated ${result.entitiesAffected} entities');
+}
+</code></pre>
+<h2 id="backup-integration">Backup Integration</h2>
+<p>The runner integrates with <a href="../docdb/BackupService-class.html">BackupService</a> for robust backup/restore:</p>
+<pre class="language-dart"><code class="language-dart">final runner = MigrationRunner&lt;Product&gt;(
+  storage: productStorage,
+  config: MigrationConfig(
+    currentVersion: '2.0.0',
+    migrations: [...],
+    createBackupBeforeMigration: true,
+  ),
+  backupService: BackupService&lt;Product&gt;(
+    storage: productStorage,
+    config: BackupConfig.migration('/backups/products'),
+  ),
+);
+</code></pre>
+<h2 id="migration-path-resolution">Migration Path Resolution</h2>
+<p>The runner automatically determines the shortest path between the
+stored version and target version using the available migrations.
+Both upgrades and downgrades are supported.</p>
+</section>
+
+
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="MigrationRunner.new" class="callable">
+          <span class="name"><a href="../docdb/MigrationRunner/MigrationRunner.html">MigrationRunner</a></span><span class="signature">({<span class="parameter" id="-param-storage"><span>required</span> <span class="type-annotation"><a href="../docdb/Storage-class.html">Storage</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">storage</span>, </span><span class="parameter" id="-param-config"><span>required</span> <span class="type-annotation"><a href="../docdb/MigrationConfig-class.html">MigrationConfig</a></span> <span class="parameter-name">config</span>, </span><span class="parameter" id="-param-backupService"><span class="type-annotation"><a href="../docdb/BackupService-class.html">BackupService</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>?</span> <span class="parameter-name">backupService</span>, </span><span class="parameter" id="-param-logger"><span class="type-annotation"><a href="../docdb/DocDBLogger-class.html">DocDBLogger</a>?</span> <span class="parameter-name">logger</span></span>})</span>
+        </dt>
+        <dd>
+          Creates a new migration runner.
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="config" class="property">
+  <span class="name"><a href="../docdb/MigrationRunner/config.html">config</a></span>
+  <span class="signature">&#8594; <a href="../docdb/MigrationConfig-class.html">MigrationConfig</a></span>
+  
+
+</dt>
+<dd>
+  The migration configuration.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="currentVersion" class="property">
+  <span class="name"><a href="../docdb/MigrationRunner/currentVersion.html">currentVersion</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span>
+  
+
+</dt>
+<dd>
+  The current schema version of the storage.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="hasBackupService" class="property">
+  <span class="name"><a href="../docdb/MigrationRunner/hasBackupService.html">hasBackupService</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Whether a backup service is configured.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="history" class="property">
+  <span class="name"><a href="../docdb/MigrationRunner/history.html">history</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../docdb/MigrationLog-class.html">MigrationLog</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  The migration history log.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="storage" class="property">
+  <span class="name"><a href="../docdb/MigrationRunner/storage.html">storage</a></span>
+  <span class="signature">&#8594; <a href="../docdb/Storage-class.html">Storage</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  The storage being migrated.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="targetVersion" class="property">
+  <span class="name"><a href="../docdb/MigrationRunner/targetVersion.html">targetVersion</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  The target schema version from configuration.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="dispose" class="callable">
+  <span class="name"><a href="../docdb/MigrationRunner/dispose.html">dispose</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Disposes resources used by the migration runner.
+  
+
+</dd>
+
+        <dt id="exportVersionData" class="callable">
+  <span class="name"><a href="../docdb/MigrationRunner/exportVersionData.html">exportVersionData</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Exports version data for external persistence.
+  
+
+</dd>
+
+        <dt id="importVersionData" class="callable">
+  <span class="name"><a href="../docdb/MigrationRunner/importVersionData.html">importVersionData</a></span><span class="signature">(<wbr><span class="parameter" id="importVersionData-param-data"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span> <span class="parameter-name">data</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Imports version data from external source.
+  
+
+</dd>
+
+        <dt id="initialize" class="callable">
+  <span class="name"><a href="../docdb/MigrationRunner/initialize.html">initialize</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Initializes the migration runner.
+  
+
+</dd>
+
+        <dt id="loadHistory" class="callable">
+  <span class="name"><a href="../docdb/MigrationRunner/loadHistory.html">loadHistory</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Loads migration history from storage.
+  
+
+</dd>
+
+        <dt id="migrate" class="callable">
+  <span class="name"><a href="../docdb/MigrationRunner/migrate.html">migrate</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../docdb/MigrationLog-class.html">MigrationLog</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Performs the migration from current to target version.
+  
+
+</dd>
+
+        <dt id="needsMigration" class="callable">
+  <span class="name"><a href="../docdb/MigrationRunner/needsMigration.html">needsMigration</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if migration is needed.
+  
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">docdb</a></li>
+    <li><a href="../docdb/">docdb</a></li>
+    <li class="self-crumb">MigrationRunner<span class="signature">&lt;<wbr><span class="type-parameter">T extends <a href="../docdb/Entity-class.html">Entity</a></span>&gt;</span> class</li>
+</ol>
+
+    <h5>docdb library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    docdb
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

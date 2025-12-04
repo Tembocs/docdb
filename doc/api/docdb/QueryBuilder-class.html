@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the QueryBuilder class from the docdb library, for the Dart programming language.">
+  <title>QueryBuilder class - docdb library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">docdb</a></li>
+    <li><a href="../docdb/">docdb.dart</a></li>
+    <li class="self-crumb">QueryBuilder class</li>
+  </ol>
+  <div class="self-name">QueryBuilder</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="docdb&#47;docdb-library-sidebar.html"
+    data-below-sidebar="docdb&#47;QueryBuilder-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">QueryBuilder</span> class 
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>A builder class for constructing complex queries using a fluent interface.</p>
+<p>The <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a> provides a convenient way to construct queries
+programmatically by chaining method calls.</p>
+<h2 id="basic-usage">Basic Usage</h2>
+<pre class="language-dart"><code class="language-dart">final query = QueryBuilder()
+    .whereEquals('status', 'active')
+    .whereGreaterThan('age', 18)
+    .build();
+</code></pre>
+<h2 id="combining-queries">Combining Queries</h2>
+<p>Multiple conditions are combined with AND by default:</p>
+<pre class="language-dart"><code class="language-dart">final query = QueryBuilder()
+    .whereEquals('status', 'active')    // AND
+    .whereGreaterThan('priority', 5)    // AND
+    .whereLessThan('age', 65)
+    .build();
+</code></pre>
+<p>Use <a href="../docdb/QueryBuilder/or.html">or</a> for OR conditions:</p>
+<pre class="language-dart"><code class="language-dart">final query = QueryBuilder()
+    .whereEquals('status', 'active')
+    .or(EqualsQuery('status', 'pending'))
+    .build();
+</code></pre>
+<h2 id="nested-field-queries">Nested Field Queries</h2>
+<p>Use dot notation for nested fields:</p>
+<pre class="language-dart"><code class="language-dart">final query = QueryBuilder()
+    .whereEquals('address.city', 'London')
+    .build();
+</code></pre>
+<h2 id="complex-queries">Complex Queries</h2>
+<p>For complex logic, compose queries manually:</p>
+<pre class="language-dart"><code class="language-dart">final query = OrQuery([
+  AndQuery([
+    EqualsQuery('status', 'active'),
+    GreaterThanQuery('priority', 5),
+  ]),
+  AndQuery([
+    EqualsQuery('status', 'urgent'),
+    EqualsQuery('assigned', true),
+  ]),
+]);
+</code></pre>
+</section>
+
+
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="QueryBuilder.new" class="callable">
+          <span class="name"><a href="../docdb/QueryBuilder/QueryBuilder.html">QueryBuilder</a></span><span class="signature">()</span>
+        </dt>
+        <dd>
+          
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="hasConditions" class="property">
+  <span class="name"><a href="../docdb/QueryBuilder/hasConditions.html">hasConditions</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Returns true if at least one condition has been added.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="and" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/and.html">and</a></span><span class="signature">(<wbr><span class="parameter" id="and-param-query"><span class="type-annotation"><a href="../docdb/IQuery-class.html">IQuery</a></span> <span class="parameter-name">query</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Combines the current query with another using AND.
+  
+
+</dd>
+
+        <dt id="build" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/build.html">build</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/IQuery-class.html">IQuery</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Builds and returns the final query.
+  
+
+</dd>
+
+        <dt id="buildOrAll" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/buildOrAll.html">buildOrAll</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/IQuery-class.html">IQuery</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Builds the query or returns <a href="../docdb/AllQuery-class.html">AllQuery</a> if no conditions were added.
+  
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="or" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/or.html">or</a></span><span class="signature">(<wbr><span class="parameter" id="or-param-query"><span class="type-annotation"><a href="../docdb/IQuery-class.html">IQuery</a></span> <span class="parameter-name">query</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Combines the current query with another using OR.
+  
+
+</dd>
+
+        <dt id="orAll" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/orAll.html">orAll</a></span><span class="signature">(<wbr><span class="parameter" id="orAll-param-queries"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../docdb/IQuery-class.html">IQuery</a></span>&gt;</span></span> <span class="parameter-name">queries</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Combines the current query with multiple queries using OR.
+  
+
+</dd>
+
+        <dt id="reset" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/reset.html">reset</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Resets the builder to its initial state.
+  
+
+</dd>
+
+        <dt id="toMap" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/toMap.html">toMap</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Serializes the current query for debugging or logging.
+  
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="whereBetween" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereBetween.html">whereBetween</a></span><span class="signature">(<wbr><span class="parameter" id="whereBetween-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereBetween-param-lowerBound"><span class="type-annotation">dynamic</span> <span class="parameter-name">lowerBound</span>, </span><span class="parameter" id="whereBetween-param-upperBound"><span class="type-annotation">dynamic</span> <span class="parameter-name">upperBound</span>, {</span><span class="parameter" id="whereBetween-param-includeLower"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">includeLower</span> = <span class="default-value">true</span>, </span><span class="parameter" id="whereBetween-param-includeUpper"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">includeUpper</span> = <span class="default-value">true</span></span>})
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a between condition: lowerBound &lt;= field &lt;= upperBound.
+  
+
+</dd>
+
+        <dt id="whereContains" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereContains.html">whereContains</a></span><span class="signature">(<wbr><span class="parameter" id="whereContains-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereContains-param-value"><span class="type-annotation">dynamic</span> <span class="parameter-name">value</span>, {</span><span class="parameter" id="whereContains-param-caseSensitive"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">caseSensitive</span> = <span class="default-value">true</span></span>})
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a contains condition for strings or lists.
+  
+
+</dd>
+
+        <dt id="whereEndsWith" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereEndsWith.html">whereEndsWith</a></span><span class="signature">(<wbr><span class="parameter" id="whereEndsWith-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereEndsWith-param-suffix"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">suffix</span>, {</span><span class="parameter" id="whereEndsWith-param-caseSensitive"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">caseSensitive</span> = <span class="default-value">true</span></span>})
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds an ends-with condition for string fields.
+  
+
+</dd>
+
+        <dt id="whereEquals" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereEquals.html">whereEquals</a></span><span class="signature">(<wbr><span class="parameter" id="whereEquals-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereEquals-param-value"><span class="type-annotation">dynamic</span> <span class="parameter-name">value</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds an equality condition: field == value.
+  
+
+</dd>
+
+        <dt id="whereExists" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereExists.html">whereExists</a></span><span class="signature">(<wbr><span class="parameter" id="whereExists-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a condition checking if a field exists.
+  
+
+</dd>
+
+        <dt id="whereGreaterThan" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereGreaterThan.html">whereGreaterThan</a></span><span class="signature">(<wbr><span class="parameter" id="whereGreaterThan-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereGreaterThan-param-value"><span class="type-annotation">dynamic</span> <span class="parameter-name">value</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a greater-than condition: field &gt; value.
+  
+
+</dd>
+
+        <dt id="whereGreaterThanOrEquals" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereGreaterThanOrEquals.html">whereGreaterThanOrEquals</a></span><span class="signature">(<wbr><span class="parameter" id="whereGreaterThanOrEquals-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereGreaterThanOrEquals-param-value"><span class="type-annotation">dynamic</span> <span class="parameter-name">value</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a greater-than-or-equal condition: field &gt;= value.
+  
+
+</dd>
+
+        <dt id="whereIn" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereIn.html">whereIn</a></span><span class="signature">(<wbr><span class="parameter" id="whereIn-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereIn-param-values"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a></span> <span class="parameter-name">values</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds an IN condition: field in <code>values</code>.
+  
+
+</dd>
+
+        <dt id="whereIsNotNull" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereIsNotNull.html">whereIsNotNull</a></span><span class="signature">(<wbr><span class="parameter" id="whereIsNotNull-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a condition checking if a field is not null.
+  
+
+</dd>
+
+        <dt id="whereIsNull" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereIsNull.html">whereIsNull</a></span><span class="signature">(<wbr><span class="parameter" id="whereIsNull-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a condition checking if a field is null.
+  
+
+</dd>
+
+        <dt id="whereLessThan" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereLessThan.html">whereLessThan</a></span><span class="signature">(<wbr><span class="parameter" id="whereLessThan-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereLessThan-param-value"><span class="type-annotation">dynamic</span> <span class="parameter-name">value</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a less-than condition: field &lt; value.
+  
+
+</dd>
+
+        <dt id="whereLessThanOrEquals" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereLessThanOrEquals.html">whereLessThanOrEquals</a></span><span class="signature">(<wbr><span class="parameter" id="whereLessThanOrEquals-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereLessThanOrEquals-param-value"><span class="type-annotation">dynamic</span> <span class="parameter-name">value</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a less-than-or-equal condition: field &lt;= value.
+  
+
+</dd>
+
+        <dt id="whereNot" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereNot.html">whereNot</a></span><span class="signature">(<wbr><span class="parameter" id="whereNot-param-query"><span class="type-annotation"><a href="../docdb/IQuery-class.html">IQuery</a></span> <span class="parameter-name">query</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Negates a query.
+  
+
+</dd>
+
+        <dt id="whereNotEquals" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereNotEquals.html">whereNotEquals</a></span><span class="signature">(<wbr><span class="parameter" id="whereNotEquals-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereNotEquals-param-value"><span class="type-annotation">dynamic</span> <span class="parameter-name">value</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a not-equal condition: field != value.
+  
+
+</dd>
+
+        <dt id="whereNotIn" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereNotIn.html">whereNotIn</a></span><span class="signature">(<wbr><span class="parameter" id="whereNotIn-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereNotIn-param-values"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a></span> <span class="parameter-name">values</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a NOT IN condition: field not in <code>values</code>.
+  
+
+</dd>
+
+        <dt id="whereRegex" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereRegex.html">whereRegex</a></span><span class="signature">(<wbr><span class="parameter" id="whereRegex-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereRegex-param-pattern"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">pattern</span>, {</span><span class="parameter" id="whereRegex-param-caseSensitive"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">caseSensitive</span> = <span class="default-value">true</span>, </span><span class="parameter" id="whereRegex-param-multiLine"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">multiLine</span> = <span class="default-value">false</span></span>})
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a regex condition: field matches pattern.
+  
+
+</dd>
+
+        <dt id="whereStartsWith" class="callable">
+  <span class="name"><a href="../docdb/QueryBuilder/whereStartsWith.html">whereStartsWith</a></span><span class="signature">(<wbr><span class="parameter" id="whereStartsWith-param-field"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">field</span>, </span><span class="parameter" id="whereStartsWith-param-prefix"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">prefix</span>, {</span><span class="parameter" id="whereStartsWith-param-caseSensitive"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">caseSensitive</span> = <span class="default-value">true</span></span>})
+    <span class="returntype parameter">&#8594; <a href="../docdb/QueryBuilder-class.html">QueryBuilder</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a starts-with condition for string fields.
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">docdb</a></li>
+    <li><a href="../docdb/">docdb</a></li>
+    <li class="self-crumb">QueryBuilder class</li>
+</ol>
+
+    <h5>docdb library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    docdb
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
