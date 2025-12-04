@@ -469,16 +469,23 @@ class Collection<T extends Entity> {
 
     final entityLock = _getEntityLock(id);
     return await entityLock.synchronized(() async {
-      final data = await _storage.get(id);
-      if (data == null) {
-        return null;
-      }
-
-      // Track version for optimistic concurrency
-      _entityVersions.putIfAbsent(id, () => 1);
-
-      return _fromMap(id, data);
+      return await _getInternal(id);
     });
+  }
+
+  /// Internal get implementation without lock acquisition.
+  ///
+  /// Must be called within an already-acquired entity lock.
+  Future<T?> _getInternal(String id) async {
+    final data = await _storage.get(id);
+    if (data == null) {
+      return null;
+    }
+
+    // Track version for optimistic concurrency
+    _entityVersions.putIfAbsent(id, () => 1);
+
+    return _fromMap(id, data);
   }
 
   /// Retrieves an entity by its ID, throwing if not found.
@@ -622,47 +629,56 @@ class Collection<T extends Entity> {
       throw CollectionException('Cannot update entity without ID.');
     }
 
-    final newData = entity.toMap();
-
     final entityLock = _getEntityLock(entityId);
     await entityLock.synchronized(() async {
-      try {
-        // Get current entity for index update
-        final oldData = await _storage.get(entityId);
-        if (oldData == null) {
-          throw EntityNotFoundException(entityId: entityId, storageName: _name);
-        }
+      await _updateInternal(entity);
+    });
+  }
 
-        // Check version for optimistic concurrency
-        final expectedVersion = _entityVersions[entityId] ?? 1;
-        final storedVersion = (oldData['__version'] as int?) ?? 1;
+  /// Internal update implementation without lock acquisition.
+  ///
+  /// Must be called within an already-acquired entity lock.
+  /// Assumes entity.id is non-null.
+  Future<void> _updateInternal(T entity) async {
+    final entityId = entity.id!;
+    final newData = entity.toMap();
 
-        if (storedVersion != expectedVersion) {
-          throw ConcurrencyException(
-            'Entity "$entityId" was modified. '
-            'Expected version $expectedVersion, found $storedVersion.',
-          );
-        }
+    try {
+      // Get current entity for index update
+      final oldData = await _storage.get(entityId);
+      if (oldData == null) {
+        throw EntityNotFoundException(entityId: entityId, storageName: _name);
+      }
 
-        // Update indexes
-        _indexManager.update(entityId, oldData, newData);
+      // Check version for optimistic concurrency
+      final expectedVersion = _entityVersions[entityId] ?? 1;
+      final storedVersion = (oldData['__version'] as int?) ?? 1;
 
-        // Update storage
-        await _storage.update(entityId, newData);
-
-        // Increment version
-        _entityVersions[entityId] = expectedVersion + 1;
-
-        _logger.debug('Updated entity "$entityId".');
-      } catch (e, stackTrace) {
-        if (e is EntityNotFoundException || e is ConcurrencyException) rethrow;
-        _logger.error('Failed to update entity "$entityId"', e, stackTrace);
-        throw CollectionException(
-          'Failed to update entity "$entityId": $e',
-          cause: e,
+      if (storedVersion != expectedVersion) {
+        throw ConcurrencyException(
+          'Entity "$entityId" was modified. '
+          'Expected version $expectedVersion, found $storedVersion.',
         );
       }
-    });
+
+      // Update indexes
+      _indexManager.update(entityId, oldData, newData);
+
+      // Update storage
+      await _storage.update(entityId, newData);
+
+      // Increment version
+      _entityVersions[entityId] = expectedVersion + 1;
+
+      _logger.debug('Updated entity "$entityId".');
+    } catch (e, stackTrace) {
+      if (e is EntityNotFoundException || e is ConcurrencyException) rethrow;
+      _logger.error('Failed to update entity "$entityId"', e, stackTrace);
+      throw CollectionException(
+        'Failed to update entity "$entityId": $e',
+        cause: e,
+      );
+    }
   }
 
   /// Updates an entity by ID with a modifier function.
@@ -700,13 +716,14 @@ class Collection<T extends Entity> {
 
     final entityLock = _getEntityLock(id);
     return await entityLock.synchronized(() async {
-      final current = await get(id);
+      // Use internal methods to avoid nested lock acquisition
+      final current = await _getInternal(id);
       if (current == null) {
         throw EntityNotFoundException(entityId: id, storageName: _name);
       }
 
       final updated = modifier(current);
-      await update(updated);
+      await _updateInternal(updated);
       return updated;
     });
   }
