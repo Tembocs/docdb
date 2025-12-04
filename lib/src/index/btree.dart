@@ -93,6 +93,8 @@ class BTreeIndex implements IIndex {
   /// Performs a range search between [lowerBound] and [upperBound].
   ///
   /// Returns entity IDs whose indexed values fall within the specified range.
+  /// Uses early termination for optimal performance - stops iterating once
+  /// past the upper bound since keys are ordered.
   ///
   /// - [lowerBound]: The lower bound (inclusive). If null, starts from minimum.
   /// - [upperBound]: The upper bound (exclusive). If null, extends to maximum.
@@ -100,6 +102,11 @@ class BTreeIndex implements IIndex {
   /// - [includeUpper]: Whether to include [upperBound] in results (default: false).
   ///
   /// Returns a list of matching entity IDs.
+  ///
+  /// ## Performance
+  ///
+  /// Time complexity is O(log n + k) where n is total keys and k is matching keys.
+  /// Early termination ensures we don't scan keys beyond the upper bound.
   ///
   /// ## Example
   ///
@@ -119,33 +126,139 @@ class BTreeIndex implements IIndex {
     bool includeLower = true,
     bool includeUpper = false,
   }) {
+    if (_index.isEmpty) {
+      return const [];
+    }
+
     final result = <String>{};
 
     for (final entry in _index.entries) {
       final key = entry.key;
       final entityIds = entry.value;
 
-      // Check lower bound
-      bool withinLower;
-      if (lowerBound == null) {
-        withinLower = true;
-      } else {
+      // Check lower bound - skip keys below the lower bound
+      if (lowerBound != null) {
         final comparison = Comparable.compare(key, lowerBound);
-        withinLower = includeLower ? comparison >= 0 : comparison > 0;
+        if (includeLower ? comparison < 0 : comparison <= 0) {
+          // Key is below lower bound, skip to next
+          continue;
+        }
       }
 
-      // Check upper bound
-      bool withinUpper;
-      if (upperBound == null) {
-        withinUpper = true;
-      } else {
+      // Check upper bound - stop iteration once past upper bound
+      if (upperBound != null) {
         final comparison = Comparable.compare(key, upperBound);
-        withinUpper = includeUpper ? comparison <= 0 : comparison < 0;
+        if (includeUpper ? comparison > 0 : comparison >= 0) {
+          // Key is past upper bound, stop iteration (early termination)
+          break;
+        }
       }
 
-      if (withinLower && withinUpper) {
-        result.addAll(entityIds);
+      // Key is within range, add entity IDs
+      result.addAll(entityIds);
+    }
+
+    return result.toList();
+  }
+
+  /// Finds all entity IDs where the indexed value is greater than [value].
+  ///
+  /// Uses early termination - skips keys until finding the first key greater
+  /// than [value], then collects all remaining keys.
+  ///
+  /// Time complexity: O(log n + k) where k is the number of matching results.
+  List<String> greaterThan(dynamic value) {
+    if (_index.isEmpty) {
+      return const [];
+    }
+
+    final result = <String>{};
+    bool foundStart = false;
+
+    for (final entry in _index.entries) {
+      if (!foundStart) {
+        if (Comparable.compare(entry.key, value) > 0) {
+          foundStart = true;
+          result.addAll(entry.value);
+        }
+      } else {
+        // Once we've found the start, add all remaining entries
+        result.addAll(entry.value);
       }
+    }
+
+    return result.toList();
+  }
+
+  /// Finds all entity IDs where the indexed value is greater than or equal to [value].
+  ///
+  /// Uses early termination - skips keys until finding the first key >= [value],
+  /// then collects all remaining keys.
+  ///
+  /// Time complexity: O(log n + k) where k is the number of matching results.
+  List<String> greaterThanOrEqual(dynamic value) {
+    if (_index.isEmpty) {
+      return const [];
+    }
+
+    final result = <String>{};
+    bool foundStart = false;
+
+    for (final entry in _index.entries) {
+      if (!foundStart) {
+        if (Comparable.compare(entry.key, value) >= 0) {
+          foundStart = true;
+          result.addAll(entry.value);
+        }
+      } else {
+        result.addAll(entry.value);
+      }
+    }
+
+    return result.toList();
+  }
+
+  /// Finds all entity IDs where the indexed value is less than [value].
+  ///
+  /// Uses early termination - collects keys until reaching [value], then stops.
+  ///
+  /// Time complexity: O(k) where k is the number of matching results.
+  List<String> lessThan(dynamic value) {
+    if (_index.isEmpty) {
+      return const [];
+    }
+
+    final result = <String>{};
+
+    for (final entry in _index.entries) {
+      if (Comparable.compare(entry.key, value) >= 0) {
+        // Reached the boundary, stop
+        break;
+      }
+      result.addAll(entry.value);
+    }
+
+    return result.toList();
+  }
+
+  /// Finds all entity IDs where the indexed value is less than or equal to [value].
+  ///
+  /// Uses early termination - collects keys until passing [value], then stops.
+  ///
+  /// Time complexity: O(k) where k is the number of matching results.
+  List<String> lessThanOrEqual(dynamic value) {
+    if (_index.isEmpty) {
+      return const [];
+    }
+
+    final result = <String>{};
+
+    for (final entry in _index.entries) {
+      if (Comparable.compare(entry.key, value) > 0) {
+        // Passed the boundary, stop
+        break;
+      }
+      result.addAll(entry.value);
     }
 
     return result.toList();

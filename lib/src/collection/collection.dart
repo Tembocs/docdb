@@ -987,18 +987,13 @@ class Collection<T extends Entity> {
       }
     }
 
-    // Handle range queries with btree index
+    // Handle range queries with btree index using optimized methods
     if (query is GreaterThanQuery &&
         _indexManager.hasIndexOfType(query.field, IndexType.btree)) {
       _logger.debug(
         'Using btree index on field "${query.field}" for GreaterThanQuery.',
       );
-      final ids = _indexManager.rangeSearch(
-        query.field,
-        query.value,
-        null,
-        includeLower: false,
-      );
+      final ids = _indexManager.greaterThan(query.field, query.value);
       return _getEntitiesByIds(ids);
     }
 
@@ -1007,12 +1002,7 @@ class Collection<T extends Entity> {
       _logger.debug(
         'Using btree index on field "${query.field}" for GreaterThanOrEqualsQuery.',
       );
-      final ids = _indexManager.rangeSearch(
-        query.field,
-        query.value,
-        null,
-        includeLower: true,
-      );
+      final ids = _indexManager.greaterThanOrEqual(query.field, query.value);
       return _getEntitiesByIds(ids);
     }
 
@@ -1021,12 +1011,7 @@ class Collection<T extends Entity> {
       _logger.debug(
         'Using btree index on field "${query.field}" for LessThanQuery.',
       );
-      final ids = _indexManager.rangeSearch(
-        query.field,
-        null,
-        query.value,
-        includeUpper: false,
-      );
+      final ids = _indexManager.lessThan(query.field, query.value);
       return _getEntitiesByIds(ids);
     }
 
@@ -1035,12 +1020,7 @@ class Collection<T extends Entity> {
       _logger.debug(
         'Using btree index on field "${query.field}" for LessThanOrEqualsQuery.',
       );
-      final ids = _indexManager.rangeSearch(
-        query.field,
-        null,
-        query.value,
-        includeUpper: true,
-      );
+      final ids = _indexManager.lessThanOrEqual(query.field, query.value);
       return _getEntitiesByIds(ids);
     }
 

@@ -188,6 +188,98 @@ class IndexManager {
     );
   }
 
+  /// Finds entity IDs where the indexed value is greater than [value].
+  ///
+  /// Uses optimized early termination for better performance.
+  /// Only supported for B-tree indexes.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a B-tree.
+  List<String> greaterThan(String field, dynamic value) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! BTreeIndex) {
+      throw UnsupportedIndexTypeException(
+        'greaterThan not supported for hash index on field "$field". '
+        'Use a btree index for range queries.',
+      );
+    }
+
+    return index.greaterThan(value);
+  }
+
+  /// Finds entity IDs where the indexed value is greater than or equal to [value].
+  ///
+  /// Uses optimized early termination for better performance.
+  /// Only supported for B-tree indexes.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a B-tree.
+  List<String> greaterThanOrEqual(String field, dynamic value) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! BTreeIndex) {
+      throw UnsupportedIndexTypeException(
+        'greaterThanOrEqual not supported for hash index on field "$field". '
+        'Use a btree index for range queries.',
+      );
+    }
+
+    return index.greaterThanOrEqual(value);
+  }
+
+  /// Finds entity IDs where the indexed value is less than [value].
+  ///
+  /// Uses optimized early termination for better performance.
+  /// Only supported for B-tree indexes.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a B-tree.
+  List<String> lessThan(String field, dynamic value) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! BTreeIndex) {
+      throw UnsupportedIndexTypeException(
+        'lessThan not supported for hash index on field "$field". '
+        'Use a btree index for range queries.',
+      );
+    }
+
+    return index.lessThan(value);
+  }
+
+  /// Finds entity IDs where the indexed value is less than or equal to [value].
+  ///
+  /// Uses optimized early termination for better performance.
+  /// Only supported for B-tree indexes.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a B-tree.
+  List<String> lessThanOrEqual(String field, dynamic value) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! BTreeIndex) {
+      throw UnsupportedIndexTypeException(
+        'lessThanOrEqual not supported for hash index on field "$field". '
+        'Use a btree index for range queries.',
+      );
+    }
+
+    return index.lessThanOrEqual(value);
+  }
+
   /// Checks if an index exists on the specified [field].
   bool hasIndex(String field) => _indices.containsKey(field);
 
