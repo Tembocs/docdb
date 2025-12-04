@@ -96,6 +96,29 @@ class HashIndex implements IIndex {
   /// Checks if a specific key exists in the index.
   bool containsKey(dynamic key) => _index.containsKey(key);
 
+  // ===========================================================================
+  // Index-Only Count Methods
+  // ===========================================================================
+  // These methods return counts directly from the index without requiring
+  // entity deserialization, providing O(1) performance.
+
+  /// Counts entities where the indexed value equals [value].
+  ///
+  /// Returns the count directly from the index without loading entities.
+  /// Time complexity: O(1)
+  int countEquals(dynamic value) {
+    final entityIds = _index[value];
+    return entityIds?.length ?? 0;
+  }
+
+  /// Checks if any entity exists where the indexed value equals [value].
+  ///
+  /// More efficient than search() when you only need to check existence.
+  /// Time complexity: O(1)
+  bool existsEquals(dynamic value) {
+    return _index.containsKey(value);
+  }
+
   @override
   void clear() {
     _index.clear();

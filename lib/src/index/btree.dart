@@ -276,6 +276,170 @@ class BTreeIndex implements IIndex {
   /// Returns the total number of indexed entity references.
   int get entryCount => _index.values.fold(0, (sum, set) => sum + set.length);
 
+  // ===========================================================================
+  // Index-Only Count Methods
+  // ===========================================================================
+  // These methods return counts directly from the index without requiring
+  // entity deserialization, providing O(1) to O(log n + k) performance.
+
+  /// Counts entities where the indexed value equals [value].
+  ///
+  /// Returns the count directly from the index without loading entities.
+  /// Time complexity: O(1)
+  int countEquals(dynamic value) {
+    final entityIds = _index[value];
+    return entityIds?.length ?? 0;
+  }
+
+  /// Counts entities where the indexed value is greater than [value].
+  ///
+  /// Returns the count directly from the index without loading entities.
+  /// Time complexity: O(log n + k) where k is matching keys.
+  int countGreaterThan(dynamic value) {
+    if (_index.isEmpty) return 0;
+
+    int count = 0;
+    bool foundStart = false;
+
+    for (final entry in _index.entries) {
+      if (!foundStart) {
+        if (Comparable.compare(entry.key, value) > 0) {
+          foundStart = true;
+          count += entry.value.length;
+        }
+      } else {
+        count += entry.value.length;
+      }
+    }
+
+    return count;
+  }
+
+  /// Counts entities where the indexed value is greater than or equal to [value].
+  ///
+  /// Returns the count directly from the index without loading entities.
+  /// Time complexity: O(log n + k) where k is matching keys.
+  int countGreaterThanOrEqual(dynamic value) {
+    if (_index.isEmpty) return 0;
+
+    int count = 0;
+    bool foundStart = false;
+
+    for (final entry in _index.entries) {
+      if (!foundStart) {
+        if (Comparable.compare(entry.key, value) >= 0) {
+          foundStart = true;
+          count += entry.value.length;
+        }
+      } else {
+        count += entry.value.length;
+      }
+    }
+
+    return count;
+  }
+
+  /// Counts entities where the indexed value is less than [value].
+  ///
+  /// Returns the count directly from the index without loading entities.
+  /// Time complexity: O(k) where k is matching keys.
+  int countLessThan(dynamic value) {
+    if (_index.isEmpty) return 0;
+
+    int count = 0;
+
+    for (final entry in _index.entries) {
+      if (Comparable.compare(entry.key, value) >= 0) {
+        break;
+      }
+      count += entry.value.length;
+    }
+
+    return count;
+  }
+
+  /// Counts entities where the indexed value is less than or equal to [value].
+  ///
+  /// Returns the count directly from the index without loading entities.
+  /// Time complexity: O(k) where k is matching keys.
+  int countLessThanOrEqual(dynamic value) {
+    if (_index.isEmpty) return 0;
+
+    int count = 0;
+
+    for (final entry in _index.entries) {
+      if (Comparable.compare(entry.key, value) > 0) {
+        break;
+      }
+      count += entry.value.length;
+    }
+
+    return count;
+  }
+
+  /// Counts entities where the indexed value is between [lowerBound] and [upperBound].
+  ///
+  /// Returns the count directly from the index without loading entities.
+  /// Time complexity: O(log n + k) where k is matching keys.
+  int countRange(
+    dynamic lowerBound,
+    dynamic upperBound, {
+    bool includeLower = true,
+    bool includeUpper = false,
+  }) {
+    if (_index.isEmpty) return 0;
+
+    int count = 0;
+
+    for (final entry in _index.entries) {
+      final key = entry.key;
+
+      // Check lower bound
+      if (lowerBound != null) {
+        final comparison = Comparable.compare(key, lowerBound);
+        if (includeLower ? comparison < 0 : comparison <= 0) {
+          continue;
+        }
+      }
+
+      // Check upper bound
+      if (upperBound != null) {
+        final comparison = Comparable.compare(key, upperBound);
+        if (includeUpper ? comparison > 0 : comparison >= 0) {
+          break;
+        }
+      }
+
+      count += entry.value.length;
+    }
+
+    return count;
+  }
+
+  /// Checks if any entity exists where the indexed value equals [value].
+  ///
+  /// More efficient than search() when you only need to check existence.
+  /// Time complexity: O(1)
+  bool existsEquals(dynamic value) {
+    return _index.containsKey(value);
+  }
+
+  /// Checks if any entity exists where the indexed value is greater than [value].
+  ///
+  /// Time complexity: O(1) - just checks if max key > value.
+  bool existsGreaterThan(dynamic value) {
+    if (_index.isEmpty) return false;
+    return Comparable.compare(_index.lastKey()!, value) > 0;
+  }
+
+  /// Checks if any entity exists where the indexed value is less than [value].
+  ///
+  /// Time complexity: O(1) - just checks if min key < value.
+  bool existsLessThan(dynamic value) {
+    if (_index.isEmpty) return false;
+    return Comparable.compare(_index.firstKey()!, value) < 0;
+  }
+
   @override
   void clear() {
     _index.clear();

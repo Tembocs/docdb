@@ -314,6 +314,228 @@ class IndexManager {
   /// Returns the number of indexes.
   int get indexCount => _indices.length;
 
+  // ===========================================================================
+  // Index-Only Count Methods
+  // ===========================================================================
+  // These methods return counts directly from the index without requiring
+  // entity deserialization. Use these for optimal performance when you only
+  // need counts, not actual entities.
+
+  /// Counts entities where [field] equals [value] using the index.
+  ///
+  /// Returns the count directly from the index without loading entities.
+  /// Works with both hash and btree indexes.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  int countEquals(String field, dynamic value) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is HashIndex) {
+      return index.countEquals(value);
+    } else if (index is BTreeIndex) {
+      return index.countEquals(value);
+    }
+
+    // Fallback to search and count
+    return index.search(value).length;
+  }
+
+  /// Counts entities where [field] is greater than [value] using a btree index.
+  ///
+  /// Returns the count directly from the index without loading entities.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a btree.
+  int countGreaterThan(String field, dynamic value) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! BTreeIndex) {
+      throw UnsupportedIndexTypeException(
+        'countGreaterThan not supported for hash index on field "$field". '
+        'Use a btree index for range queries.',
+      );
+    }
+
+    return index.countGreaterThan(value);
+  }
+
+  /// Counts entities where [field] is greater than or equal to [value].
+  ///
+  /// Returns the count directly from the index without loading entities.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a btree.
+  int countGreaterThanOrEqual(String field, dynamic value) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! BTreeIndex) {
+      throw UnsupportedIndexTypeException(
+        'countGreaterThanOrEqual not supported for hash index on field "$field". '
+        'Use a btree index for range queries.',
+      );
+    }
+
+    return index.countGreaterThanOrEqual(value);
+  }
+
+  /// Counts entities where [field] is less than [value] using a btree index.
+  ///
+  /// Returns the count directly from the index without loading entities.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a btree.
+  int countLessThan(String field, dynamic value) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! BTreeIndex) {
+      throw UnsupportedIndexTypeException(
+        'countLessThan not supported for hash index on field "$field". '
+        'Use a btree index for range queries.',
+      );
+    }
+
+    return index.countLessThan(value);
+  }
+
+  /// Counts entities where [field] is less than or equal to [value].
+  ///
+  /// Returns the count directly from the index without loading entities.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a btree.
+  int countLessThanOrEqual(String field, dynamic value) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! BTreeIndex) {
+      throw UnsupportedIndexTypeException(
+        'countLessThanOrEqual not supported for hash index on field "$field". '
+        'Use a btree index for range queries.',
+      );
+    }
+
+    return index.countLessThanOrEqual(value);
+  }
+
+  /// Counts entities where [field] is between [lowerBound] and [upperBound].
+  ///
+  /// Returns the count directly from the index without loading entities.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a btree.
+  int countRange(
+    String field,
+    dynamic lowerBound,
+    dynamic upperBound, {
+    bool includeLower = true,
+    bool includeUpper = false,
+  }) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! BTreeIndex) {
+      throw UnsupportedIndexTypeException(
+        'countRange not supported for hash index on field "$field". '
+        'Use a btree index for range queries.',
+      );
+    }
+
+    return index.countRange(
+      lowerBound,
+      upperBound,
+      includeLower: includeLower,
+      includeUpper: includeUpper,
+    );
+  }
+
+  // ===========================================================================
+  // Index-Only Existence Checks
+  // ===========================================================================
+  // These methods check for existence directly from the index without
+  // loading entities from storage.
+
+  /// Checks if any entity exists where [field] equals [value].
+  ///
+  /// Returns true if at least one entity matches, without loading entities.
+  /// Works with both hash and btree indexes.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  bool existsEquals(String field, dynamic value) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is HashIndex) {
+      return index.existsEquals(value);
+    } else if (index is BTreeIndex) {
+      return index.existsEquals(value);
+    }
+
+    // Fallback to search
+    return index.search(value).isNotEmpty;
+  }
+
+  /// Checks if any entity exists where [field] is greater than [value].
+  ///
+  /// Uses O(1) check against index bounds.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a btree.
+  bool existsGreaterThan(String field, dynamic value) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! BTreeIndex) {
+      throw UnsupportedIndexTypeException(
+        'existsGreaterThan not supported for hash index on field "$field". '
+        'Use a btree index for range queries.',
+      );
+    }
+
+    return index.existsGreaterThan(value);
+  }
+
+  /// Checks if any entity exists where [field] is less than [value].
+  ///
+  /// Uses O(1) check against index bounds.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a btree.
+  bool existsLessThan(String field, dynamic value) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! BTreeIndex) {
+      throw UnsupportedIndexTypeException(
+        'existsLessThan not supported for hash index on field "$field". '
+        'Use a btree index for range queries.',
+      );
+    }
+
+    return index.existsLessThan(value);
+  }
+
   /// Clears all indexes without removing them.
   ///
   /// The index structure is preserved, but all entries are removed.

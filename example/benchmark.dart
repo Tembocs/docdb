@@ -420,6 +420,68 @@ Future<List<BenchmarkResult>> _runIndexBenchmarks() async {
         }
       }),
     );
+
+    // -------------------------------------------------------------------------
+    // Index-Only Count Benchmarks (No Deserialization)
+    // -------------------------------------------------------------------------
+    print('');
+    print('  Index-Only Count (no deserialization):');
+
+    results.add(
+      await _benchmark('Index Count: Equals (100 counts)', 100, () async {
+        for (int i = 0; i < 100; i++) {
+          await products.countWhere(
+            QueryBuilder().whereEquals('quantity', 25).build(),
+          );
+        }
+      }),
+    );
+
+    results.add(
+      await _benchmark('Index Count: Range (100 counts)', 100, () async {
+        for (int i = 0; i < 100; i++) {
+          await products.countWhere(
+            QueryBuilder().whereGreaterThan('price', 750.0).build(),
+          );
+        }
+      }),
+    );
+
+    results.add(
+      await _benchmark('Index Count: Between (100 counts)', 100, () async {
+        for (int i = 0; i < 100; i++) {
+          await products.countWhere(
+            QueryBuilder().whereBetween('price', 200.0, 800.0).build(),
+          );
+        }
+      }),
+    );
+
+    // -------------------------------------------------------------------------
+    // Index-Only Exists Benchmarks
+    // -------------------------------------------------------------------------
+    print('');
+    print('  Index-Only Exists (no deserialization):');
+
+    results.add(
+      await _benchmark('Index Exists: Equals (100 checks)', 100, () async {
+        for (int i = 0; i < 100; i++) {
+          await products.existsWhere(
+            QueryBuilder().whereEquals('quantity', 25).build(),
+          );
+        }
+      }),
+    );
+
+    results.add(
+      await _benchmark('Index Exists: Range (100 checks)', 100, () async {
+        for (int i = 0; i < 100; i++) {
+          await products.existsWhere(
+            QueryBuilder().whereGreaterThan('price', 999.0).build(),
+          );
+        }
+      }),
+    );
   } finally {
     await db.close();
   }

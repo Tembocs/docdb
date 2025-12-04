@@ -949,6 +949,10 @@ class Collection<T extends Entity> {
 
   /// Counts entities matching the query.
   ///
+  /// When an appropriate index is available, this method returns the count
+  /// directly from the index without loading or deserializing any entities,
+  /// providing O(1) to O(log n + k) performance.
+  ///
   /// ## Parameters
   ///
   /// - [query]: The query to execute. If null, counts all entities.
@@ -956,12 +960,163 @@ class Collection<T extends Entity> {
   /// ## Returns
   ///
   /// The number of matching entities.
+  ///
+  /// ## Performance
+  ///
+  /// - With index: O(1) for equality, O(log n + k) for range queries
+  /// - Without index: O(n) full scan with deserialization
   Future<int> countWhere([IQuery? query]) async {
     if (query == null) {
       return count;
     }
+
+    // Try to use index-only counting (no deserialization needed)
+    final indexCount = _tryIndexedCount(query);
+    if (indexCount != null) {
+      _logger.debug('Using index-only count for query.');
+      return indexCount;
+    }
+
+    // Fall back to find + count (requires deserialization)
     final results = await find(query);
     return results.length;
+  }
+
+  /// Checks if any entity exists matching the query.
+  ///
+  /// When an appropriate index is available, this method checks existence
+  /// directly from the index without loading or deserializing any entities,
+  /// providing O(1) performance for most queries.
+  ///
+  /// ## Parameters
+  ///
+  /// - [query]: The query to execute.
+  ///
+  /// ## Returns
+  ///
+  /// `true` if at least one entity matches, `false` otherwise.
+  ///
+  /// ## Performance
+  ///
+  /// - With index: O(1) for most queries
+  /// - Without index: O(n) full scan with deserialization
+  ///
+  /// ## Example
+  ///
+  /// ```dart
+  /// // Check if any product with this email exists (uses index)
+  /// final hasAdmin = await users.existsWhere(
+  ///   Query.equals('role', 'admin'),
+  /// );
+  /// ```
+  Future<bool> existsWhere(IQuery query) async {
+    // Try to use index-only existence check (no deserialization needed)
+    final indexExists = _tryIndexedExists(query);
+    if (indexExists != null) {
+      _logger.debug('Using index-only existence check for query.');
+      return indexExists;
+    }
+
+    // Fall back to findOne (requires deserialization of at most one entity)
+    final result = await findOne(query);
+    return result != null;
+  }
+
+  /// Tries to get count directly from index without loading entities.
+  ///
+  /// Returns null if no suitable index is available.
+  int? _tryIndexedCount(IQuery query) {
+    if (query is EqualsQuery) {
+      if (_indexManager.hasIndex(query.field)) {
+        return _indexManager.countEquals(query.field, query.value);
+      }
+    }
+
+    if (query is GreaterThanQuery) {
+      if (_indexManager.hasIndexOfType(query.field, IndexType.btree)) {
+        return _indexManager.countGreaterThan(query.field, query.value);
+      }
+    }
+
+    if (query is GreaterThanOrEqualsQuery) {
+      if (_indexManager.hasIndexOfType(query.field, IndexType.btree)) {
+        return _indexManager.countGreaterThanOrEqual(query.field, query.value);
+      }
+    }
+
+    if (query is LessThanQuery) {
+      if (_indexManager.hasIndexOfType(query.field, IndexType.btree)) {
+        return _indexManager.countLessThan(query.field, query.value);
+      }
+    }
+
+    if (query is LessThanOrEqualsQuery) {
+      if (_indexManager.hasIndexOfType(query.field, IndexType.btree)) {
+        return _indexManager.countLessThanOrEqual(query.field, query.value);
+      }
+    }
+
+    if (query is BetweenQuery) {
+      if (_indexManager.hasIndexOfType(query.field, IndexType.btree)) {
+        return _indexManager.countRange(
+          query.field,
+          query.lowerBound,
+          query.upperBound,
+          includeLower: query.includeLower,
+          includeUpper: query.includeUpper,
+        );
+      }
+    }
+
+    if (query is InQuery) {
+      if (_indexManager.hasIndex(query.field)) {
+        int total = 0;
+        for (final value in query.values) {
+          total += _indexManager.countEquals(query.field, value);
+        }
+        return total;
+      }
+    }
+
+    // No suitable index found
+    return null;
+  }
+
+  /// Tries to check existence directly from index without loading entities.
+  ///
+  /// Returns null if no suitable index is available.
+  bool? _tryIndexedExists(IQuery query) {
+    if (query is EqualsQuery) {
+      if (_indexManager.hasIndex(query.field)) {
+        return _indexManager.existsEquals(query.field, query.value);
+      }
+    }
+
+    if (query is GreaterThanQuery) {
+      if (_indexManager.hasIndexOfType(query.field, IndexType.btree)) {
+        return _indexManager.existsGreaterThan(query.field, query.value);
+      }
+    }
+
+    if (query is LessThanQuery) {
+      if (_indexManager.hasIndexOfType(query.field, IndexType.btree)) {
+        return _indexManager.existsLessThan(query.field, query.value);
+      }
+    }
+
+    // For other queries, use count > 0
+    if (query is GreaterThanOrEqualsQuery ||
+        query is LessThanOrEqualsQuery ||
+        query is BetweenQuery ||
+        query is InQuery) {
+      final indexCount = _tryIndexedCount(query);
+      if (indexCount != null) {
+        return indexCount > 0;
+      }
+    }
+
+    // No suitable index found
+    return null;
   }
 
   /// Tries to execute the query using an available index.
