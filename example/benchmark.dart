@@ -28,8 +28,7 @@ class BenchmarkResult {
 
   BenchmarkResult(this.name, this.operations, this.duration);
 
-  double get opsPerSecond =>
-      operations / (duration.inMicroseconds / 1000000.0);
+  double get opsPerSecond => operations / (duration.inMicroseconds / 1000000.0);
 
   double get msPerOp => duration.inMicroseconds / 1000.0 / operations;
 
@@ -43,11 +42,19 @@ class BenchmarkResult {
 }
 
 Future<void> main() async {
-  print('╔════════════════════════════════════════════════════════════════════╗');
-  print('║                    DocDB Performance Benchmark                     ║');
-  print('╚════════════════════════════════════════════════════════════════════╝');
+  print(
+    '╔════════════════════════════════════════════════════════════════════╗',
+  );
+  print(
+    '║                    DocDB Performance Benchmark                     ║',
+  );
+  print(
+    '╚════════════════════════════════════════════════════════════════════╝',
+  );
   print('');
-  print('System: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}');
+  print(
+    'System: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+  );
   print('Dart:   ${Platform.version.split(' ').first}');
   print('');
 
@@ -56,32 +63,44 @@ Future<void> main() async {
   // =========================================================================
   // In-Memory Benchmarks
   // =========================================================================
-  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  print(
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+  );
   print('  IN-MEMORY STORAGE BENCHMARKS');
-  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  print(
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+  );
   print('');
 
-  results.addAll(await _runStorageBenchmarks(
-    config: DocDBConfig.inMemory(),
-    prefix: 'Memory',
-  ));
+  results.addAll(
+    await _runStorageBenchmarks(
+      config: DocDBConfig.inMemory(),
+      prefix: 'Memory',
+    ),
+  );
 
   // =========================================================================
   // File-Based Benchmarks
   // =========================================================================
   print('');
-  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  print(
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+  );
   print('  FILE-BASED STORAGE BENCHMARKS');
-  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  print(
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+  );
   print('');
 
   final tempDir = await Directory.systemTemp.createTemp('docdb_bench_');
   try {
-    results.addAll(await _runStorageBenchmarks(
-      config: DocDBConfig.production(),
-      path: tempDir.path,
-      prefix: 'File',
-    ));
+    results.addAll(
+      await _runStorageBenchmarks(
+        config: DocDBConfig.production(),
+        path: tempDir.path,
+        prefix: 'File',
+      ),
+    );
   } finally {
     await tempDir.delete(recursive: true);
   }
@@ -90,9 +109,13 @@ Future<void> main() async {
   // Index Performance Comparison
   // =========================================================================
   print('');
-  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  print(
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+  );
   print('  INDEX PERFORMANCE COMPARISON');
-  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  print(
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+  );
   print('');
 
   results.addAll(await _runIndexBenchmarks());
@@ -101,11 +124,19 @@ Future<void> main() async {
   // Summary
   // =========================================================================
   print('');
-  print('╔════════════════════════════════════════════════════════════════════╗');
-  print('║                         BENCHMARK SUMMARY                          ║');
-  print('╚════════════════════════════════════════════════════════════════════╝');
+  print(
+    '╔════════════════════════════════════════════════════════════════════╗',
+  );
+  print(
+    '║                         BENCHMARK SUMMARY                          ║',
+  );
+  print(
+    '╚════════════════════════════════════════════════════════════════════╝',
+  );
   print('');
-  print('${'Operation'.padRight(40)} ${'Total'.padLeft(6)}  ${'Per Op'.padLeft(8)}  ${'Throughput'.padLeft(10)}');
+  print(
+    '${'Operation'.padRight(40)} ${'Total'.padLeft(6)}  ${'Per Op'.padLeft(8)}  ${'Throughput'.padLeft(10)}',
+  );
   print('─' * 72);
 
   for (final result in results) {
@@ -138,28 +169,32 @@ Future<List<BenchmarkResult>> _runStorageBenchmarks({
     print('  Insert Operations:');
 
     // Single inserts
-    results.add(await _benchmark(
-      '$prefix: Insert $kMediumDataset (single)',
-      kMediumDataset,
-      () async {
-        for (int i = 0; i < kMediumDataset; i++) {
-          await products.insert(_createProduct(i));
-        }
-      },
-    ));
+    results.add(
+      await _benchmark(
+        '$prefix: Insert $kMediumDataset (single)',
+        kMediumDataset,
+        () async {
+          for (int i = 0; i < kMediumDataset; i++) {
+            await products.insert(_createProduct(i));
+          }
+        },
+      ),
+    );
 
     // Clear for next test
     await products.deleteAll();
 
     // Batch insert
-    results.add(await _benchmark(
-      '$prefix: Insert $kMediumDataset (batch)',
-      kMediumDataset,
-      () async {
-        final batch = List.generate(kMediumDataset, _createProduct);
-        await products.insertMany(batch);
-      },
-    ));
+    results.add(
+      await _benchmark(
+        '$prefix: Insert $kMediumDataset (batch)',
+        kMediumDataset,
+        () async {
+          final batch = List.generate(kMediumDataset, _createProduct);
+          await products.insertMany(batch);
+        },
+      ),
+    );
 
     // -------------------------------------------------------------------------
     // Read Benchmarks
@@ -172,35 +207,37 @@ Future<List<BenchmarkResult>> _runStorageBenchmarks({
     final ids = allProducts.map((p) => p.id!).toList();
 
     // Read by ID
-    results.add(await _benchmark(
-      '$prefix: Read by ID ($kMediumDataset)',
-      kMediumDataset,
-      () async {
-        for (final id in ids) {
-          await products.get(id);
-        }
-      },
-    ));
+    results.add(
+      await _benchmark(
+        '$prefix: Read by ID ($kMediumDataset)',
+        kMediumDataset,
+        () async {
+          for (final id in ids) {
+            await products.get(id);
+          }
+        },
+      ),
+    );
 
     // Get all
-    results.add(await _benchmark(
-      '$prefix: GetAll ($kMediumDataset entities)',
-      1,
-      () async {
-        await products.getAll();
-      },
-    ));
+    results.add(
+      await _benchmark(
+        '$prefix: GetAll ($kMediumDataset entities)',
+        1,
+        () async {
+          await products.getAll();
+        },
+      ),
+    );
 
     // Count
-    results.add(await _benchmark(
-      '$prefix: Count',
-      100,
-      () async {
+    results.add(
+      await _benchmark('$prefix: Count', 100, () async {
         for (int i = 0; i < 100; i++) {
           await products.count;
         }
-      },
-    ));
+      }),
+    );
 
     // -------------------------------------------------------------------------
     // Query Benchmarks
@@ -209,43 +246,37 @@ Future<List<BenchmarkResult>> _runStorageBenchmarks({
     print('  Query Operations:');
 
     // Equals query
-    results.add(await _benchmark(
-      '$prefix: Query equals (100 queries)',
-      100,
-      () async {
+    results.add(
+      await _benchmark('$prefix: Query equals (100 queries)', 100, () async {
         for (int i = 0; i < 100; i++) {
           await products.find(
             QueryBuilder().whereEquals('quantity', 50).build(),
           );
         }
-      },
-    ));
+      }),
+    );
 
     // Range query
-    results.add(await _benchmark(
-      '$prefix: Query range (100 queries)',
-      100,
-      () async {
+    results.add(
+      await _benchmark('$prefix: Query range (100 queries)', 100, () async {
         for (int i = 0; i < 100; i++) {
           await products.find(
             QueryBuilder().whereGreaterThan('price', 500.0).build(),
           );
         }
-      },
-    ));
+      }),
+    );
 
     // Contains query
-    results.add(await _benchmark(
-      '$prefix: Query contains (100 queries)',
-      100,
-      () async {
+    results.add(
+      await _benchmark('$prefix: Query contains (100 queries)', 100, () async {
         for (int i = 0; i < 100; i++) {
           await products.find(
             QueryBuilder().whereContains('name', 'Product').build(),
           );
         }
-      },
-    ));
+      }),
+    );
 
     // -------------------------------------------------------------------------
     // Update Benchmarks
@@ -253,19 +284,21 @@ Future<List<BenchmarkResult>> _runStorageBenchmarks({
     print('');
     print('  Update Operations:');
 
-    results.add(await _benchmark(
-      '$prefix: Update ($kSmallDataset entities)',
-      kSmallDataset,
-      () async {
-        final fresh = await products.getAll();
-        for (int i = 0; i < kSmallDataset; i++) {
-          final product = fresh[i];
-          final updated = product.copyWith(price: product.price + 1.0);
-          await products.update(updated);
-        }
-      },
-      skipWarmup: true,
-    ));
+    results.add(
+      await _benchmark(
+        '$prefix: Update ($kSmallDataset entities)',
+        kSmallDataset,
+        () async {
+          final fresh = await products.getAll();
+          for (int i = 0; i < kSmallDataset; i++) {
+            final product = fresh[i];
+            final updated = product.copyWith(price: product.price + 1.0);
+            await products.update(updated);
+          }
+        },
+        skipWarmup: true,
+      ),
+    );
 
     // -------------------------------------------------------------------------
     // Delete Benchmarks
@@ -273,25 +306,29 @@ Future<List<BenchmarkResult>> _runStorageBenchmarks({
     print('');
     print('  Delete Operations:');
 
-    results.add(await _benchmark(
-      '$prefix: Delete ($kSmallDataset entities)',
-      kSmallDataset,
-      () async {
-        for (int i = 0; i < kSmallDataset; i++) {
-          await products.delete(ids[i]);
-        }
-      },
-    ));
+    results.add(
+      await _benchmark(
+        '$prefix: Delete ($kSmallDataset entities)',
+        kSmallDataset,
+        () async {
+          for (int i = 0; i < kSmallDataset; i++) {
+            await products.delete(ids[i]);
+          }
+        },
+      ),
+    );
 
     // DeleteAll
     await products.insertMany(List.generate(kSmallDataset, _createProduct));
-    results.add(await _benchmark(
-      '$prefix: DeleteAll ($kSmallDataset entities)',
-      1,
-      () async {
-        await products.deleteAll();
-      },
-    ));
+    results.add(
+      await _benchmark(
+        '$prefix: DeleteAll ($kSmallDataset entities)',
+        1,
+        () async {
+          await products.deleteAll();
+        },
+      ),
+    );
   } finally {
     await db.close();
   }
@@ -320,29 +357,25 @@ Future<List<BenchmarkResult>> _runIndexBenchmarks() async {
     // -------------------------------------------------------------------------
     print('  Without Index:');
 
-    results.add(await _benchmark(
-      'No Index: Equals query (50 queries)',
-      50,
-      () async {
+    results.add(
+      await _benchmark('No Index: Equals query (50 queries)', 50, () async {
         for (int i = 0; i < 50; i++) {
           await products.find(
             QueryBuilder().whereEquals('quantity', 25).build(),
           );
         }
-      },
-    ));
+      }),
+    );
 
-    results.add(await _benchmark(
-      'No Index: Range query (50 queries)',
-      50,
-      () async {
+    results.add(
+      await _benchmark('No Index: Range query (50 queries)', 50, () async {
         for (int i = 0; i < 50; i++) {
           await products.find(
             QueryBuilder().whereGreaterThan('price', 750.0).build(),
           );
         }
-      },
-    ));
+      }),
+    );
 
     // -------------------------------------------------------------------------
     // Create Indexes
@@ -350,23 +383,17 @@ Future<List<BenchmarkResult>> _runIndexBenchmarks() async {
     print('');
     print('  Creating indexes...');
 
-    results.add(await _benchmark(
-      'Create Hash Index (quantity)',
-      1,
-      () async {
+    results.add(
+      await _benchmark('Create Hash Index (quantity)', 1, () async {
         await products.createIndex('quantity', IndexType.hash);
-      },
-      skipWarmup: true,
-    ));
+      }, skipWarmup: true),
+    );
 
-    results.add(await _benchmark(
-      'Create BTree Index (price)',
-      1,
-      () async {
+    results.add(
+      await _benchmark('Create BTree Index (price)', 1, () async {
         await products.createIndex('price', IndexType.btree);
-      },
-      skipWarmup: true,
-    ));
+      }, skipWarmup: true),
+    );
 
     // -------------------------------------------------------------------------
     // Query WITH Index
@@ -374,29 +401,25 @@ Future<List<BenchmarkResult>> _runIndexBenchmarks() async {
     print('');
     print('  With Index:');
 
-    results.add(await _benchmark(
-      'Hash Index: Equals query (50 queries)',
-      50,
-      () async {
+    results.add(
+      await _benchmark('Hash Index: Equals query (50 queries)', 50, () async {
         for (int i = 0; i < 50; i++) {
           await products.find(
             QueryBuilder().whereEquals('quantity', 25).build(),
           );
         }
-      },
-    ));
+      }),
+    );
 
-    results.add(await _benchmark(
-      'BTree Index: Range query (50 queries)',
-      50,
-      () async {
+    results.add(
+      await _benchmark('BTree Index: Range query (50 queries)', 50, () async {
         for (int i = 0; i < 50; i++) {
           await products.find(
             QueryBuilder().whereGreaterThan('price', 750.0).build(),
           );
         }
-      },
-    ));
+      }),
+    );
   } finally {
     await db.close();
   }
