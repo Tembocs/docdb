@@ -11,7 +11,6 @@ import 'package:test/test.dart';
 
 import 'package:docdb/src/authentication/authentication.dart';
 import 'package:docdb/src/authorization/authorization.dart';
-import 'package:docdb/src/entity/entity.dart';
 import 'package:docdb/src/exceptions/exceptions.dart';
 import 'package:docdb/src/storage/memory_storage.dart';
 
@@ -72,7 +71,7 @@ void main() {
     setUp(() {
       security = SecurityService(
         config: SecurityConfig.development(
-          jwtSecret: 'test-secret-key-32-characters-!',
+          jwtSecret: 'test-secret-key-32-characters-min',
         ),
       );
     });
@@ -87,7 +86,7 @@ void main() {
       test('should reject password too short', () {
         final devSecurity = SecurityService(
           config: SecurityConfig.development(
-            jwtSecret: 'test-secret-key-32-characters-!',
+            jwtSecret: 'test-secret-key-32-characters-min',
           ),
         );
 
@@ -99,7 +98,7 @@ void main() {
       test('should reject password without lowercase (in production)', () {
         final prodSecurity = SecurityService(
           config: SecurityConfig.production(
-            jwtSecret: 'test-secret-key-32-characters-!',
+            jwtSecret: 'test-secret-key-32-characters-min',
           ),
         );
 
@@ -111,7 +110,7 @@ void main() {
       test('should reject password without uppercase (in production)', () {
         final prodSecurity = SecurityService(
           config: SecurityConfig.production(
-            jwtSecret: 'test-secret-key-32-characters-!',
+            jwtSecret: 'test-secret-key-32-characters-min',
           ),
         );
 
@@ -123,7 +122,7 @@ void main() {
       test('should reject password without numbers (in production)', () {
         final prodSecurity = SecurityService(
           config: SecurityConfig.production(
-            jwtSecret: 'test-secret-key-32-characters-!',
+            jwtSecret: 'test-secret-key-32-characters-min',
           ),
         );
 
@@ -666,7 +665,7 @@ void main() {
         userStorage: userStorage,
         sessionStorage: sessionStorage,
         securityConfig: SecurityConfig.development(
-          jwtSecret: 'test-secret-key-32-characters-!',
+          jwtSecret: 'test-secret-key-32-characters-min',
         ),
         roleManager: roleManager,
       );
@@ -692,7 +691,7 @@ void main() {
         final newAuth = AuthenticationService(
           userStorage: userStorage,
           securityConfig: SecurityConfig.development(
-            jwtSecret: 'test-secret-key-32-characters-!',
+            jwtSecret: 'test-secret-key-32-characters-min',
           ),
           roleManager: roleManager,
         );
@@ -922,18 +921,12 @@ void main() {
 
     group('Password Management', () {
       late User user;
-      late LoginResult loginResult;
 
       setUp(() async {
         user = await authService.register(
           username: 'passworduser',
           password: 'OldPassword123',
           roles: ['user'],
-        );
-
-        loginResult = await authService.login(
-          username: 'passworduser',
-          password: 'OldPassword123',
         );
       });
 
