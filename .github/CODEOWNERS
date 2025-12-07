@@ -1,0 +1,18 @@
+# Code Owners
+# These users will be automatically requested for review on PRs
+
+# Default owners for everything
+* @Tembocs
+
+# Core engine components
+/lib/src/engine/ @Tembocs
+/lib/src/storage/ @Tembocs
+/lib/src/transaction/ @Tembocs
+
+# Security-sensitive areas
+/lib/src/encryption/ @Tembocs
+/lib/src/authentication/ @Tembocs
+/lib/src/authorization/ @Tembocs
+
+# CI/CD configuration
+/.github/ @Tembocs

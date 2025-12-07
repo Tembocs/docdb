@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://pub.dev/documentation/docdb/latest/
+    about: Check the API documentation for usage guides
+  - name: 💬 Discussions
+    url: https://github.com/Tembocs/docdb/discussions
+    about: Ask questions and discuss ideas

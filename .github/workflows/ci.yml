@@ -1,0 +1,274 @@
+# DocDB Continuous Integration
+#
+# This workflow runs on every push and pull request to ensure code quality.
+# It includes linting, formatting, testing, and coverage reporting.
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DART_SDK_VERSION: "3.10.x"
+
+jobs:
+  # ===========================================================================
+  # Code Quality Checks
+  # ===========================================================================
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK_VERSION }}
+
+      - name: Cache Dart dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze code
+        run: dart analyze --fatal-infos
+
+      - name: Check for outdated dependencies
+        run: dart pub outdated
+        continue-on-error: true
+
+  # ===========================================================================
+  # Unit Tests
+  # ===========================================================================
+  test:
+    name: Test (Dart ${{ matrix.sdk }})
+    runs-on: ${{ matrix.os }}
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        sdk: ["3.10.x", "stable"]
+        include:
+          # Also test on macOS and Windows with stable SDK
+          - os: macos-latest
+            sdk: stable
+          - os: windows-latest
+            sdk: stable
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.sdk }}
+
+      - name: Cache Dart dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Run tests
+        run: dart test --reporter github --coverage=coverage
+
+      - name: Upload coverage data
+        if: matrix.os == 'ubuntu-latest' && matrix.sdk == '3.10.x'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data
+          path: coverage/
+          retention-days: 1
+
+  # ===========================================================================
+  # Coverage Reporting
+  # ===========================================================================
+  coverage:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK_VERSION }}
+
+      - name: Download coverage data
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-data
+          path: coverage/
+
+      - name: Install coverage tools
+        run: dart pub global activate coverage
+
+      - name: Format coverage report
+        run: |
+          dart pub global run coverage:format_coverage \
+            --lcov \
+            --in=coverage \
+            --out=coverage/lcov.info \
+            --report-on=lib
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage/lcov.info
+          fail_ci_if_error: false
+          verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Generate coverage summary
+        run: |
+          echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage/lcov.info ]; then
+            LINES=$(grep -c "^DA:" coverage/lcov.info || echo "0")
+            HIT=$(grep "^DA:" coverage/lcov.info | grep -v ",0$" | wc -l || echo "0")
+            if [ "$LINES" -gt 0 ]; then
+              PCT=$((HIT * 100 / LINES))
+              echo "**Line Coverage:** ${PCT}% (${HIT}/${LINES} lines)" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+  # ===========================================================================
+  # Performance Benchmarks
+  # ===========================================================================
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: test
+    # Only run benchmarks on main branch or when specifically requested
+    if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'run-benchmarks')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK_VERSION }}
+
+      - name: Cache Dart dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Run benchmarks
+        run: dart run example/benchmark.dart | tee benchmark-results.txt
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark-results.txt
+          retention-days: 30
+
+      - name: Add benchmark summary
+        run: |
+          echo "## Benchmark Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          tail -70 benchmark-results.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # ===========================================================================
+  # Documentation Generation
+  # ===========================================================================
+  docs:
+    name: Generate Documentation
+    runs-on: ubuntu-latest
+    needs: lint
+    # Only generate docs on main branch pushes
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK_VERSION }}
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Generate API documentation
+        run: dart doc .
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: doc/api/
+          retention-days: 7
+
+  # ===========================================================================
+  # Build Verification
+  # ===========================================================================
+  build:
+    name: Build Examples
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK_VERSION }}
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Compile examples (AOT check)
+        run: |
+          for file in example/*.dart; do
+            echo "Compiling $file..."
+            dart compile exe "$file" -o "/tmp/$(basename "$file" .dart)" 2>&1 || true
+          done
+
+      - name: Verify package score
+        run: |
+          dart pub global activate pana
+          dart pub global run pana --no-warning . | tee pana-report.txt
+          echo "## Package Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          tail -20 pana-report.txt >> $GITHUB_STEP_SUMMARY

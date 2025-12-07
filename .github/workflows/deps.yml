@@ -1,0 +1,88 @@
+# DocDB Dependency Updates
+#
+# This workflow runs weekly to check for dependency updates and security issues.
+
+name: Dependencies
+
+on:
+  schedule:
+    # Run every Monday at 9:00 UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+env:
+  DART_SDK_VERSION: "3.10.x"
+
+jobs:
+  # ===========================================================================
+  # Check for Outdated Dependencies
+  # ===========================================================================
+  check-updates:
+    name: Check Dependency Updates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK_VERSION }}
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Check for outdated packages
+        run: |
+          echo "## Dependency Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          dart pub outdated >> $GITHUB_STEP_SUMMARY 2>&1 || true
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check for upgradable packages
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Upgradable Packages" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          dart pub upgrade --dry-run >> $GITHUB_STEP_SUMMARY 2>&1 || true
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # ===========================================================================
+  # Security Audit
+  # ===========================================================================
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK_VERSION }}
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Run package analysis
+        run: |
+          dart pub global activate pana
+          dart pub global run pana --no-warning . > pana-report.txt 2>&1 || true
+          
+          echo "## Security & Quality Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Extract score
+          if grep -q "Points:" pana-report.txt; then
+            echo "### Package Score" >> $GITHUB_STEP_SUMMARY
+            grep "Points:" pana-report.txt >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Full Report" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat pana-report.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

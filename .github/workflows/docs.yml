@@ -1,0 +1,108 @@
+# DocDB Documentation Deployment
+#
+# Automatically deploys API documentation to GitHub Pages when main is updated.
+
+name: Deploy Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lib/**"
+      - "doc/**"
+      - "pubspec.yaml"
+  workflow_dispatch:
+
+# Sets permissions for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+env:
+  DART_SDK_VERSION: "3.10.x"
+
+jobs:
+  # ===========================================================================
+  # Build Documentation
+  # ===========================================================================
+  build:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK_VERSION }}
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Generate API documentation
+        run: dart doc .
+
+      - name: Add custom index
+        run: |
+          # Create a landing page that redirects to the API docs
+          cat > doc/api/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>DocDB API Documentation</title>
+            <meta http-equiv="refresh" content="0; url=docdb/docdb-library.html">
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+              }
+              .container { text-align: center; }
+              a { color: #fff; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>📦 DocDB</h1>
+              <p>Redirecting to API documentation...</p>
+              <p><a href="docdb/docdb-library.html">Click here if not redirected</a></p>
+            </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: doc/api
+
+  # ===========================================================================
+  # Deploy to GitHub Pages
+  # ===========================================================================
+  deploy:
+    name: Deploy to GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
