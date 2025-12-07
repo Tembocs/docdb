@@ -1,12 +1,12 @@
-/// DocDB - Main Database Class
+/// EntiDB - Main Database Class
 ///
-/// The primary entry point for the DocDB embedded document database.
+/// The primary entry point for the EntiDB embedded document database.
 /// Provides a unified interface for managing collections, transactions,
 /// backups, and database lifecycle.
 ///
 /// ## Overview
 ///
-/// DocDB is a robust, embedded document database for Dart applications,
+/// EntiDB is a robust, embedded document database for Dart applications,
 /// providing:
 ///
 /// - **Type-Safe Collections**: Generic `Collection<T>` with compile-time safety
@@ -20,7 +20,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/docdb.dart';
+/// import 'package:entidb/entidb.dart';
 ///
 /// // Define your entity
 /// class Product implements Entity {
@@ -39,9 +39,9 @@
 /// }
 ///
 /// // Open database
-/// final db = await DocDB.open(
+/// final db = await EntiDB.open(
 ///   path: './myapp.db',
-///   config: DocDBConfig.production(),
+///   config: EntiDBConfig.production(),
 /// );
 ///
 /// // Get or create a collection
@@ -67,9 +67,9 @@
 /// final derived = await derivation.deriveKey('user-password');
 /// final encryption = AesGcmEncryptionService(secretKey: derived.secretKey);
 ///
-/// final db = await DocDB.open(
+/// final db = await EntiDB.open(
 ///   path: './secure.db',
-///   config: DocDBConfig.production(encryptionService: encryption),
+///   config: EntiDBConfig.production(encryptionService: encryption),
 /// );
 /// ```
 library;
@@ -88,10 +88,10 @@ import '../storage/paged_storage.dart';
 import '../storage/storage.dart';
 import '../utils/constants.dart';
 import 'collection_entry.dart';
-import 'docdb_config.dart';
-import 'docdb_stats.dart';
+import 'entidb_config.dart';
+import 'entidb_stats.dart';
 
-/// The main DocDB database class.
+/// The main EntiDB database class.
 ///
 /// Provides a unified interface for managing collections, handling the
 /// database lifecycle, and coordinating cross-cutting concerns like
@@ -99,23 +99,23 @@ import 'docdb_stats.dart';
 ///
 /// ## Lifecycle
 ///
-/// 1. **Open**: Use [DocDB.open] to open or create a database
+/// 1. **Open**: Use [EntiDB.open] to open or create a database
 /// 2. **Use**: Access collections via [collection] method
 /// 3. **Close**: Call [close] to flush and release resources
 ///
 /// ## Thread Safety
 ///
-/// DocDB is thread-safe for concurrent access from multiple isolates.
+/// EntiDB is thread-safe for concurrent access from multiple isolates.
 /// Collections are protected by internal locking mechanisms.
-class DocDB {
+class EntiDB {
   /// The database file path (null for in-memory).
   final String? path;
 
   /// Database configuration.
-  final DocDBConfig config;
+  final EntiDBConfig config;
 
   /// Logger for database operations.
-  final DocDBLogger _logger;
+  final EntiDBLogger _logger;
 
   /// Lock for thread-safe operations.
   final Lock _lock = Lock();
@@ -130,12 +130,12 @@ class DocDB {
   bool _disposed = false;
 
   /// Private constructor - use [open] factory.
-  DocDB._({required this.path, required this.config})
-    : _logger = DocDBLogger(LoggerNameConstants.docdb);
+  EntiDB._({required this.path, required this.config})
+    : _logger = EntiDBLogger(LoggerNameConstants.entidb);
 
   /// Opens or creates a database at the specified path.
   ///
-  /// For in-memory databases, pass `null` as the path or use [DocDBConfig.inMemory].
+  /// For in-memory databases, pass `null` as the path or use [EntiDBConfig.inMemory].
   ///
   /// ## Parameters
   ///
@@ -144,32 +144,32 @@ class DocDB {
   ///
   /// ## Returns
   ///
-  /// An open [DocDB] instance ready for use.
+  /// An open [EntiDB] instance ready for use.
   ///
   /// ## Throws
   ///
-  /// - [DocDBException]: If the database cannot be opened
+  /// - [EntiDBException]: If the database cannot be opened
   ///
   /// ## Example
   ///
   /// ```dart
   /// // File-based database
-  /// final db = await DocDB.open(
+  /// final db = await EntiDB.open(
   ///   path: './myapp_data',
-  ///   config: DocDBConfig.production(),
+  ///   config: EntiDBConfig.production(),
   /// );
   ///
   /// // In-memory database
-  /// final testDb = await DocDB.open(
+  /// final testDb = await EntiDB.open(
   ///   path: null,
-  ///   config: DocDBConfig.inMemory(),
+  ///   config: EntiDBConfig.inMemory(),
   /// );
   /// ```
-  static Future<DocDB> open({
+  static Future<EntiDB> open({
     String? path,
-    DocDBConfig config = const DocDBConfig(),
+    EntiDBConfig config = const EntiDBConfig(),
   }) async {
-    final db = DocDB._(path: path, config: config);
+    final db = EntiDB._(path: path, config: config);
 
     try {
       await db._initialize();
@@ -228,7 +228,7 @@ class DocDB {
   ///
   /// ## Throws
   ///
-  /// - [DocDBException]: If the database is not open or collection creation fails
+  /// - [EntiDBException]: If the database is not open or collection creation fails
   ///
   /// ## Example
   ///
@@ -317,7 +317,7 @@ class DocDB {
   String _getStoragePath(String collectionName) {
     if (path == null) {
       // Use temp directory for in-memory mode with file storage
-      return '${Directory.systemTemp.path}/docdb_$collectionName.db';
+      return '${Directory.systemTemp.path}/entidb_$collectionName.db';
     }
     return '$path/$collectionName.db';
   }
@@ -349,7 +349,7 @@ class DocDB {
   ///
   /// ## Throws
   ///
-  /// - [DocDBException]: If the drop operation fails
+  /// - [EntiDBException]: If the drop operation fails
   Future<bool> dropCollection(String name) async {
     _checkOpen();
 
@@ -450,8 +450,8 @@ class DocDB {
   ///
   /// ## Returns
   ///
-  /// A [DocDBStats] object with current database metrics.
-  Future<DocDBStats> getStats() async {
+  /// A [EntiDBStats] object with current database metrics.
+  Future<EntiDBStats> getStats() async {
     _checkOpen();
 
     return await _lock.synchronized(() async {
@@ -466,7 +466,7 @@ class DocDB {
         );
       }
 
-      return DocDBStats(
+      return EntiDBStats(
         path: path,
         isOpen: _isOpen,
         collectionCount: _collections.length,
@@ -489,7 +489,7 @@ class DocDB {
 
   @override
   String toString() {
-    return 'DocDB(path: ${path ?? "in-memory"}, '
+    return 'EntiDB(path: ${path ?? "in-memory"}, '
         'collections: ${_collections.length}, '
         'open: $_isOpen)';
   }

@@ -1,4 +1,4 @@
-/// DocDB Index Module Tests
+/// EntiDB Index Module Tests
 ///
 /// Comprehensive tests for the index module including BTreeIndex and HashIndex
 /// implementations for efficient data lookup and range queries.
@@ -6,9 +6,9 @@ library;
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/exceptions/exceptions.dart';
-import 'package:docdb/src/index/index.dart';
-import 'package:docdb/src/query/query_types.dart';
+import 'package:entidb/src/exceptions/exceptions.dart';
+import 'package:entidb/src/index/index.dart';
+import 'package:entidb/src/query/query_types.dart';
 
 void main() {
   group('IIndex Interface', () {

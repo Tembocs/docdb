@@ -1,6 +1,6 @@
 /// Collection Entry - Internal
 ///
-/// Internal helper class for tracking registered collections within DocDB.
+/// Internal helper class for tracking registered collections within EntiDB.
 /// This file is not exported as part of the public API.
 library;
 
@@ -9,7 +9,7 @@ import '../storage/storage.dart';
 
 /// Internal entry tracking a registered collection.
 ///
-/// Used by DocDB to maintain metadata about each collection including
+/// Used by EntiDB to maintain metadata about each collection including
 /// its type information, storage backend, and collection instance.
 class CollectionEntry {
   /// The collection name.

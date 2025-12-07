@@ -1,4 +1,4 @@
-/// DocDB Backup - Differential Snapshot
+/// EntiDB Backup - Differential Snapshot
 ///
 /// Represents a differential backup containing only changes since a
 /// base full backup.

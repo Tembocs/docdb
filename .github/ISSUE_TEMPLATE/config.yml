@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: 📚 Documentation
-    url: https://pub.dev/documentation/docdb/latest/
+    url: https://pub.dev/documentation/entidb/latest/
     about: Check the API documentation for usage guides
   - name: 💬 Discussions
-    url: https://github.com/Tembocs/docdb/discussions
+    url: https://github.com/Tembocs/entidb/discussions
     about: Ask questions and discuss ideas

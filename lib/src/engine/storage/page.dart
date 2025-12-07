@@ -5,7 +5,7 @@ import 'page_type.dart';
 
 /// A fixed-size block of data representing a database page.
 ///
-/// Pages are the fundamental unit of I/O in DocDB's storage engine.
+/// Pages are the fundamental unit of I/O in EntiDB's storage engine.
 /// All disk reads and writes operate on complete pages, never partial data.
 ///
 /// ## Page Structure

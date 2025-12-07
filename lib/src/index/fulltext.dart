@@ -1,4 +1,4 @@
-/// Full-Text Search Index implementation for DocDB.
+/// Full-Text Search Index implementation for EntiDB.
 ///
 /// This module provides a full-text search index using an inverted index
 /// structure with tokenization, normalization, and relevance scoring.

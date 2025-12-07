@@ -1,4 +1,4 @@
-/// Isolation level definitions for DocDB transactions.
+/// Isolation level definitions for EntiDB transactions.
 ///
 /// Defines the levels of isolation between concurrent transactions,
 /// controlling what data changes are visible to each transaction.
@@ -28,7 +28,7 @@ library;
 ///
 /// ## Default Behavior
 ///
-/// DocDB defaults to [serializable] isolation for single-writer scenarios.
+/// EntiDB defaults to [serializable] isolation for single-writer scenarios.
 /// For high-concurrency use cases, consider [readCommitted].
 enum IsolationLevel {
   /// Lowest isolation level.

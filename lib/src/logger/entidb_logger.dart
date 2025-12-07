@@ -6,7 +6,7 @@ import 'package:synchronized/synchronized.dart';
 import 'log_level.dart';
 import 'logger_config.dart';
 
-/// A thread-safe logging utility for DocDB with module-specific contexts.
+/// A thread-safe logging utility for EntiDB with module-specific contexts.
 ///
 /// Provides structured logging capabilities with multiple log levels,
 /// synchronized file access, and optional console output.
@@ -17,10 +17,10 @@ import 'logger_config.dart';
 ///
 /// ```dart
 /// // Production setup (file logging only)
-/// await DocDBLogger.initialize();
+/// await EntiDBLogger.initialize();
 ///
 /// // Development setup (file + console logging)
-/// await DocDBLogger.initialize(config: LoggerConfig.development);
+/// await EntiDBLogger.initialize(config: LoggerConfig.development);
 /// ```
 ///
 /// ## Creating Logger Instances
@@ -28,7 +28,7 @@ import 'logger_config.dart';
 /// Create a logger for each module using [LoggerNameConstants]:
 ///
 /// ```dart
-/// final logger = DocDBLogger(LoggerNameConstants.authentication);
+/// final logger = EntiDBLogger(LoggerNameConstants.authentication);
 /// ```
 ///
 /// ## Logging Messages
@@ -45,9 +45,9 @@ import 'logger_config.dart';
 /// Always dispose the logger during application shutdown:
 ///
 /// ```dart
-/// await DocDBLogger.dispose();
+/// await EntiDBLogger.dispose();
 /// ```
-class DocDBLogger {
+class EntiDBLogger {
   /// The name of the module using this logger instance.
   final String moduleName;
 
@@ -70,9 +70,9 @@ class DocDBLogger {
   ///
   /// [moduleName] identifies the source of log messages in the log output.
   ///
-  /// **Important**: Call [DocDBLogger.initialize] before creating instances.
+  /// **Important**: Call [EntiDBLogger.initialize] before creating instances.
   /// If not initialized, logging operations will be no-ops until initialization.
-  DocDBLogger(this.moduleName) : _logger = Logger(moduleName);
+  EntiDBLogger(this.moduleName) : _logger = Logger(moduleName);
 
   /// Returns `true` if the logger system has been initialized.
   static bool get isInitialized => _isInitialized;
@@ -93,13 +93,13 @@ class DocDBLogger {
   /// Example:
   /// ```dart
   /// // Production setup
-  /// await DocDBLogger.initialize();
+  /// await EntiDBLogger.initialize();
   ///
   /// // Development setup with console output
-  /// await DocDBLogger.initialize(config: LoggerConfig.development);
+  /// await EntiDBLogger.initialize(config: LoggerConfig.development);
   ///
   /// // Custom configuration
-  /// await DocDBLogger.initialize(
+  /// await EntiDBLogger.initialize(
   ///   config: LoggerConfig(
   ///     logPath: 'custom/path/app.log',
   ///     minLevel: LogLevel.warning,

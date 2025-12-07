@@ -1,4 +1,4 @@
-/// Core entity module for DocDB.
+/// Core entity module for EntiDB.
 ///
 /// This module defines the [Entity] interface that all storable classes
 /// must implement. The interface-based approach enables type-safe storage
@@ -7,7 +7,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/entity/entity.dart';
+/// import 'package:entidb/src/entity/entity.dart';
 ///
 /// class Product implements Entity {
 ///   @override
@@ -41,7 +41,7 @@
 /// ## Usage with Collections
 ///
 /// ```dart
-/// final db = await DocDB.open(path: './shop');
+/// final db = await EntiDB.open(path: './shop');
 /// final products = await db.collection<Product>(
 ///   'products',
 ///   fromMap: Product.fromMap,
@@ -55,9 +55,9 @@
 /// ```
 library;
 
-/// Base interface for all storable entities in DocDB.
+/// Base interface for all storable entities in EntiDB.
 ///
-/// Any class that needs to be stored in a DocDB collection must implement
+/// Any class that needs to be stored in a EntiDB collection must implement
 /// this interface. The interface provides a minimal contract for serialization
 /// while allowing full flexibility in class design.
 ///
@@ -104,7 +104,7 @@ library;
 ///
 /// ## ID Generation
 ///
-/// When inserting an entity with a `null` id, DocDB automatically generates
+/// When inserting an entity with a `null` id, EntiDB automatically generates
 /// a UUID v4 identifier. If an id is provided, it will be used as-is.
 ///
 /// ```dart
@@ -164,7 +164,7 @@ abstract interface class Entity {
   /// Returns `null` for new entities that haven't been persisted yet.
   /// Once inserted into a collection, the id is guaranteed to be non-null.
   ///
-  /// DocDB generates a UUID v4 if this is `null` during insertion.
+  /// EntiDB generates a UUID v4 if this is `null` during insertion.
   /// If a custom id is provided, it must be unique within the collection.
   ///
   /// Example:
@@ -181,7 +181,7 @@ abstract interface class Entity {
   /// Converts this entity to a map for storage.
   ///
   /// The returned map should contain all fields that need to be persisted,
-  /// **excluding the id** (which is stored separately by DocDB).
+  /// **excluding the id** (which is stored separately by EntiDB).
   ///
   /// ## Guidelines
   ///
@@ -192,7 +192,7 @@ abstract interface class Entity {
   ///
   /// ## Supported Types
   ///
-  /// DocDB natively supports:
+  /// EntiDB natively supports:
   /// - `String`, `int`, `double`, `bool`, `null`
   /// - `List<T>` where T is a supported type
   /// - `Map<String, T>` where T is a supported type

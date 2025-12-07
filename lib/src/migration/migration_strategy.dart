@@ -1,4 +1,4 @@
-/// DocDB Migration - Migration Strategy Interface
+/// EntiDB Migration - Migration Strategy Interface
 ///
 /// Defines the contract for migration transformations between schema versions.
 /// Strategies implement bidirectional transformations (upgrade and downgrade).

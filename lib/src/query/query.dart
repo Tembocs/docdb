@@ -1,4 +1,4 @@
-/// Query module for DocDB.
+/// Query module for EntiDB.
 ///
 /// This module provides a comprehensive query system for filtering entities
 /// based on field values. Queries are constructed using a fluent builder API
@@ -7,7 +7,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/query/query.dart';
+/// import 'package:entidb/src/query/query.dart';
 ///
 /// // Build a simple query
 /// final query = QueryBuilder()

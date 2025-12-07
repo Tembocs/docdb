@@ -1,4 +1,4 @@
-/// DocDB Encryption - Key Derivation
+/// EntiDB Encryption - Key Derivation
 ///
 /// Provides password-based key derivation using PBKDF2.
 /// Converts user passwords into cryptographically strong keys.

@@ -1,4 +1,4 @@
-# DocDB
+# EntiDB
 
 An embedded, entity-based document database for Dart and Flutter applications.
 
@@ -7,7 +7,7 @@ An embedded, entity-based document database for Dart and Flutter applications.
 
 ## Overview
 
-DocDB is a local, entity-based document database written in Dart. You define entity classes that implement a simple interface, and DocDB handles serialization, storage, and retrieval. It provides typed collections, indexing, transactions, and optional encryption. It works with both Dart CLI applications and Flutter apps.
+EntiDB is a local, entity-based document database written in Dart. You define entity classes that implement a simple interface, and EntiDB handles serialization, storage, and retrieval. It provides typed collections, indexing, transactions, and optional encryption. It works with both Dart CLI applications and Flutter apps.
 
 ## Features
 
@@ -28,7 +28,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  docdb: ^1.0.0
+  entidb: ^1.0.0
 ```
 
 Then run:
@@ -42,7 +42,7 @@ dart pub get
 ### Define an Entity
 
 ```dart
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 class Product implements Entity {
   @override
@@ -77,13 +77,13 @@ class Product implements Entity {
 ### Open Database and Use Collections
 
 ```dart
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 Future<void> main() async {
   // Open database with file storage
-  final db = await DocDB.open(
+  final db = await EntiDB.open(
     path: './data',
-    config: DocDBConfig.production(),
+    config: EntiDBConfig.production(),
   );
 
   // Get a typed collection
@@ -121,15 +121,15 @@ Future<void> main() async {
 For testing or temporary data:
 
 ```dart
-final db = await DocDB.open(
+final db = await EntiDB.open(
   path: null,  // null path = in-memory
-  config: DocDBConfig.inMemory(),
+  config: EntiDBConfig.inMemory(),
 );
 ```
 
 ## Queries
 
-DocDB provides a `QueryBuilder` for constructing queries:
+EntiDB provides a `QueryBuilder` for constructing queries:
 
 ```dart
 // Equality
@@ -198,9 +198,9 @@ await db.transaction(
 Enable encryption for sensitive data:
 
 ```dart
-final db = await DocDB.open(
+final db = await EntiDB.open(
   path: './secure_data',
-  config: DocDBConfig(
+  config: EntiDBConfig(
     encryption: EncryptionConfig(
       enabled: true,
       key: yourSecretKey,  // 32 bytes for AES-256
@@ -247,7 +247,7 @@ await runner.migrateToLatest();
 ## Configuration
 
 ```dart
-final config = DocDBConfig(
+final config = EntiDBConfig(
   // Storage settings
   pageSize: 4096,
   cacheSize: 1000,

@@ -1,4 +1,4 @@
-/// DocDB Encryption - No-Op Encryption Service
+/// EntiDB Encryption - No-Op Encryption Service
 ///
 /// Provides a pass-through implementation that performs no actual encryption.
 /// Useful for development, testing, or when encryption is explicitly disabled.

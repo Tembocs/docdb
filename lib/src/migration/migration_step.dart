@@ -1,4 +1,4 @@
-/// DocDB Migration - Migration Step
+/// EntiDB Migration - Migration Step
 ///
 /// Represents a single step in a migration path between versions.
 library;

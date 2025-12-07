@@ -1,4 +1,4 @@
-/// DocDB Collection Module
+/// EntiDB Collection Module
 ///
 /// Provides type-safe, high-performance entity collections with support for
 /// indexing, transactions, optimistic concurrency control, and querying.
@@ -6,7 +6,7 @@
 /// ## Overview
 ///
 /// The [Collection] class is the primary interface for storing and retrieving
-/// entities in DocDB. It provides:
+/// entities in EntiDB. It provides:
 ///
 /// - **Type Safety**: Generic `Collection<T extends Entity>` returns typed results
 /// - **Indexing**: B-tree and hash indexes for efficient queries
@@ -17,7 +17,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/collection/collection.dart';
+/// import 'package:entidb/src/collection/collection.dart';
 ///
 /// // Define your entity
 /// class Product implements Entity {
@@ -124,7 +124,7 @@ const _uuid = Uuid();
 /// A type-safe collection of entities with indexing and query support.
 ///
 /// [Collection] provides the primary interface for storing and retrieving
-/// entities in DocDB. It wraps a [Storage] backend and adds:
+/// entities in EntiDB. It wraps a [Storage] backend and adds:
 ///
 /// - Type-safe operations with automatic serialization/deserialization
 /// - Index management for efficient queries
@@ -173,7 +173,7 @@ class Collection<T extends Entity> {
   final String _name;
 
   /// Logger for collection operations.
-  final DocDBLogger _logger;
+  final EntiDBLogger _logger;
 
   /// Collection-level lock for schema operations.
   final Lock _collectionLock = Lock();
@@ -229,7 +229,7 @@ class Collection<T extends Entity> {
   }) : _storage = storage,
        _fromMap = fromMap,
        _name = name,
-       _logger = DocDBLogger('${LoggerNameConstants.collection}.$name') {
+       _logger = EntiDBLogger('${LoggerNameConstants.collection}.$name') {
     _queryOptimizer = QueryOptimizer(
       _indexManager,
       enableCaching: enableQueryPlanCaching,

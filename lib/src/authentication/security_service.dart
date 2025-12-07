@@ -1,4 +1,4 @@
-/// DocDB Security Service Module
+/// EntiDB Security Service Module
 ///
 /// Provides cryptographic operations for authentication including password
 /// hashing, JWT token generation/verification, and secure credential handling.
@@ -14,7 +14,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/authentication/security_service.dart';
+/// import 'package:entidb/src/authentication/security_service.dart';
 ///
 /// final config = SecurityConfig(
 ///   jwtSecret: 'your-256-bit-secret-key-here',
@@ -118,7 +118,7 @@ class SecurityConfig {
   /// ## Parameters
   ///
   /// - [jwtSecret]: Secret key for JWT signing (required, min 32 chars).
-  /// - [jwtIssuer]: Token issuer claim (default: 'docdb').
+  /// - [jwtIssuer]: Token issuer claim (default: 'entidb').
   /// - [jwtAudience]: Token audience claim.
   /// - [tokenExpiry]: Access token lifetime (default: 1 hour).
   /// - [refreshTokenExpiry]: Refresh token lifetime (default: 7 days).
@@ -128,7 +128,7 @@ class SecurityConfig {
   /// - [minPasswordLength]: Minimum password length (default: 8).
   const SecurityConfig({
     required this.jwtSecret,
-    this.jwtIssuer = 'docdb',
+    this.jwtIssuer = 'entidb',
     this.jwtAudience,
     this.tokenExpiry = const Duration(hours: 1),
     this.refreshTokenExpiry = const Duration(days: 7),
@@ -162,7 +162,7 @@ class SecurityConfig {
   /// Creates a production configuration with strict settings.
   factory SecurityConfig.production({
     required String jwtSecret,
-    String jwtIssuer = 'docdb',
+    String jwtIssuer = 'entidb',
   }) {
     return SecurityConfig(
       jwtSecret: jwtSecret,
@@ -330,7 +330,7 @@ class SecurityService {
   final SecurityConfig _config;
 
   /// Logger for security operations.
-  final DocDBLogger _logger;
+  final EntiDBLogger _logger;
 
   /// Creates a new [SecurityService] with the given configuration.
   ///
@@ -345,7 +345,7 @@ class SecurityService {
   /// - [ArgumentError]: If the configuration is invalid.
   SecurityService({required SecurityConfig config})
     : _config = config,
-      _logger = DocDBLogger(LoggerNameConstants.authentication) {
+      _logger = EntiDBLogger(LoggerNameConstants.authentication) {
     _config.validate();
     _logger.debug('SecurityService initialized.');
   }

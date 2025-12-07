@@ -1,4 +1,4 @@
-/// DocDB Query Module Tests
+/// EntiDB Query Module Tests
 ///
 /// Comprehensive tests for the query module including QueryBuilder fluent API
 /// and all query types (EqualsQuery, NotEqualsQuery, AndQuery, OrQuery, etc.).
@@ -6,10 +6,10 @@ library;
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/entity/entity.dart';
-import 'package:docdb/src/query/query.dart';
-import 'package:docdb/src/index/index_manager.dart';
-import 'package:docdb/src/index/i_index.dart';
+import 'package:entidb/src/entity/entity.dart';
+import 'package:entidb/src/query/query.dart';
+import 'package:entidb/src/index/index_manager.dart';
+import 'package:entidb/src/index/i_index.dart';
 
 void main() {
   group('AllQuery', () {

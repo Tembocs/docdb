@@ -1,19 +1,19 @@
 /// Comprehensive tests for the Main module.
 ///
 /// Tests cover:
-/// - DocDB class lifecycle and operations
-/// - DocDBConfig configurations and factory methods
-/// - DocDBStats statistics collection
+/// - EntiDB class lifecycle and operations
+/// - EntiDBConfig configurations and factory methods
+/// - EntiDBStats statistics collection
 /// - StorageBackend enum
 /// - CollectionEntry internal helper
 /// - Edge cases and error handling
 import 'dart:io';
 
-import 'package:docdb/docdb.dart';
-import 'package:docdb/src/collection/collection.dart';
-import 'package:docdb/src/encryption/no_encryption_service.dart';
-import 'package:docdb/src/main/collection_entry.dart';
-import 'package:docdb/src/storage/memory_storage.dart';
+import 'package:entidb/entidb.dart';
+import 'package:entidb/src/collection/collection.dart';
+import 'package:entidb/src/encryption/no_encryption_service.dart';
+import 'package:entidb/src/main/collection_entry.dart';
+import 'package:entidb/src/storage/memory_storage.dart';
 import 'package:test/test.dart';
 
 // =============================================================================
@@ -164,13 +164,13 @@ void main() {
   });
 
   // ===========================================================================
-  // DocDBConfig Tests
+  // EntiDBConfig Tests
   // ===========================================================================
 
-  group('DocDBConfig', () {
+  group('EntiDBConfig', () {
     group('Default constructor', () {
       test('should create with default values', () {
-        const config = DocDBConfig();
+        const config = EntiDBConfig();
 
         expect(config.storageBackend, StorageBackend.paged);
         expect(config.bufferPoolSize, 1024);
@@ -184,7 +184,7 @@ void main() {
       });
 
       test('should create with custom values', () {
-        const config = DocDBConfig(
+        const config = EntiDBConfig(
           storageBackend: StorageBackend.memory,
           bufferPoolSize: 2048,
           pageSize: 8192,
@@ -206,29 +206,29 @@ void main() {
       });
 
       test('should handle zero buffer pool size', () {
-        const config = DocDBConfig(bufferPoolSize: 0);
+        const config = EntiDBConfig(bufferPoolSize: 0);
         expect(config.bufferPoolSize, 0);
       });
 
       test('should handle large buffer pool size', () {
-        const config = DocDBConfig(bufferPoolSize: 1000000);
+        const config = EntiDBConfig(bufferPoolSize: 1000000);
         expect(config.bufferPoolSize, 1000000);
       });
 
       test('should handle minimum page size', () {
-        const config = DocDBConfig(pageSize: 4096);
+        const config = EntiDBConfig(pageSize: 4096);
         expect(config.pageSize, 4096);
       });
 
       test('should handle large page size', () {
-        const config = DocDBConfig(pageSize: 65536);
+        const config = EntiDBConfig(pageSize: 65536);
         expect(config.pageSize, 65536);
       });
     });
 
     group('Factory constructors', () {
       test('production() should use optimized settings', () {
-        final config = DocDBConfig.production();
+        final config = EntiDBConfig.production();
 
         expect(config.storageBackend, StorageBackend.paged);
         expect(config.bufferPoolSize, 2048);
@@ -242,13 +242,13 @@ void main() {
 
       test('production() should accept encryption service', () {
         final encryption = NoEncryptionService();
-        final config = DocDBConfig.production(encryptionService: encryption);
+        final config = EntiDBConfig.production(encryptionService: encryption);
 
         expect(config.encryptionService, encryption);
       });
 
       test('development() should enable debug logging', () {
-        final config = DocDBConfig.development();
+        final config = EntiDBConfig.development();
 
         expect(config.storageBackend, StorageBackend.paged);
         expect(config.bufferPoolSize, 256);
@@ -259,13 +259,13 @@ void main() {
 
       test('development() should accept encryption service', () {
         final encryption = NoEncryptionService();
-        final config = DocDBConfig.development(encryptionService: encryption);
+        final config = EntiDBConfig.development(encryptionService: encryption);
 
         expect(config.encryptionService, encryption);
       });
 
       test('inMemory() should use memory backend', () {
-        final config = DocDBConfig.inMemory();
+        final config = EntiDBConfig.inMemory();
 
         expect(config.storageBackend, StorageBackend.memory);
         expect(config.enableTransactions, isFalse);
@@ -276,20 +276,20 @@ void main() {
 
     group('encryptionEnabled property', () {
       test('should return false when no encryption service', () {
-        const config = DocDBConfig();
+        const config = EntiDBConfig();
         expect(config.encryptionEnabled, isFalse);
       });
 
       test('should return false when encryption service is disabled', () {
         final encryption = NoEncryptionService();
-        final config = DocDBConfig(encryptionService: encryption);
+        final config = EntiDBConfig(encryptionService: encryption);
         expect(config.encryptionEnabled, isFalse);
       });
     });
 
     group('copyWith', () {
       test('should copy with no changes', () {
-        final original = DocDBConfig.production();
+        final original = EntiDBConfig.production();
         final copy = original.copyWith();
 
         expect(copy.storageBackend, original.storageBackend);
@@ -303,7 +303,7 @@ void main() {
       });
 
       test('should copy with single change', () {
-        final original = DocDBConfig.production();
+        final original = EntiDBConfig.production();
         final copy = original.copyWith(bufferPoolSize: 4096);
 
         expect(copy.bufferPoolSize, 4096);
@@ -312,7 +312,7 @@ void main() {
       });
 
       test('should copy with multiple changes', () {
-        final original = DocDBConfig.production();
+        final original = EntiDBConfig.production();
         final copy = original.copyWith(
           storageBackend: StorageBackend.memory,
           bufferPoolSize: 512,
@@ -330,7 +330,7 @@ void main() {
       });
 
       test('should copy with all changes', () {
-        const original = DocDBConfig();
+        const original = EntiDBConfig();
         final encryption = NoEncryptionService();
         final copy = original.copyWith(
           storageBackend: StorageBackend.memory,
@@ -357,7 +357,7 @@ void main() {
 
       test('should preserve encryption service when not overridden', () {
         final encryption = NoEncryptionService();
-        final original = DocDBConfig(encryptionService: encryption);
+        final original = EntiDBConfig(encryptionService: encryption);
         final copy = original.copyWith(bufferPoolSize: 1000);
 
         expect(copy.encryptionService, encryption);
@@ -366,12 +366,12 @@ void main() {
   });
 
   // ===========================================================================
-  // DocDBStats Tests
+  // EntiDBStats Tests
   // ===========================================================================
 
-  group('DocDBStats', () {
+  group('EntiDBStats', () {
     test('should create with required fields', () {
-      const stats = DocDBStats(
+      const stats = EntiDBStats(
         path: '/data/db',
         isOpen: true,
         collectionCount: 3,
@@ -389,7 +389,7 @@ void main() {
     });
 
     test('should handle null path for in-memory', () {
-      const stats = DocDBStats(
+      const stats = EntiDBStats(
         path: null,
         isOpen: true,
         collectionCount: 0,
@@ -403,7 +403,7 @@ void main() {
     });
 
     test('should calculate totalEntityCount from collections', () {
-      final stats = DocDBStats(
+      final stats = EntiDBStats(
         path: '/data/db',
         isOpen: true,
         collectionCount: 3,
@@ -432,7 +432,7 @@ void main() {
     });
 
     test('should calculate totalIndexCount from collections', () {
-      final stats = DocDBStats(
+      final stats = EntiDBStats(
         path: '/data/db',
         isOpen: true,
         collectionCount: 2,
@@ -456,7 +456,7 @@ void main() {
     });
 
     test('should return zero counts for empty collections', () {
-      const stats = DocDBStats(
+      const stats = EntiDBStats(
         path: '/data/db',
         isOpen: true,
         collectionCount: 0,
@@ -470,7 +470,7 @@ void main() {
     });
 
     test('toString should include relevant info', () {
-      const stats = DocDBStats(
+      const stats = EntiDBStats(
         path: '/data/db',
         isOpen: true,
         collectionCount: 2,
@@ -493,7 +493,7 @@ void main() {
     });
 
     test('toString should handle in-memory path', () {
-      const stats = DocDBStats(
+      const stats = EntiDBStats(
         path: null,
         isOpen: true,
         collectionCount: 0,
@@ -643,14 +643,14 @@ void main() {
   });
 
   // ===========================================================================
-  // DocDB Class Tests
+  // EntiDB Class Tests
   // ===========================================================================
 
-  group('DocDB', () {
+  group('EntiDB', () {
     late Directory tempDir;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('docdb_main_test_');
+      tempDir = await Directory.systemTemp.createTemp('entidb_main_test_');
     });
 
     tearDown(() async {
@@ -661,7 +661,7 @@ void main() {
 
     group('Lifecycle', () {
       test('should open in-memory database', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         expect(db.isOpen, isTrue);
         expect(db.path, isNull);
@@ -673,7 +673,7 @@ void main() {
       });
 
       test('should open with default config', () async {
-        final db = await DocDB.open(path: tempDir.path);
+        final db = await EntiDB.open(path: tempDir.path);
 
         expect(db.isOpen, isTrue);
         expect(db.path, tempDir.path);
@@ -682,9 +682,9 @@ void main() {
       });
 
       test('should open file-based database', () async {
-        final db = await DocDB.open(
+        final db = await EntiDB.open(
           path: tempDir.path,
-          config: DocDBConfig.development(),
+          config: EntiDBConfig.development(),
         );
 
         expect(db.isOpen, isTrue);
@@ -695,9 +695,9 @@ void main() {
 
       test('should create directory if not exists', () async {
         final newPath = '${tempDir.path}/nested/deep/path';
-        final db = await DocDB.open(
+        final db = await EntiDB.open(
           path: newPath,
-          config: DocDBConfig.development(),
+          config: EntiDBConfig.development(),
         );
 
         expect(db.isOpen, isTrue);
@@ -708,9 +708,9 @@ void main() {
 
       test('should handle multiple open/close cycles', () async {
         for (var i = 0; i < 3; i++) {
-          final db = await DocDB.open(
+          final db = await EntiDB.open(
             path: null,
-            config: DocDBConfig.inMemory(),
+            config: EntiDBConfig.inMemory(),
           );
           expect(db.isOpen, isTrue);
           await db.close();
@@ -719,7 +719,7 @@ void main() {
       });
 
       test('should handle close being called multiple times', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         await db.close();
         await db.close(); // Should not throw
@@ -729,10 +729,10 @@ void main() {
       });
 
       test('toString should return descriptive string', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final str = db.toString();
-        expect(str, contains('DocDB'));
+        expect(str, contains('EntiDB'));
         expect(str, contains('in-memory'));
         expect(str, contains('open'));
 
@@ -740,7 +740,7 @@ void main() {
       });
 
       test('toString should include collection count', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         await db.collection<TestProduct>(
           'products',
@@ -757,7 +757,7 @@ void main() {
 
     group('Collection Management', () {
       test('should create collection', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -773,7 +773,7 @@ void main() {
       });
 
       test('should return same collection on repeated access', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products1 = await db.collection<TestProduct>(
           'products',
@@ -792,7 +792,7 @@ void main() {
       });
 
       test('should support multiple collections', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         await db.collection<TestProduct>(
           'products',
@@ -811,7 +811,7 @@ void main() {
       });
 
       test('should check if collection exists', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         expect(db.hasCollection('products'), isFalse);
 
@@ -827,7 +827,7 @@ void main() {
       });
 
       test('should throw on type mismatch', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         await db.collection<TestProduct>('items', fromMap: TestProduct.fromMap);
 
@@ -840,7 +840,7 @@ void main() {
       });
 
       test('should drop collection', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         await db.collection<TestProduct>(
           'products',
@@ -860,9 +860,9 @@ void main() {
       test(
         'should return false when dropping non-existent collection',
         () async {
-          final db = await DocDB.open(
+          final db = await EntiDB.open(
             path: null,
-            config: DocDBConfig.inMemory(),
+            config: EntiDBConfig.inMemory(),
           );
 
           final dropped = await db.dropCollection('nonexistent');
@@ -873,7 +873,7 @@ void main() {
       );
 
       test('should allow recreating dropped collection', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         await db.collection<TestProduct>(
           'products',
@@ -897,9 +897,9 @@ void main() {
       test(
         'should allow recreating dropped collection with different type',
         () async {
-          final db = await DocDB.open(
+          final db = await EntiDB.open(
             path: null,
-            config: DocDBConfig.inMemory(),
+            config: EntiDBConfig.inMemory(),
           );
 
           await db.collection<TestProduct>(
@@ -922,7 +922,7 @@ void main() {
       );
 
       test('should throw on collection with empty name', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         // Empty names are not allowed (logger rejects them)
         expect(
@@ -937,9 +937,9 @@ void main() {
       test(
         'should handle collection with special characters in name',
         () async {
-          final db = await DocDB.open(
+          final db = await EntiDB.open(
             path: null,
-            config: DocDBConfig.inMemory(),
+            config: EntiDBConfig.inMemory(),
           );
 
           final collection = await db.collection<TestProduct>(
@@ -957,7 +957,7 @@ void main() {
 
     group('Data Operations', () {
       test('should insert and retrieve entity', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -978,7 +978,7 @@ void main() {
       });
 
       test('should insert multiple entities', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -997,7 +997,7 @@ void main() {
       });
 
       test('should update entity', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -1020,7 +1020,7 @@ void main() {
       });
 
       test('should delete entity', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -1040,7 +1040,7 @@ void main() {
       });
 
       test('should query entities', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -1061,7 +1061,7 @@ void main() {
       });
 
       test('should handle complex entities', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final entities = await db.collection<ComplexEntity>(
           'complex',
@@ -1089,7 +1089,7 @@ void main() {
 
     group('Flush Operations', () {
       test('should flush all collections', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -1105,7 +1105,7 @@ void main() {
       });
 
       test('should flush empty database', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         // Should not throw even with no collections
         await db.flush();
@@ -1114,7 +1114,7 @@ void main() {
       });
 
       test('should flush multiple collections', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         await db.collection<TestProduct>(
           'products',
@@ -1131,7 +1131,7 @@ void main() {
 
     group('Statistics', () {
       test('should get stats for empty database', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final stats = await db.getStats();
 
@@ -1146,7 +1146,7 @@ void main() {
       });
 
       test('should get stats with collections', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -1167,9 +1167,9 @@ void main() {
       });
 
       test('should get stats for file-based database', () async {
-        final db = await DocDB.open(
+        final db = await EntiDB.open(
           path: tempDir.path,
-          config: DocDBConfig.development(),
+          config: EntiDBConfig.development(),
         );
 
         final stats = await db.getStats();
@@ -1181,7 +1181,7 @@ void main() {
       });
 
       test('should reflect encryption status in stats', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final stats = await db.getStats();
         expect(stats.encryptionEnabled, isFalse);
@@ -1192,7 +1192,7 @@ void main() {
 
     group('Error Handling', () {
       test('should throw DatabaseDisposedException when disposed', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
         await db.close();
 
         expect(
@@ -1205,7 +1205,7 @@ void main() {
       });
 
       test('should throw on flush after dispose', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
         await db.close();
 
         expect(
@@ -1215,7 +1215,7 @@ void main() {
       });
 
       test('should throw on getStats after dispose', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
         await db.close();
 
         expect(
@@ -1225,7 +1225,7 @@ void main() {
       });
 
       test('should throw on dropCollection after dispose', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         await db.collection<TestProduct>(
           'products',
@@ -1241,7 +1241,7 @@ void main() {
       });
 
       test('hasCollection should work after close (no throw)', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         await db.collection<TestProduct>(
           'products',
@@ -1261,9 +1261,9 @@ void main() {
         final dbPath = tempDir.path;
 
         // First session - insert data
-        var db = await DocDB.open(
+        var db = await EntiDB.open(
           path: dbPath,
-          config: DocDBConfig.development(),
+          config: EntiDBConfig.development(),
         );
 
         var products = await db.collection<TestProduct>(
@@ -1278,7 +1278,7 @@ void main() {
         await db.close();
 
         // Second session - verify data
-        db = await DocDB.open(path: dbPath, config: DocDBConfig.development());
+        db = await EntiDB.open(path: dbPath, config: EntiDBConfig.development());
 
         products = await db.collection<TestProduct>(
           'products',
@@ -1297,9 +1297,9 @@ void main() {
         final dbPath = tempDir.path;
 
         // First session
-        var db = await DocDB.open(
+        var db = await EntiDB.open(
           path: dbPath,
-          config: DocDBConfig.development(),
+          config: EntiDBConfig.development(),
         );
 
         var products = await db.collection<TestProduct>(
@@ -1321,7 +1321,7 @@ void main() {
         await db.close();
 
         // Second session
-        db = await DocDB.open(path: dbPath, config: DocDBConfig.development());
+        db = await EntiDB.open(path: dbPath, config: EntiDBConfig.development());
 
         products = await db.collection<TestProduct>(
           'products',
@@ -1341,7 +1341,7 @@ void main() {
 
     group('Concurrent Access', () {
       test('should handle concurrent collection access', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         // Access same collection concurrently
         final futures = List.generate(10, (i) async {
@@ -1366,7 +1366,7 @@ void main() {
       });
 
       test('should handle concurrent different collection access', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         // Access different collections concurrently
         final productsFuture = db.collection<TestProduct>(
@@ -1388,7 +1388,7 @@ void main() {
 
     group('Edge Cases', () {
       test('should handle minimal entity', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final collection = await db.collection<MinimalEntity>(
           'minimal',
@@ -1405,7 +1405,7 @@ void main() {
       });
 
       test('should handle entity with null values in map', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -1424,7 +1424,7 @@ void main() {
       });
 
       test('should handle unicode in entity data', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -1442,7 +1442,7 @@ void main() {
       });
 
       test('should handle very long collection name', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final longName = 'a' * 200;
         final collection = await db.collection<MinimalEntity>(
@@ -1457,7 +1457,7 @@ void main() {
       });
 
       test('should handle very long entity name', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -1476,7 +1476,7 @@ void main() {
       });
 
       test('should handle negative price', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -1494,7 +1494,7 @@ void main() {
       });
 
       test('should handle special double values', () async {
-        final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+        final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
         final products = await db.collection<TestProduct>(
           'products',
@@ -1520,9 +1520,9 @@ void main() {
 
       test('should handle rapid open/close cycles', () async {
         for (var i = 0; i < 5; i++) {
-          final db = await DocDB.open(
+          final db = await EntiDB.open(
             path: tempDir.path,
-            config: DocDBConfig.development(),
+            config: EntiDBConfig.development(),
           );
 
           final products = await db.collection<TestProduct>(
@@ -1538,9 +1538,9 @@ void main() {
         }
 
         // Verify all data persisted
-        final db = await DocDB.open(
+        final db = await EntiDB.open(
           path: tempDir.path,
-          config: DocDBConfig.development(),
+          config: EntiDBConfig.development(),
         );
 
         final products = await db.collection<TestProduct>(
@@ -1556,9 +1556,9 @@ void main() {
 
     group('Auto-flush on close', () {
       test('should flush when autoFlushOnClose is true', () async {
-        final db = await DocDB.open(
+        final db = await EntiDB.open(
           path: tempDir.path,
-          config: DocDBConfig.development().copyWith(autoFlushOnClose: true),
+          config: EntiDBConfig.development().copyWith(autoFlushOnClose: true),
         );
 
         final products = await db.collection<TestProduct>(
@@ -1573,9 +1573,9 @@ void main() {
         await db.close();
 
         // Reopen and verify data was flushed
-        final db2 = await DocDB.open(
+        final db2 = await EntiDB.open(
           path: tempDir.path,
-          config: DocDBConfig.development(),
+          config: EntiDBConfig.development(),
         );
 
         final products2 = await db2.collection<TestProduct>(

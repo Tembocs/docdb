@@ -1,4 +1,4 @@
-/// DocDB Migration Module Tests
+/// EntiDB Migration Module Tests
 ///
 /// Comprehensive tests for the migration module including MigrationStrategy,
 /// SingleEntityMigrationStrategy, NoOpMigrationStrategy, MigrationConfig,
@@ -7,10 +7,10 @@ library;
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/entity/entity.dart';
-import 'package:docdb/src/exceptions/migration_exceptions.dart';
-import 'package:docdb/src/storage/memory_storage.dart';
-import 'package:docdb/src/migration/migration.dart';
+import 'package:entidb/src/entity/entity.dart';
+import 'package:entidb/src/exceptions/migration_exceptions.dart';
+import 'package:entidb/src/storage/memory_storage.dart';
+import 'package:entidb/src/migration/migration.dart';
 
 // =============================================================================
 // Test Entity

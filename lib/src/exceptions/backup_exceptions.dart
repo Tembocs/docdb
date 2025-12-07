@@ -1,13 +1,13 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for backup and restore operations.
 ///
 /// Thrown when backup creation, restoration, or related file
 /// operations fail.
 @immutable
-class BackupException extends DocDBException {
+class BackupException extends EntiDBException {
   /// Creates a new [BackupException].
   ///
   /// - [message]: A descriptive error message.

@@ -1,5 +1,5 @@
 /// Tests for the Utils module.
-import 'package:docdb/src/utils/utils.dart';
+import 'package:entidb/src/utils/utils.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -24,8 +24,8 @@ void main() {
 
     group('LoggerNameConstants', () {
       test('should have all required logger names', () {
-        expect(LoggerNameConstants.docdbMain, 'DocDbMain');
-        expect(LoggerNameConstants.docdb, 'DocDB');
+        expect(LoggerNameConstants.entidbMain, 'EntiDbMain');
+        expect(LoggerNameConstants.entidb, 'EntiDB');
         expect(LoggerNameConstants.authentication, 'Authentication');
         expect(LoggerNameConstants.authorization, 'Authorization');
         expect(LoggerNameConstants.backup, 'Backup');
@@ -54,7 +54,7 @@ void main() {
       });
 
       test('should have correct log path', () {
-        expect(DatabaseFilePaths.logPath, 'logs/docdb.log');
+        expect(DatabaseFilePaths.logPath, 'logs/entidb.log');
       });
     });
 

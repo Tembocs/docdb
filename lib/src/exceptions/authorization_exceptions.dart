@@ -1,13 +1,13 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for authorization-related errors.
 ///
 /// Thrown when a user lacks the necessary permissions to perform
 /// an operation, such as accessing a resource or executing a command.
 @immutable
-class AuthorizationException extends DocDBException {
+class AuthorizationException extends EntiDBException {
   /// Creates a new [AuthorizationException].
   ///
   /// - [message]: A descriptive error message.

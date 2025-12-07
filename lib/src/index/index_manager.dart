@@ -1,8 +1,8 @@
 // lib/src/index/index_manager.dart
 
-import 'package:docdb/src/exceptions/exceptions.dart';
-import 'package:docdb/src/logger/logger.dart';
-import 'package:docdb/src/utils/constants.dart';
+import 'package:entidb/src/exceptions/exceptions.dart';
+import 'package:entidb/src/logger/logger.dart';
+import 'package:entidb/src/utils/constants.dart';
 
 import 'btree.dart';
 import 'fulltext.dart';
@@ -46,7 +46,7 @@ class IndexManager {
   final Map<String, IIndex> _indices = {};
 
   /// Logger instance for this manager.
-  final DocDBLogger _logger = DocDBLogger(LoggerNameConstants.index);
+  final EntiDBLogger _logger = EntiDBLogger(LoggerNameConstants.index);
 
   /// Creates a new [IndexManager] instance.
   IndexManager();

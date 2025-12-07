@@ -3,7 +3,7 @@
 /// Demonstrates how to query documents using QueryBuilder.
 ///
 /// Run with: `dart run example/querying.dart`
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 import 'models/models.dart';
 
@@ -12,7 +12,7 @@ Future<void> main() async {
   print('                    Querying Documents');
   print('═══════════════════════════════════════════════════════════════\n');
 
-  final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+  final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
   try {
     final products = await db.collection<Product>(

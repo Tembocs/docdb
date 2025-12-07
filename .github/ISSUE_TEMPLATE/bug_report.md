@@ -38,7 +38,7 @@ assignees: ""
 
 ## Environment
 
-- **DocDB Version**: 
+- **EntiDB Version**: 
 - **Dart SDK Version**: 
 - **OS**: 
 - **Platform**: (CLI / Flutter / Web)

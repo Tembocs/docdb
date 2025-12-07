@@ -1,4 +1,4 @@
-/// DocDB Backup - Snapshot
+/// EntiDB Backup - Snapshot
 ///
 /// Represents a point-in-time snapshot of storage state for backup
 /// and restore operations with integrity verification.

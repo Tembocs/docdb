@@ -1,6 +1,6 @@
-/// DocDB Storage Engine.
+/// EntiDB Storage Engine.
 ///
-/// This module provides the low-level storage infrastructure for DocDB,
+/// This module provides the low-level storage infrastructure for EntiDB,
 /// including page-based storage, buffer management, disk I/O, and
 /// write-ahead logging for durability.
 ///
@@ -29,7 +29,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/engine/engine.dart';
+/// import 'package:entidb/src/engine/engine.dart';
 ///
 /// // Open or create a database file
 /// final pager = await Pager.open('database.db');

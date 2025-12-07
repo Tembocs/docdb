@@ -3,7 +3,7 @@ import 'package:meta/meta.dart';
 import '../utils/constants.dart';
 import 'log_level.dart';
 
-/// Configuration options for [DocDBLogger].
+/// Configuration options for [EntiDBLogger].
 ///
 /// Use this class to customize logger behavior, including log file path,
 /// minimum log level, and console output settings.
@@ -11,7 +11,7 @@ import 'log_level.dart';
 /// Example usage:
 /// ```dart
 /// // Use predefined configurations
-/// await DocDBLogger.initialize(config: LoggerConfig.development);
+/// await EntiDBLogger.initialize(config: LoggerConfig.development);
 ///
 /// // Or create a custom configuration
 /// final config = LoggerConfig(
@@ -19,7 +19,7 @@ import 'log_level.dart';
 ///   minLevel: LogLevel.warning,
 ///   enableConsoleOutput: true,
 /// );
-/// await DocDBLogger.initialize(config: config);
+/// await EntiDBLogger.initialize(config: config);
 /// ```
 @immutable
 class LoggerConfig {

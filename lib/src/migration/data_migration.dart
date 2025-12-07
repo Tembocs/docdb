@@ -1,4 +1,4 @@
-/// DocDB Migration - Data Migration
+/// EntiDB Migration - Data Migration
 ///
 /// Provides migration support for application data storage.
 /// This is a convenience wrapper around [MigrationRunner] for data entities.

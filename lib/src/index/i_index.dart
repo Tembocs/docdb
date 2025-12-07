@@ -1,4 +1,4 @@
-/// Abstract interface for index implementations in DocDB.
+/// Abstract interface for index implementations in EntiDB.
 ///
 /// This module defines the [IIndex] contract that all index implementations
 /// must follow. Indexes provide efficient lookup of entities based on

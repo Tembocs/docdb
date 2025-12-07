@@ -1,13 +1,13 @@
 /// Tests for the Exceptions module.
-import 'package:docdb/src/exceptions/exceptions.dart';
+import 'package:entidb/src/exceptions/exceptions.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('DocDBException', () {
+  group('EntiDBException', () {
     test('should be abstract and not directly instantiable', () {
-      // DocDBException is abstract, so we test through a concrete subclass
+      // EntiDBException is abstract, so we test through a concrete subclass
       final exception = StorageException('Test message');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -233,7 +233,7 @@ void main() {
     test('should create with message', () {
       const exception = AuthenticationException('Auth failed');
       expect(exception.message, 'Auth failed');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -269,7 +269,7 @@ void main() {
     test('should create with message', () {
       const exception = AuthorizationException('Not authorized');
       expect(exception.message, 'Not authorized');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -357,7 +357,7 @@ void main() {
     test('should create with message', () {
       const exception = CollectionException('Collection error');
       expect(exception.message, 'Collection error');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -365,7 +365,7 @@ void main() {
     test('should create with message', () {
       const exception = DocumentException('Document error');
       expect(exception.message, 'Document error');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -380,7 +380,7 @@ void main() {
     test('should create with message', () {
       const exception = IndexException('Index error');
       expect(exception.message, 'Index error');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -409,7 +409,7 @@ void main() {
     test('should create with message', () {
       const exception = QueryException('Query failed');
       expect(exception.message, 'Query failed');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -424,7 +424,7 @@ void main() {
     test('should create with message', () {
       const exception = TransactionException('Transaction failed');
       expect(exception.message, 'Transaction failed');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -439,7 +439,7 @@ void main() {
     test('should create with message', () {
       const exception = EncryptionException('Encryption error');
       expect(exception.message, 'Encryption error');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -545,7 +545,7 @@ void main() {
     test('should create with message', () {
       const exception = BackupException('Backup error');
       expect(exception.message, 'Backup error');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -697,7 +697,7 @@ void main() {
     test('should create with message', () {
       const exception = MigrationException('Migration failed');
       expect(exception.message, 'Migration failed');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -705,7 +705,7 @@ void main() {
     test('should create with message', () {
       const exception = SchemaValidationException('Validation failed');
       expect(exception.message, 'Validation failed');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -713,7 +713,7 @@ void main() {
     test('should create with message', () {
       const exception = ServerException('Server error');
       expect(exception.message, 'Server error');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -721,7 +721,7 @@ void main() {
     test('should create with message', () {
       const exception = DatabaseException('Database error');
       expect(exception.message, 'Database error');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -809,7 +809,7 @@ void main() {
     test('should create with message', () {
       const exception = TypeRegistryException('Registry error');
       expect(exception.message, 'Registry error');
-      expect(exception, isA<DocDBException>());
+      expect(exception, isA<EntiDBException>());
     });
   });
 
@@ -915,8 +915,8 @@ void main() {
   });
 
   group('Exception hierarchy', () {
-    test('all exceptions should extend DocDBException', () {
-      final exceptions = <DocDBException>[
+    test('all exceptions should extend EntiDBException', () {
+      final exceptions = <EntiDBException>[
         const StorageException('test'),
         StorageInitializationException(storageName: 'test'),
         StorageReadException(storageName: 'test'),
@@ -1009,7 +1009,7 @@ void main() {
       ];
 
       for (final e in exceptions) {
-        expect(e, isA<DocDBException>());
+        expect(e, isA<EntiDBException>());
       }
     });
   });

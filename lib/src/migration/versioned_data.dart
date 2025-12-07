@@ -1,4 +1,4 @@
-/// DocDB Migration - Versioned Data
+/// EntiDB Migration - Versioned Data
 ///
 /// Provides version tracking for entity data during migrations.
 library;

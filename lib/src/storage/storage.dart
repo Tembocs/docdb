@@ -1,4 +1,4 @@
-/// DocDB Storage - Storage Interface
+/// EntiDB Storage - Storage Interface
 ///
 /// Defines the abstract interface for entity storage backends.
 /// All storage implementations must implement this interface.

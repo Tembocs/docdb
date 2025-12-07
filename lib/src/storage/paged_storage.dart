@@ -1,4 +1,4 @@
-/// DocDB Storage - Paged Storage Implementation
+/// EntiDB Storage - Paged Storage Implementation
 ///
 /// Provides high-performance storage using the database engine's page-based
 /// architecture. Suitable for production workloads with efficient caching,

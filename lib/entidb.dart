@@ -1,6 +1,6 @@
-/// DocDB - A robust, embedded document database for Dart
+/// EntiDB - A robust, embedded document database for Dart
 ///
-/// DocDB provides a feature-rich document database with support for:
+/// EntiDB provides a feature-rich document database with support for:
 ///
 /// - **Entity Storage**: Generic, type-safe storage for any Entity
 /// - **Collections**: Type-safe collections with indexing and queries
@@ -14,7 +14,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/docdb.dart';
+/// import 'package:entidb/entidb.dart';
 ///
 /// // Define your entity
 /// class Product implements Entity {
@@ -33,9 +33,9 @@
 /// }
 ///
 /// // Open database
-/// final db = await DocDB.open(
+/// final db = await EntiDB.open(
 ///   path: './myapp_data',
-///   config: DocDBConfig.production(),
+///   config: EntiDBConfig.production(),
 /// );
 ///
 /// // Get a collection
@@ -57,7 +57,7 @@
 /// See individual module documentation for detailed usage.
 library;
 
-// Main DocDB module - primary entry point (DocDB, DocDBConfig, StorageBackend, DocDBStats, CollectionStats)
+// Main EntiDB module - primary entry point (EntiDB, EntiDBConfig, StorageBackend, EntiDBStats, CollectionStats)
 export 'src/main/main.dart';
 
 // Core entity interface

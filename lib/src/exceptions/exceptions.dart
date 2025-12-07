@@ -1,15 +1,15 @@
-/// DocDB Exceptions Module
+/// EntiDB Exceptions Module
 ///
-/// This module provides a comprehensive exception hierarchy for the DocDB
-/// document database. All exceptions extend [DocDBException], enabling
+/// This module provides a comprehensive exception hierarchy for the EntiDB
+/// document database. All exceptions extend [EntiDBException], enabling
 /// uniform error handling across the library.
 ///
 /// Example usage:
 /// ```dart
 /// try {
 ///   await collection.insert(document);
-/// } on DocDBException catch (e) {
-///   print('DocDB error: ${e.message}');
+/// } on EntiDBException catch (e) {
+///   print('EntiDB error: ${e.message}');
 ///   if (e.cause != null) {
 ///     print('Caused by: ${e.cause}');
 ///   }
@@ -22,7 +22,7 @@ export 'authorization_exceptions.dart';
 export 'backup_exceptions.dart';
 export 'collection_exceptions.dart';
 export 'database_exceptions.dart';
-export 'docdb_exception.dart';
+export 'entidb_exception.dart';
 export 'document_exceptions.dart';
 export 'encryption_exceptions.dart';
 export 'index_exceptions.dart';

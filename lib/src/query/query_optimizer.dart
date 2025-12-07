@@ -1,4 +1,4 @@
-/// Query optimizer for DocDB.
+/// Query optimizer for EntiDB.
 ///
 /// This module provides intelligent query execution planning with:
 /// - Index statistics collection (cardinality, selectivity)

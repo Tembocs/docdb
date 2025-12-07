@@ -1,12 +1,12 @@
-/// DocDB Statistics
+/// EntiDB Statistics
 ///
-/// Provides statistics and metrics for DocDB database instances
+/// Provides statistics and metrics for EntiDB database instances
 /// and their collections.
 library;
 
 import 'package:meta/meta.dart';
 
-import 'docdb_config.dart';
+import 'entidb_config.dart';
 
 /// Database statistics.
 ///
@@ -21,7 +21,7 @@ import 'docdb_config.dart';
 /// print('Collections: ${stats.collectionCount}');
 /// ```
 @immutable
-class DocDBStats {
+class EntiDBStats {
   /// Database path (null for in-memory).
   final String? path;
 
@@ -41,7 +41,7 @@ class DocDBStats {
   final StorageBackend storageBackend;
 
   /// Creates database statistics.
-  const DocDBStats({
+  const EntiDBStats({
     required this.path,
     required this.isOpen,
     required this.collectionCount,
@@ -60,7 +60,7 @@ class DocDBStats {
 
   @override
   String toString() {
-    return 'DocDBStats('
+    return 'EntiDBStats('
         'path: ${path ?? "in-memory"}, '
         'collections: $collectionCount, '
         'entities: $totalEntityCount, '

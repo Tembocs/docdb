@@ -1,4 +1,4 @@
-/// DocDB Type Registry - Type Serializer Interface
+/// EntiDB Type Registry - Type Serializer Interface
 ///
 /// Defines the contract for custom type serialization/deserialization.
 /// Enables extensible support for non-primitive types in entity storage.

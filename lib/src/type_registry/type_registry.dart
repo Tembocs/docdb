@@ -1,4 +1,4 @@
-/// DocDB Type Registry - Central Registry
+/// EntiDB Type Registry - Central Registry
 ///
 /// Singleton registry for managing type serializers. Provides thread-safe
 /// registration and lookup of serializers for custom types.
@@ -13,7 +13,7 @@ import 'type_serializer.dart';
 /// Central registry for type serializers used during entity serialization.
 ///
 /// This singleton manages the mapping between Dart types, type names, and
-/// their corresponding serializers. It enables DocDB to serialize and
+/// their corresponding serializers. It enables EntiDB to serialize and
 /// deserialize custom types that are not natively JSON-compatible.
 ///
 /// ## Usage

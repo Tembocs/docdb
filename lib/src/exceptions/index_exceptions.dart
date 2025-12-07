@@ -1,13 +1,13 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for index-related errors.
 ///
 /// Thrown when index operations fail, such as creation, lookup,
 /// or maintenance operations.
 @immutable
-class IndexException extends DocDBException {
+class IndexException extends EntiDBException {
   /// Creates a new [IndexException].
   ///
   /// - [message]: A descriptive error message.

@@ -1,6 +1,6 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Thrown when document validation against a schema fails.
 ///
@@ -8,7 +8,7 @@ import 'docdb_exception.dart';
 /// the expected schema, such as missing required fields, type
 /// mismatches, or constraint violations.
 @immutable
-class SchemaValidationException extends DocDBException {
+class SchemaValidationException extends EntiDBException {
   /// Creates a new [SchemaValidationException].
   ///
   /// - [message]: A descriptive error message.

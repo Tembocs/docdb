@@ -1,4 +1,4 @@
-/// DocDB Transaction Module Tests
+/// EntiDB Transaction Module Tests
 ///
 /// Comprehensive tests for the transaction module including Transaction,
 /// TransactionManager, isolation levels, commit, and rollback functionality.
@@ -6,10 +6,10 @@ library;
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/entity/entity.dart';
-import 'package:docdb/src/exceptions/transaction_exceptions.dart';
-import 'package:docdb/src/storage/memory_storage.dart';
-import 'package:docdb/src/transaction/transaction.dart';
+import 'package:entidb/src/entity/entity.dart';
+import 'package:entidb/src/exceptions/transaction_exceptions.dart';
+import 'package:entidb/src/storage/memory_storage.dart';
+import 'package:entidb/src/transaction/transaction.dart';
 
 /// Simple test entity for transaction tests.
 class TestEntity implements Entity {

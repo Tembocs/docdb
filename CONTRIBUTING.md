@@ -1,6 +1,6 @@
-# Contributing to DocDB
+# Contributing to EntiDB
 
-Thank you for your interest in contributing to DocDB! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to EntiDB! This document provides guidelines and instructions for contributing.
 
 ## Code of Conduct
 
@@ -18,8 +18,8 @@ Please be respectful and constructive in all interactions. We're all here to bui
 1. Fork the repository
 2. Clone your fork:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/docdb.git
-   cd docdb
+   git clone https://github.com/YOUR_USERNAME/entidb.git
+   cd entidb
    ```
 3. Install dependencies:
    ```bash
@@ -136,7 +136,7 @@ group('MyFeature', () {
 
 ```
 lib/
-├── docdb.dart           # Main library export
+├── entidb.dart           # Main library export
 └── src/
     ├── collection/      # Collection management
     ├── engine/          # Storage engine (pager, WAL, buffer)

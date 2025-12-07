@@ -1,4 +1,4 @@
-# DocDB Dependency Updates
+# EntiDB Dependency Updates
 #
 # This workflow runs weekly to check for dependency updates and security issues.
 

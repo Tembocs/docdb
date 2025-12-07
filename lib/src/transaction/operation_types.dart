@@ -1,4 +1,4 @@
-/// Operation type definitions for DocDB transactions.
+/// Operation type definitions for EntiDB transactions.
 ///
 /// Defines the types of operations that can be performed within
 /// a transaction.

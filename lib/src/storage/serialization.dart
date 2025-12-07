@@ -1,4 +1,4 @@
-/// DocDB Storage - Binary Serialization Module
+/// EntiDB Storage - Binary Serialization Module
 ///
 /// Provides CBOR-based binary serialization with optional compression and
 /// encryption support. This module serves as the serialization layer for
@@ -148,7 +148,7 @@ class SerializationConfig {
 /// encryption.
 ///
 /// This service provides the core serialization functionality for all
-/// storage implementations in DocDB.
+/// storage implementations in EntiDB.
 ///
 /// ## Usage
 ///

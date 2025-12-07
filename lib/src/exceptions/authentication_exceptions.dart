@@ -1,13 +1,13 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for authentication-related errors.
 ///
 /// Thrown when authentication operations fail, such as login attempts,
 /// token validation, or user registration issues.
 @immutable
-class AuthenticationException extends DocDBException {
+class AuthenticationException extends EntiDBException {
   /// Creates a new [AuthenticationException].
   ///
   /// - [message]: A descriptive error message.

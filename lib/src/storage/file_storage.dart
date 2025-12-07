@@ -1,4 +1,4 @@
-/// DocDB Storage - File-Based Storage Implementation
+/// EntiDB Storage - File-Based Storage Implementation
 ///
 /// Provides persistent storage using individual JSON files for each entity.
 /// This implementation is suitable for development, small datasets, and

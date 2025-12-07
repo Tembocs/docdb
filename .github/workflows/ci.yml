@@ -1,4 +1,4 @@
-# DocDB Continuous Integration
+# EntiDB Continuous Integration
 #
 # This workflow runs on every push and pull request to ensure code quality.
 # It includes linting, formatting, testing, and coverage reporting.

@@ -1,4 +1,4 @@
-/// DocDB Encryption - AES-GCM Encryption Service
+/// EntiDB Encryption - AES-GCM Encryption Service
 ///
 /// Provides AES-GCM authenticated encryption using the cryptography package.
 /// This implementation ensures both confidentiality and integrity of data.

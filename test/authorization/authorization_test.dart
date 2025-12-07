@@ -1,4 +1,4 @@
-/// DocDB Authorization Module Tests
+/// EntiDB Authorization Module Tests
 ///
 /// Comprehensive tests for the authorization module including:
 /// - Permission: Permission parsing, matching, and implication logic
@@ -10,9 +10,9 @@ library;
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/authorization/authorization.dart';
-import 'package:docdb/src/exceptions/exceptions.dart';
-import 'package:docdb/src/storage/memory_storage.dart';
+import 'package:entidb/src/authorization/authorization.dart';
+import 'package:entidb/src/exceptions/exceptions.dart';
+import 'package:entidb/src/storage/memory_storage.dart';
 
 void main() {
   group('Action Enum', () {

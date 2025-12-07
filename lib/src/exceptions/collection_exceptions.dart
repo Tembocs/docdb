@@ -1,13 +1,13 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for collection-related errors.
 ///
 /// Thrown when collection operations fail, such as creating,
 /// accessing, or modifying collections.
 @immutable
-class CollectionException extends DocDBException {
+class CollectionException extends EntiDBException {
   /// Creates a new [CollectionException].
   ///
   /// - [message]: A descriptive error message.

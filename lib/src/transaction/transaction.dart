@@ -3,7 +3,7 @@
 // Barrel file for the transaction module.
 // Provides ACID transaction support for entity storage operations.
 
-/// Transaction support for DocDB.
+/// Transaction support for EntiDB.
 ///
 /// This module provides comprehensive transaction management for atomic
 /// operations on entity storage. Transactions ensure that multiple

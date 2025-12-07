@@ -1,4 +1,4 @@
-# DocDB Code Review
+# EntiDB Code Review
 
 **Date**: December 7, 2025  
 **Reviewer**: GitHub Copilot  
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-DocDB is a well-architected, feature-rich embedded document database for Dart and Flutter applications. The codebase demonstrates strong software engineering practices with comprehensive documentation, a modular architecture, and extensive test coverage. The project is production-ready with some minor issues that should be addressed.
+EntiDB is a well-architected, feature-rich embedded document database for Dart and Flutter applications. The codebase demonstrates strong software engineering practices with comprehensive documentation, a modular architecture, and extensive test coverage. The project is production-ready with some minor issues that should be addressed.
 
 **Overall Assessment**: ⭐⭐⭐⭐ (4/5) - Excellent
 
@@ -35,7 +35,7 @@ The codebase follows a clean, modular architecture with clear separation of conc
 
 ```
 lib/src/
-├── main/           # Entry point (DocDB, DocDBConfig)
+├── main/           # Entry point (EntiDB, EntiDBConfig)
 ├── entity/         # Core Entity interface
 ├── collection/     # Type-safe collections
 ├── storage/        # Storage backends (Paged, Memory)
@@ -62,7 +62,7 @@ lib/src/
 
 **Observations:**
 - The architecture supports pluggable storage backends effectively
-- The layered approach (DocDB → Collection → Storage → Engine) is well-designed
+- The layered approach (EntiDB → Collection → Storage → Engine) is well-designed
 
 ### 1.2 Design Patterns
 
@@ -70,7 +70,7 @@ The codebase demonstrates proper use of design patterns:
 
 | Pattern | Usage | Quality |
 |---------|-------|---------|
-| Factory | `DocDB.open()`, entity `fromMap` | ✅ Excellent |
+| Factory | `EntiDB.open()`, entity `fromMap` | ✅ Excellent |
 | Singleton | `TypeRegistry.instance` | ✅ Proper with `resetForTesting()` |
 | Builder | `QueryBuilder` | ✅ Fluent, intuitive API |
 | Strategy | `MigrationStrategy`, `EncryptionService` | ✅ Well-implemented |
@@ -187,7 +187,7 @@ The `example/` directory provides practical demonstrations:
 
 | Module | Test File | Status |
 |--------|-----------|--------|
-| Main DocDB | `docdb_test.dart` | ✅ Comprehensive |
+| Main EntiDB | `entidb_test.dart` | ✅ Comprehensive |
 | Collection | `collection_test.dart` | ✅ 698 lines |
 | Query | `query_test.dart` | ✅ Complete |
 | Index | `index_test.dart` | ✅ Complete |
@@ -424,7 +424,7 @@ No contribution guidelines for external contributors.
 
 ## Conclusion
 
-DocDB is a **high-quality, production-ready** embedded document database for Dart. The codebase demonstrates:
+EntiDB is a **high-quality, production-ready** embedded document database for Dart. The codebase demonstrates:
 
 - ✅ Excellent architecture with clear separation of concerns
 - ✅ Comprehensive documentation with examples

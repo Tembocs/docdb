@@ -1,4 +1,4 @@
-/// Transaction operation definitions for DocDB.
+/// Transaction operation definitions for EntiDB.
 ///
 /// Represents individual operations within a transaction that are
 /// queued for execution on commit.

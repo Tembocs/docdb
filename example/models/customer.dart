@@ -1,7 +1,7 @@
 /// Customer Entity
 ///
 /// A simple entity demonstrating minimal Entity implementation.
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 /// A customer entity for user management.
 ///

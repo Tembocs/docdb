@@ -10,22 +10,22 @@ const String errorMessageUnauthorized = 'Unauthorized access.';
 /// Current database schema version.
 const String defaultDatabaseVersion = '1.0.0';
 
-/// Logger name constants for various DocDB modules.
+/// Logger name constants for various EntiDB modules.
 ///
 /// These constants provide consistent naming for loggers across the system,
 /// enabling filtered log output and module-specific debugging.
 ///
 /// Example usage:
 /// ```dart
-/// final logger = DocDBLogger(LoggerNameConstants.authentication);
+/// final logger = EntiDBLogger(LoggerNameConstants.authentication);
 /// logger.info('User logged in successfully');
 /// ```
 abstract final class LoggerNameConstants {
-  /// Logger name for the main DocDB entry point.
-  static const String docdbMain = 'DocDbMain';
+  /// Logger name for the main EntiDB entry point.
+  static const String entidbMain = 'EntiDbMain';
 
-  /// Logger name for the DocDB database class.
-  static const String docdb = 'DocDB';
+  /// Logger name for the EntiDB database class.
+  static const String entidb = 'EntiDB';
 
   /// Logger name for authentication operations.
   static const String authentication = 'Authentication';
@@ -85,7 +85,7 @@ abstract final class DatabaseFilePaths {
   static const String userBackupPath = 'data/user_backup.db';
 
   /// Path to the application log file.
-  static const String logPath = 'logs/docdb.log';
+  static const String logPath = 'logs/entidb.log';
 }
 
 /// File paths for migration-related data.

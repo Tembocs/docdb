@@ -1,4 +1,4 @@
-/// DocDB Backup - Backup Metadata
+/// EntiDB Backup - Backup Metadata
 ///
 /// Provides metadata tracking for backup files including identification,
 /// timestamps, integrity information, and descriptive details.

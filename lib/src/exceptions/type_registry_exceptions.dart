@@ -1,6 +1,6 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for type registry errors.
 ///
@@ -8,7 +8,7 @@ import 'docdb_exception.dart';
 /// duplicate type registration, missing serializers, or type
 /// resolution errors.
 @immutable
-class TypeRegistryException extends DocDBException {
+class TypeRegistryException extends EntiDBException {
   /// Creates a new [TypeRegistryException].
   ///
   /// - [message]: A descriptive error message.

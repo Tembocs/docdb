@@ -2,11 +2,11 @@
 
 import 'dart:async';
 
-import 'package:docdb/src/entity/entity.dart';
-import 'package:docdb/src/exceptions/exceptions.dart';
-import 'package:docdb/src/logger/docdb_logger.dart';
-import 'package:docdb/src/storage/storage.dart';
-import 'package:docdb/src/utils/constants.dart';
+import 'package:entidb/src/entity/entity.dart';
+import 'package:entidb/src/exceptions/exceptions.dart';
+import 'package:entidb/src/logger/entidb_logger.dart';
+import 'package:entidb/src/storage/storage.dart';
+import 'package:entidb/src/utils/constants.dart';
 
 import 'isolation_level.dart';
 import 'transaction_impl.dart';
@@ -60,7 +60,7 @@ class TransactionManager<T extends Entity> {
   Transaction<T>? _currentTransaction;
 
   /// Logger for transaction management operations.
-  final DocDBLogger _logger = DocDBLogger(LoggerNameConstants.transaction);
+  final EntiDBLogger _logger = EntiDBLogger(LoggerNameConstants.transaction);
 
   /// Creates a new transaction manager for the given storage.
   ///

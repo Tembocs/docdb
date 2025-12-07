@@ -1,4 +1,4 @@
-# DocDB Feature Completeness & TODO List
+# EntiDB Feature Completeness & TODO List
 
 ## ✅ Fully Implemented Features
 

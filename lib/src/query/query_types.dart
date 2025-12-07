@@ -1,4 +1,4 @@
-/// Query type definitions for DocDB.
+/// Query type definitions for EntiDB.
 ///
 /// This module contains all query interface and implementation classes
 /// for filtering entities based on field values.

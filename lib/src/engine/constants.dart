@@ -1,4 +1,4 @@
-/// Engine-wide constants for DocDB storage engine.
+/// Engine-wide constants for EntiDB storage engine.
 ///
 /// This file defines all constants used by the low-level storage engine,
 /// including page sizes, header offsets, magic numbers, and limits.
@@ -98,7 +98,7 @@ abstract final class PageFlags {
 /// including version information, configuration, and pointers
 /// to critical data structures.
 abstract final class FileHeaderConstants {
-  /// Magic number identifying DocDB files.
+  /// Magic number identifying EntiDB files.
   ///
   /// ASCII: "DCDB" (0x44 0x43 0x44 0x42)
   static const int magicNumber = 0x44434442;

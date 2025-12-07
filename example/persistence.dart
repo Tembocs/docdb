@@ -5,7 +5,7 @@
 /// Run with: `dart run example/persistence.dart`
 import 'dart:io';
 
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 import 'models/models.dart';
 
@@ -15,7 +15,7 @@ Future<void> main() async {
   print('═══════════════════════════════════════════════════════════════\n');
 
   // Create a temporary directory for the database
-  final tempDir = await Directory.systemTemp.createTemp('docdb_persist_');
+  final tempDir = await Directory.systemTemp.createTemp('entidb_persist_');
   final dbPath = tempDir.path;
 
   try {
@@ -28,9 +28,9 @@ Future<void> main() async {
     print('   Database path: $dbPath\n');
 
     {
-      final db = await DocDB.open(
+      final db = await EntiDB.open(
         path: dbPath,
-        config: DocDBConfig.development(),
+        config: EntiDBConfig.development(),
       );
 
       final products = await db.collection<Product>(
@@ -67,9 +67,9 @@ Future<void> main() async {
     print('🔄 SESSION 2: Reopening database and verifying data\n');
 
     {
-      final db = await DocDB.open(
+      final db = await EntiDB.open(
         path: dbPath,
-        config: DocDBConfig.development(),
+        config: EntiDBConfig.development(),
       );
 
       final products = await db.collection<Product>(
@@ -102,9 +102,9 @@ Future<void> main() async {
     print('✏️ SESSION 3: Modifying persisted data\n');
 
     {
-      final db = await DocDB.open(
+      final db = await EntiDB.open(
         path: dbPath,
-        config: DocDBConfig.development(),
+        config: EntiDBConfig.development(),
       );
 
       final products = await db.collection<Product>(
@@ -144,9 +144,9 @@ Future<void> main() async {
     print('✅ SESSION 4: Final verification\n');
 
     {
-      final db = await DocDB.open(
+      final db = await EntiDB.open(
         path: dbPath,
-        config: DocDBConfig.development(),
+        config: EntiDBConfig.development(),
       );
 
       final products = await db.collection<Product>(
@@ -171,9 +171,9 @@ Future<void> main() async {
     print('\n💭 COMPARISON: In-Memory Database (no persistence)\n');
 
     {
-      final memDb = await DocDB.open(
+      final memDb = await EntiDB.open(
         path: null, // null path = in-memory
-        config: DocDBConfig.inMemory(),
+        config: EntiDBConfig.inMemory(),
       );
 
       final memProducts = await memDb.collection<Product>(

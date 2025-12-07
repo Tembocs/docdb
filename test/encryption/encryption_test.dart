@@ -1,4 +1,4 @@
-/// DocDB Encryption Module Tests
+/// EntiDB Encryption Module Tests
 ///
 /// Comprehensive tests for the encryption module including AesGcmEncryptionService,
 /// NoEncryptionService, and KeyDerivationService.
@@ -10,8 +10,8 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 import 'package:test/test.dart';
 
-import 'package:docdb/src/encryption/encryption.dart';
-import 'package:docdb/src/exceptions/encryption_exceptions.dart';
+import 'package:entidb/src/encryption/encryption.dart';
+import 'package:entidb/src/exceptions/encryption_exceptions.dart';
 
 void main() {
   group('AesKeySize Enum', () {

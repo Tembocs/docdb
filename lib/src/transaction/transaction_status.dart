@@ -1,4 +1,4 @@
-/// Transaction status definitions for DocDB.
+/// Transaction status definitions for EntiDB.
 ///
 /// Defines the lifecycle states of a transaction.
 library;

@@ -7,7 +7,7 @@ library;
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/entity/entity.dart';
+import 'package:entidb/src/entity/entity.dart';
 
 // =============================================================================
 // Test Entity Implementations

@@ -1,4 +1,4 @@
-/// Write-Ahead Log (WAL) constants for DocDB storage engine.
+/// Write-Ahead Log (WAL) constants for EntiDB storage engine.
 ///
 /// Defines constants for the WAL file format, record types, and limits.
 /// The WAL provides crash recovery and durability guarantees.

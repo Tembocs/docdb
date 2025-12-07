@@ -1,4 +1,4 @@
-/// DocDB Migration - Migration Runner
+/// EntiDB Migration - Migration Runner
 ///
 /// Provides the core migration execution engine for entity storage.
 library;
@@ -9,7 +9,7 @@ import '../backup/backup_service.dart';
 import '../backup/snapshot.dart';
 import '../entity/entity.dart';
 import '../exceptions/migration_exceptions.dart';
-import '../logger/docdb_logger.dart';
+import '../logger/entidb_logger.dart';
 import '../storage/storage.dart';
 import '../utils/constants.dart';
 import 'migration_config.dart';
@@ -75,7 +75,7 @@ import 'versioned_data.dart';
 final class MigrationRunner<T extends Entity> {
   final Storage<T> _storage;
   final MigrationConfig _config;
-  final DocDBLogger _logger;
+  final EntiDBLogger _logger;
   final BackupService<T>? _backupService;
   final List<MigrationLog> _history = [];
 
@@ -93,11 +93,11 @@ final class MigrationRunner<T extends Entity> {
     required Storage<T> storage,
     required MigrationConfig config,
     BackupService<T>? backupService,
-    DocDBLogger? logger,
+    EntiDBLogger? logger,
   }) : _storage = storage,
        _config = config,
        _backupService = backupService,
-       _logger = logger ?? DocDBLogger(LoggerNameConstants.migration);
+       _logger = logger ?? EntiDBLogger(LoggerNameConstants.migration);
 
   /// The storage being migrated.
   Storage<T> get storage => _storage;

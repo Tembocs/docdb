@@ -1,13 +1,13 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for storage-related errors.
 ///
 /// Thrown when low-level storage operations fail, such as file I/O
 /// errors, permission issues, or disk space problems.
 @immutable
-class StorageException extends DocDBException {
+class StorageException extends EntiDBException {
   /// The path to the storage location (file or directory).
   final String? path;
 

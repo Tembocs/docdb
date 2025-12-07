@@ -1,6 +1,6 @@
-/// DocDB Backup Module
+/// EntiDB Backup Module
 ///
-/// Provides comprehensive backup and restore capabilities for DocDB storage
+/// Provides comprehensive backup and restore capabilities for EntiDB storage
 /// with integrity verification, compression, and flexible configuration.
 ///
 /// ## Overview
@@ -21,7 +21,7 @@
 /// ### Single Storage Backup
 ///
 /// ```dart
-/// import 'package:docdb/src/backup/backup.dart';
+/// import 'package:entidb/src/backup/backup.dart';
 ///
 /// final backupService = BackupService<Product>(
 ///   storage: productStorage,

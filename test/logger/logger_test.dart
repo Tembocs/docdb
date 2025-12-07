@@ -1,7 +1,7 @@
 /// Tests for the Logger module.
 import 'dart:io';
 
-import 'package:docdb/src/logger/logger.dart';
+import 'package:entidb/src/logger/logger.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -25,14 +25,14 @@ void main() {
   group('LoggerConfig', () {
     test('should have correct default values', () {
       const config = LoggerConfig();
-      expect(config.logPath, 'logs/docdb.log');
+      expect(config.logPath, 'logs/entidb.log');
       expect(config.minLevel, LogLevel.info);
       expect(config.enableConsoleOutput, isFalse);
     });
 
     test('should create production config with correct values', () {
       const config = LoggerConfig.production;
-      expect(config.logPath, 'logs/docdb.log');
+      expect(config.logPath, 'logs/entidb.log');
       expect(config.minLevel, LogLevel.info);
       expect(config.enableConsoleOutput, isFalse);
     });
@@ -117,68 +117,68 @@ void main() {
     });
   });
 
-  group('DocDBLogger', () {
+  group('EntiDBLogger', () {
     late Directory tempDir;
     late String logPath;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('docdb_logger_test_');
+      tempDir = await Directory.systemTemp.createTemp('entidb_logger_test_');
       logPath = '${tempDir.path}/test.log';
 
       // Ensure logger is disposed before each test
-      await DocDBLogger.dispose();
+      await EntiDBLogger.dispose();
     });
 
     tearDown(() async {
-      await DocDBLogger.dispose();
+      await EntiDBLogger.dispose();
       if (await tempDir.exists()) {
         await tempDir.delete(recursive: true);
       }
     });
 
     test('should not be initialized initially', () {
-      expect(DocDBLogger.isInitialized, isFalse);
+      expect(EntiDBLogger.isInitialized, isFalse);
     });
 
     test('should initialize successfully', () async {
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
-      expect(DocDBLogger.isInitialized, isTrue);
-      expect(DocDBLogger.logPath, logPath);
+      expect(EntiDBLogger.isInitialized, isTrue);
+      expect(EntiDBLogger.logPath, logPath);
     });
 
     test('should create log directory if it does not exist', () async {
       final nestedPath = '${tempDir.path}/nested/deep/test.log';
 
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: nestedPath));
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: nestedPath));
 
-      expect(DocDBLogger.isInitialized, isTrue);
+      expect(EntiDBLogger.isInitialized, isTrue);
       expect(await Directory('${tempDir.path}/nested/deep').exists(), isTrue);
     });
 
     test('should be idempotent on multiple initialize calls', () async {
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
-      await DocDBLogger.initialize(
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: logPath));
+      await EntiDBLogger.initialize(
         config: LoggerConfig(logPath: '${tempDir.path}/other.log'),
       );
 
       // Should keep the first initialization
-      expect(DocDBLogger.logPath, logPath);
+      expect(EntiDBLogger.logPath, logPath);
     });
 
     test('should create logger with module name', () async {
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
-      final logger = DocDBLogger('TestModule');
+      final logger = EntiDBLogger('TestModule');
       expect(logger.moduleName, 'TestModule');
     });
 
     test('should log info messages', () async {
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
-      final logger = DocDBLogger('TestModule');
+      final logger = EntiDBLogger('TestModule');
       await logger.info('Test info message');
-      await DocDBLogger.flush();
+      await EntiDBLogger.flush();
 
       final content = await File(logPath).readAsString();
       expect(content, contains('INFO'));
@@ -187,11 +187,11 @@ void main() {
     });
 
     test('should log warning messages', () async {
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
-      final logger = DocDBLogger('TestModule');
+      final logger = EntiDBLogger('TestModule');
       await logger.warning('Test warning message');
-      await DocDBLogger.flush();
+      await EntiDBLogger.flush();
 
       final content = await File(logPath).readAsString();
       expect(content, contains('WARNING'));
@@ -199,11 +199,11 @@ void main() {
     });
 
     test('should log error messages with error object', () async {
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
-      final logger = DocDBLogger('TestModule');
+      final logger = EntiDBLogger('TestModule');
       await logger.error('Test error message', Exception('Test exception'));
-      await DocDBLogger.flush();
+      await EntiDBLogger.flush();
 
       final content = await File(logPath).readAsString();
       expect(content, contains('SEVERE'));
@@ -212,25 +212,25 @@ void main() {
     });
 
     test('should log error messages with stack trace', () async {
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
-      final logger = DocDBLogger('TestModule');
+      final logger = EntiDBLogger('TestModule');
       final stackTrace = StackTrace.current;
       await logger.error('Test error', Exception('Test'), stackTrace);
-      await DocDBLogger.flush();
+      await EntiDBLogger.flush();
 
       final content = await File(logPath).readAsString();
       expect(content, contains('Stack Trace'));
     });
 
     test('should log debug messages with metadata', () async {
-      await DocDBLogger.initialize(
+      await EntiDBLogger.initialize(
         config: LoggerConfig(logPath: logPath, minLevel: LogLevel.debug),
       );
 
-      final logger = DocDBLogger('TestModule');
+      final logger = EntiDBLogger('TestModule');
       await logger.debug('Test debug', {'key': 'value', 'count': 42});
-      await DocDBLogger.flush();
+      await EntiDBLogger.flush();
 
       final content = await File(logPath).readAsString();
       expect(content, contains('Test debug'));
@@ -240,33 +240,33 @@ void main() {
     });
 
     test('should not log when not initialized', () async {
-      final logger = DocDBLogger('TestModule');
+      final logger = EntiDBLogger('TestModule');
 
       // Should not throw, just be a no-op
       await logger.info('This should not be logged');
 
-      expect(DocDBLogger.isInitialized, isFalse);
+      expect(EntiDBLogger.isInitialized, isFalse);
     });
 
     test('should dispose correctly', () async {
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
-      expect(DocDBLogger.isInitialized, isTrue);
+      expect(EntiDBLogger.isInitialized, isTrue);
 
-      await DocDBLogger.dispose();
+      await EntiDBLogger.dispose();
 
-      expect(DocDBLogger.isInitialized, isFalse);
+      expect(EntiDBLogger.isInitialized, isFalse);
     });
 
     test('should allow re-initialization after dispose', () async {
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
-      await DocDBLogger.dispose();
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: logPath));
+      await EntiDBLogger.dispose();
 
       final newPath = '${tempDir.path}/new.log';
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: newPath));
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: newPath));
 
-      expect(DocDBLogger.isInitialized, isTrue);
-      expect(DocDBLogger.logPath, newPath);
+      expect(EntiDBLogger.isInitialized, isTrue);
+      expect(EntiDBLogger.logPath, newPath);
     });
 
     test('should return current config', () async {
@@ -276,18 +276,18 @@ void main() {
         enableConsoleOutput: true,
       );
 
-      await DocDBLogger.initialize(config: customConfig);
+      await EntiDBLogger.initialize(config: customConfig);
 
-      expect(DocDBLogger.config, equals(customConfig));
+      expect(EntiDBLogger.config, equals(customConfig));
     });
 
     test('should flush pending writes', () async {
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
-      final logger = DocDBLogger('TestModule');
+      final logger = EntiDBLogger('TestModule');
       await logger.info('Message 1');
       await logger.info('Message 2');
-      await DocDBLogger.flush();
+      await EntiDBLogger.flush();
 
       final content = await File(logPath).readAsString();
       expect(content, contains('Message 1'));
@@ -295,11 +295,11 @@ void main() {
     });
 
     test('should include timestamp in log messages', () async {
-      await DocDBLogger.initialize(config: LoggerConfig(logPath: logPath));
+      await EntiDBLogger.initialize(config: LoggerConfig(logPath: logPath));
 
-      final logger = DocDBLogger('TestModule');
+      final logger = EntiDBLogger('TestModule');
       await logger.info('Timestamped message');
-      await DocDBLogger.flush();
+      await EntiDBLogger.flush();
 
       final content = await File(logPath).readAsString();
       // ISO 8601 format includes T separator

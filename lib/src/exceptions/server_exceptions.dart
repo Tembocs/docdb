@@ -1,13 +1,13 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for server-related errors.
 ///
 /// Thrown when server operations fail, such as initialization,
 /// connection handling, or shutdown errors.
 @immutable
-class ServerException extends DocDBException {
+class ServerException extends EntiDBException {
   /// Creates a new [ServerException].
   ///
   /// - [message]: A descriptive error message.

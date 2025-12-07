@@ -1,13 +1,13 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for document-related errors.
 ///
 /// Thrown when document operations fail, such as serialization,
 /// deserialization, or validation errors.
 @immutable
-class DocumentException extends DocDBException {
+class DocumentException extends EntiDBException {
   /// Creates a new [DocumentException].
   ///
   /// - [message]: A descriptive error message.

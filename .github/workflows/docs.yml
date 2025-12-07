@@ -1,4 +1,4 @@
-# DocDB Documentation Deployment
+# EntiDB Documentation Deployment
 #
 # Automatically deploys API documentation to GitHub Pages when main is updated.
 
@@ -57,8 +57,8 @@ jobs:
           <html>
           <head>
             <meta charset="utf-8">
-            <title>DocDB API Documentation</title>
-            <meta http-equiv="refresh" content="0; url=docdb/docdb-library.html">
+            <title>EntiDB API Documentation</title>
+            <meta http-equiv="refresh" content="0; url=entidb/entidb-library.html">
             <style>
               body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -76,9 +76,9 @@ jobs:
           </head>
           <body>
             <div class="container">
-              <h1>📦 DocDB</h1>
+              <h1>📦 EntiDB</h1>
               <p>Redirecting to API documentation...</p>
-              <p><a href="docdb/docdb-library.html">Click here if not redirected</a></p>
+              <p><a href="entidb/entidb-library.html">Click here if not redirected</a></p>
             </div>
           </body>
           </html>

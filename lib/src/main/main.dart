@@ -1,24 +1,24 @@
-/// DocDB Main Module
+/// EntiDB Main Module
 ///
-/// This barrel file exports the core DocDB classes for database operations.
-/// It provides the primary entry point for using DocDB.
+/// This barrel file exports the core EntiDB classes for database operations.
+/// It provides the primary entry point for using EntiDB.
 ///
 /// ## Exported Classes
 ///
-/// - [DocDB] - The main database class for opening and managing databases
-/// - [DocDBConfig] - Configuration options for database instances
+/// - [EntiDB] - The main database class for opening and managing databases
+/// - [EntiDBConfig] - Configuration options for database instances
 /// - [StorageBackend] - Enum for selecting storage type (paged/memory)
-/// - [DocDBStats] - Database statistics and metrics
+/// - [EntiDBStats] - Database statistics and metrics
 /// - [CollectionStats] - Per-collection statistics
 ///
 /// ## Usage
 ///
 /// ```dart
-/// import 'package:docdb/docdb.dart';
+/// import 'package:entidb/entidb.dart';
 ///
-/// final db = await DocDB.open(
+/// final db = await EntiDB.open(
 ///   path: './myapp.db',
-///   config: DocDBConfig.production(),
+///   config: EntiDBConfig.production(),
 /// );
 ///
 /// final stats = await db.getStats();
@@ -29,12 +29,12 @@
 library;
 
 // Main database class
-export 'docdb.dart' show DocDB;
+export 'entidb.dart' show EntiDB;
 
 // Configuration and storage backend enum
-export 'docdb_config.dart' show DocDBConfig, StorageBackend;
+export 'entidb_config.dart' show EntiDBConfig, StorageBackend;
 
 // Statistics classes
-export 'docdb_stats.dart' show DocDBStats, CollectionStats;
+export 'entidb_stats.dart' show EntiDBStats, CollectionStats;
 
 // Note: CollectionEntry is intentionally not exported as it's internal

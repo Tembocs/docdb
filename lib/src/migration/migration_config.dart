@@ -1,4 +1,4 @@
-/// DocDB Migration - Migration Configuration
+/// EntiDB Migration - Migration Configuration
 ///
 /// Provides configuration options for the migration system.
 library;

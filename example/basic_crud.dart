@@ -1,9 +1,9 @@
 /// Basic CRUD Operations Example
 ///
-/// Demonstrates Create, Read, Update, Delete operations with DocDB.
+/// Demonstrates Create, Read, Update, Delete operations with EntiDB.
 ///
 /// Run with: `dart run example/basic_crud.dart`
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 import 'models/models.dart';
 
@@ -13,7 +13,7 @@ Future<void> main() async {
   print('═══════════════════════════════════════════════════════════════\n');
 
   // Use in-memory database for this example
-  final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+  final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
   try {
     // Get a typed collection

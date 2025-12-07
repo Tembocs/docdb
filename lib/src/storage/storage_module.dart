@@ -1,4 +1,4 @@
-/// DocDB Storage Module
+/// EntiDB Storage Module
 ///
 /// Provides the storage layer for entity persistence. This module defines
 /// the abstract storage interface and various implementations for different
@@ -24,7 +24,7 @@
 /// ## Usage
 ///
 /// ```dart
-/// import 'package:docdb/src/storage/storage_module.dart';
+/// import 'package:entidb/src/storage/storage_module.dart';
 ///
 /// // For testing
 /// final memoryStorage = MemoryStorage<Product>(name: 'products');

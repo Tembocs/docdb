@@ -1,4 +1,4 @@
-/// DocDB Role Manager Module
+/// EntiDB Role Manager Module
 ///
 /// Provides comprehensive role-based access control (RBAC) with role hierarchy,
 /// permission inheritance, and integration with the authentication system.
@@ -35,7 +35,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/authorization/role_manager.dart';
+/// import 'package:entidb/src/authorization/role_manager.dart';
 ///
 /// // Create with storage
 /// final roleStorage = MemoryStorage<Role>(name: 'roles');
@@ -213,7 +213,7 @@ class RoleManager {
   final RoleManagerConfig _config;
 
   /// Logger.
-  final DocDBLogger _logger;
+  final EntiDBLogger _logger;
 
   /// Lock for role operations.
   final Lock _lock = Lock();
@@ -236,7 +236,7 @@ class RoleManager {
          name: 'roles',
        ),
        _config = config,
-       _logger = DocDBLogger(LoggerNameConstants.authorization);
+       _logger = EntiDBLogger(LoggerNameConstants.authorization);
 
   /// Creates a [RoleManager] that operates in memory only.
   ///
@@ -245,7 +245,7 @@ class RoleManager {
   RoleManager.inMemory({RoleManagerConfig config = const RoleManagerConfig()})
     : _roles = null,
       _config = config,
-      _logger = DocDBLogger(LoggerNameConstants.authorization);
+      _logger = EntiDBLogger(LoggerNameConstants.authorization);
 
   /// Whether the manager has been initialized.
   bool get isInitialized => _initialized;

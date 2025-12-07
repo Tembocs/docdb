@@ -1,4 +1,4 @@
-/// DocDB Backup Module Tests
+/// EntiDB Backup Module Tests
 ///
 /// Comprehensive tests for the backup module including:
 /// - Snapshot: Point-in-time data capture with integrity verification
@@ -13,11 +13,11 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/authentication/authentication.dart';
-import 'package:docdb/src/backup/backup.dart';
-import 'package:docdb/src/entity/entity.dart';
-import 'package:docdb/src/exceptions/exceptions.dart';
-import 'package:docdb/src/storage/memory_storage.dart';
+import 'package:entidb/src/authentication/authentication.dart';
+import 'package:entidb/src/backup/backup.dart';
+import 'package:entidb/src/entity/entity.dart';
+import 'package:entidb/src/exceptions/exceptions.dart';
+import 'package:entidb/src/storage/memory_storage.dart';
 
 /// Test entity class representing a Product.
 class Product implements Entity {
@@ -594,7 +594,7 @@ void main() {
       storage = MemoryStorage<Product>(name: 'products');
       await storage.open();
 
-      tempDir = await Directory.systemTemp.createTemp('docdb_backup_test_');
+      tempDir = await Directory.systemTemp.createTemp('entidb_backup_test_');
 
       backupService = BackupService<Product>(
         storage: storage,
@@ -821,7 +821,7 @@ void main() {
       await userStorage.open();
 
       tempDir = await Directory.systemTemp.createTemp(
-        'docdb_backup_manager_test_',
+        'entidb_backup_manager_test_',
       );
 
       backupManager = BackupManager<Product, User>(
@@ -1428,7 +1428,7 @@ void main() {
     late Directory tempDir;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('docdb_diff_test_');
+      tempDir = await Directory.systemTemp.createTemp('entidb_diff_test_');
       storage = MemoryStorage<Product>(name: 'products');
       await storage.open();
 
@@ -1535,7 +1535,7 @@ void main() {
     late Directory tempDir;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('docdb_incr_test_');
+      tempDir = await Directory.systemTemp.createTemp('entidb_incr_test_');
       storage = MemoryStorage<Product>(name: 'products');
       await storage.open();
 
@@ -1664,7 +1664,7 @@ void main() {
     late Directory tempDir;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('docdb_chain_test_');
+      tempDir = await Directory.systemTemp.createTemp('entidb_chain_test_');
       storage = MemoryStorage<Product>(name: 'products');
       await storage.open();
 

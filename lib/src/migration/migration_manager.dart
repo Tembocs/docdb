@@ -1,4 +1,4 @@
-/// DocDB Migration - Migration Manager
+/// EntiDB Migration - Migration Manager
 ///
 /// Provides coordinated migration management for both data and user storage.
 library;
@@ -7,7 +7,7 @@ import 'dart:convert';
 
 import '../entity/entity.dart';
 import '../exceptions/migration_exceptions.dart';
-import '../logger/docdb_logger.dart';
+import '../logger/entidb_logger.dart';
 import '../storage/storage.dart';
 import '../utils/constants.dart';
 import 'migration_config.dart';
@@ -53,7 +53,7 @@ import 'migration_runner.dart';
 final class MigrationManager<D extends Entity, U extends Entity> {
   final MigrationRunner<D>? _dataRunner;
   final MigrationRunner<U>? _userRunner;
-  final DocDBLogger _logger;
+  final EntiDBLogger _logger;
   bool _initialized = false;
 
   /// Creates a migration manager.
@@ -66,10 +66,10 @@ final class MigrationManager<D extends Entity, U extends Entity> {
   MigrationManager({
     MigrationRunner<D>? dataRunner,
     MigrationRunner<U>? userRunner,
-    DocDBLogger? logger,
+    EntiDBLogger? logger,
   }) : _dataRunner = dataRunner,
        _userRunner = userRunner,
-       _logger = logger ?? DocDBLogger(LoggerNameConstants.migration) {
+       _logger = logger ?? EntiDBLogger(LoggerNameConstants.migration) {
     if (dataRunner == null && userRunner == null) {
       throw ArgumentError(
         'At least one of dataRunner or userRunner must be provided',
@@ -91,7 +91,7 @@ final class MigrationManager<D extends Entity, U extends Entity> {
     MigrationConfig? dataConfig,
     Storage<U>? userStorage,
     MigrationConfig? userConfig,
-    DocDBLogger? logger,
+    EntiDBLogger? logger,
   }) {
     MigrationRunner<D>? dataRunner;
     MigrationRunner<U>? userRunner;

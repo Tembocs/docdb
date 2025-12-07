@@ -1,11 +1,11 @@
-/// DocDB Permission Module
+/// EntiDB Permission Module
 ///
 /// Provides a comprehensive permission system with resource-based access control,
 /// scoped permissions, and hierarchical permission inheritance.
 ///
 /// ## Overview
 ///
-/// Permissions in DocDB are structured as:
+/// Permissions in EntiDB are structured as:
 ///
 /// ```
 /// resource:action[:scope]
@@ -25,7 +25,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/authorization/permissions.dart';
+/// import 'package:entidb/src/authorization/permissions.dart';
 ///
 /// // Create permissions
 /// final readDocs = Permission.action(Action.read, Resource.document);

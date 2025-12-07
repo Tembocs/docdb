@@ -1,4 +1,4 @@
-/// DocDB Collection Module Tests
+/// EntiDB Collection Module Tests
 ///
 /// Comprehensive tests for the Collection class including CRUD operations,
 /// indexing, querying, concurrency control, and version tracking.
@@ -6,12 +6,12 @@ library;
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/collection/collection.dart';
-import 'package:docdb/src/entity/entity.dart';
-import 'package:docdb/src/exceptions/exceptions.dart';
-import 'package:docdb/src/index/i_index.dart';
-import 'package:docdb/src/query/query.dart';
-import 'package:docdb/src/storage/memory_storage.dart';
+import 'package:entidb/src/collection/collection.dart';
+import 'package:entidb/src/entity/entity.dart';
+import 'package:entidb/src/exceptions/exceptions.dart';
+import 'package:entidb/src/index/i_index.dart';
+import 'package:entidb/src/query/query.dart';
+import 'package:entidb/src/storage/memory_storage.dart';
 
 /// Test entity for collection tests.
 class Product implements Entity {

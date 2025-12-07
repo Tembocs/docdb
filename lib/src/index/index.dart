@@ -1,4 +1,4 @@
-/// Index module for DocDB.
+/// Index module for EntiDB.
 ///
 /// This module provides indexing capabilities for efficient entity lookups.
 /// Indexes improve query performance by maintaining sorted or hashed
@@ -15,7 +15,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/index/index.dart';
+/// import 'package:entidb/src/index/index.dart';
 ///
 /// // Create an index manager
 /// final manager = IndexManager();

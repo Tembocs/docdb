@@ -1,6 +1,6 @@
-# DocDB API Examples
+# EntiDB API Examples
 
-This document provides examples of the new **Entity-based API** for DocDB. The new approach provides type safety, better IDE support, and cleaner code without requiring code generation.
+This document provides examples of the new **Entity-based API** for EntiDB. The new approach provides type safety, better IDE support, and cleaner code without requiring code generation.
 
 ## Key Differences from Old Approach
 
@@ -17,7 +17,7 @@ This document provides examples of the new **Entity-based API** for DocDB. The n
 ## 1. Direct Entity Storage (No Document Wrapper)
 
 ```dart
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 // Define your domain class implementing Entity
 class Animal implements Entity {
@@ -45,7 +45,7 @@ class Animal implements Entity {
 }
 
 void main() async {
-  final db = await DocDB.open(path: './zoo');
+  final db = await EntiDB.open(path: './zoo');
   
   // Get typed collection - returns Animal objects, not Documents!
   final animals = await db.collection<Animal>('animals', fromMap: Animal.fromMap);
@@ -68,7 +68,7 @@ void main() async {
 ## 2. E-commerce Product Management
 
 ```dart
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 // Product entity
 class Product implements Entity {
@@ -105,7 +105,7 @@ class Product implements Entity {
 }
 
 void main() async {
-  final db = await DocDB.open(path: './shop');
+  final db = await EntiDB.open(path: './shop');
   final products = await db.collection<Product>('products', fromMap: Product.fromMap);
   
   // Insert with auto-generated ID
@@ -139,7 +139,7 @@ void main() async {
 ## 3. Task Management with Transactions
 
 ```dart
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 class Task implements Entity {
   @override
@@ -166,7 +166,7 @@ class Task implements Entity {
 }
 
 void main() async {
-  final db = await DocDB.open(path: './tasks');
+  final db = await EntiDB.open(path: './tasks');
   final tasks = await db.collection<Task>('tasks', fromMap: Task.fromMap);
   
   // Atomic transaction - all or nothing
@@ -197,7 +197,7 @@ void main() async {
 ## 4. Blog with Complex Queries
 
 ```dart
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 class BlogPost implements Entity {
   @override
@@ -241,13 +241,13 @@ class BlogPost implements Entity {
 }
 
 void main() async {
-  final db = await DocDB.open(path: './blog');
+  final db = await EntiDB.open(path: './blog');
   final posts = await db.collection<BlogPost>('posts', fromMap: BlogPost.fromMap);
   
   // Insert posts
   await posts.insert(BlogPost(
-    title: 'Getting Started with DocDB',
-    content: 'DocDB is a powerful embedded database...',
+    title: 'Getting Started with EntiDB',
+    content: 'EntiDB is a powerful embedded database...',
     author: 'Alice',
     tags: ['tutorial', 'database'],
     views: 150,
@@ -282,7 +282,7 @@ void main() async {
 
 ```dart
 import 'dart:typed_data';
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 class Customer implements Entity {
   @override
@@ -318,7 +318,7 @@ void main() async {
   final encryptionKey = Uint8List(32); // 256-bit key (use secure key in production!)
   final encryption = EncryptionService(encryptionKey);
   
-  final db = await DocDB.connect(
+  final db = await EntiDB.connect(
     dataPath: 'customers/',
     userPath: 'users/',
     dataEncryption: encryption, // Data encrypted at rest

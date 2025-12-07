@@ -1,6 +1,6 @@
-/// DocDB Configuration
+/// EntiDB Configuration
 ///
-/// Provides configuration options for DocDB database instances including
+/// Provides configuration options for EntiDB database instances including
 /// storage backend selection, buffer pool settings, encryption, and
 /// operational parameters.
 library;
@@ -9,7 +9,7 @@ import 'package:meta/meta.dart';
 
 import '../encryption/encryption_service.dart';
 
-/// Storage backend types for DocDB.
+/// Storage backend types for EntiDB.
 ///
 /// Determines how data is persisted:
 /// - [paged]: Page-based file storage for production use
@@ -22,7 +22,7 @@ enum StorageBackend {
   memory,
 }
 
-/// Configuration for DocDB database instance.
+/// Configuration for EntiDB database instance.
 ///
 /// Controls storage behavior, caching, encryption, and other database options.
 ///
@@ -30,22 +30,22 @@ enum StorageBackend {
 ///
 /// ```dart
 /// // Production configuration
-/// final config = DocDBConfig.production();
+/// final config = EntiDBConfig.production();
 ///
 /// // Development configuration with encryption
-/// final devConfig = DocDBConfig.development(
+/// final devConfig = EntiDBConfig.development(
 ///   encryptionService: myEncryptionService,
 /// );
 ///
 /// // Custom configuration
-/// final customConfig = DocDBConfig(
+/// final customConfig = EntiDBConfig(
 ///   bufferPoolSize: 4096,
 ///   pageSize: 8192,
 ///   enableDebugLogging: true,
 /// );
 /// ```
 @immutable
-class DocDBConfig {
+class EntiDBConfig {
   /// The storage backend to use.
   final StorageBackend storageBackend;
 
@@ -77,8 +77,8 @@ class DocDBConfig {
   bool get encryptionEnabled =>
       encryptionService != null && encryptionService!.isEnabled;
 
-  /// Creates a DocDB configuration.
-  const DocDBConfig({
+  /// Creates a EntiDB configuration.
+  const EntiDBConfig({
     this.storageBackend = StorageBackend.paged,
     this.bufferPoolSize = 1024,
     this.pageSize = 4096,
@@ -97,8 +97,8 @@ class DocDBConfig {
   /// - 4MB max entity size
   /// - Checksum verification enabled
   /// - Debug logging disabled
-  factory DocDBConfig.production({EncryptionService? encryptionService}) {
-    return DocDBConfig(
+  factory EntiDBConfig.production({EncryptionService? encryptionService}) {
+    return EntiDBConfig(
       storageBackend: StorageBackend.paged,
       bufferPoolSize: 2048,
       pageSize: 4096,
@@ -117,8 +117,8 @@ class DocDBConfig {
   /// - Smaller buffer pool (256 pages)
   /// - Debug logging enabled
   /// - Standard entity size limits
-  factory DocDBConfig.development({EncryptionService? encryptionService}) {
-    return DocDBConfig(
+  factory EntiDBConfig.development({EncryptionService? encryptionService}) {
+    return EntiDBConfig(
       storageBackend: StorageBackend.paged,
       bufferPoolSize: 256,
       pageSize: 4096,
@@ -138,8 +138,8 @@ class DocDBConfig {
   /// - Transactions disabled
   /// - Debug logging enabled
   /// - No auto-flush (not needed for memory)
-  factory DocDBConfig.inMemory() {
-    return const DocDBConfig(
+  factory EntiDBConfig.inMemory() {
+    return const EntiDBConfig(
       storageBackend: StorageBackend.memory,
       enableTransactions: false,
       enableDebugLogging: true,
@@ -148,7 +148,7 @@ class DocDBConfig {
   }
 
   /// Creates a copy with modified properties.
-  DocDBConfig copyWith({
+  EntiDBConfig copyWith({
     StorageBackend? storageBackend,
     int? bufferPoolSize,
     int? pageSize,
@@ -159,7 +159,7 @@ class DocDBConfig {
     bool? enableDebugLogging,
     bool? autoFlushOnClose,
   }) {
-    return DocDBConfig(
+    return EntiDBConfig(
       storageBackend: storageBackend ?? this.storageBackend,
       bufferPoolSize: bufferPoolSize ?? this.bufferPoolSize,
       pageSize: pageSize ?? this.pageSize,

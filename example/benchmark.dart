@@ -1,6 +1,6 @@
-/// DocDB Performance Benchmark
+/// EntiDB Performance Benchmark
 ///
-/// Measures performance of core DocDB operations including:
+/// Measures performance of core EntiDB operations including:
 /// - Insert operations (single and batch)
 /// - Read operations (by ID and queries)
 /// - Update operations
@@ -18,9 +18,9 @@ library;
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 // ignore: implementation_imports
-import 'package:docdb/src/storage/serialization.dart';
+import 'package:entidb/src/storage/serialization.dart';
 
 import 'models/models.dart';
 
@@ -55,7 +55,7 @@ Future<void> main() async {
     '╔════════════════════════════════════════════════════════════════════╗',
   );
   print(
-    '║                    DocDB Performance Benchmark                     ║',
+    '║                    EntiDB Performance Benchmark                     ║',
   );
   print(
     '╚════════════════════════════════════════════════════════════════════╝',
@@ -83,7 +83,7 @@ Future<void> main() async {
 
   results.addAll(
     await _runStorageBenchmarks(
-      config: DocDBConfig.inMemory(),
+      config: EntiDBConfig.inMemory(),
       prefix: 'Memory',
     ),
   );
@@ -101,11 +101,11 @@ Future<void> main() async {
   );
   print('');
 
-  final tempDir = await Directory.systemTemp.createTemp('docdb_bench_');
+  final tempDir = await Directory.systemTemp.createTemp('entidb_bench_');
   try {
     results.addAll(
       await _runStorageBenchmarks(
-        config: DocDBConfig.production(),
+        config: EntiDBConfig.production(),
         path: tempDir.path,
         prefix: 'File',
       ),
@@ -233,13 +233,13 @@ Future<void> main() async {
 
 /// Runs storage benchmarks for a given configuration.
 Future<List<BenchmarkResult>> _runStorageBenchmarks({
-  required DocDBConfig config,
+  required EntiDBConfig config,
   String? path,
   required String prefix,
 }) async {
   final results = <BenchmarkResult>[];
 
-  final db = await DocDB.open(path: path, config: config);
+  final db = await EntiDB.open(path: path, config: config);
 
   try {
     final products = await db.collection<Product>(
@@ -423,7 +423,7 @@ Future<List<BenchmarkResult>> _runStorageBenchmarks({
 /// Runs index performance comparison benchmarks.
 Future<List<BenchmarkResult>> _runIndexBenchmarks() async {
   final results = <BenchmarkResult>[];
-  final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+  final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
   try {
     final products = await db.collection<Product>(
@@ -659,7 +659,7 @@ Product _createProductWithContent(int index) {
 /// Runs full-text search benchmarks.
 Future<List<BenchmarkResult>> _runFullTextBenchmarks() async {
   final results = <BenchmarkResult>[];
-  final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+  final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
   try {
     final products = await db.collection<Product>(
@@ -772,7 +772,7 @@ Future<List<BenchmarkResult>> _runFullTextBenchmarks() async {
 /// Runs query cache performance benchmarks.
 Future<List<BenchmarkResult>> _runQueryCacheBenchmarks() async {
   final results = <BenchmarkResult>[];
-  final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+  final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
   try {
     final products = await db.collection<Product>(
@@ -1022,7 +1022,7 @@ Future<List<BenchmarkResult>> _runCompressionBenchmarks() async {
 /// Runs query optimizer benchmarks.
 Future<List<BenchmarkResult>> _runQueryOptimizerBenchmarks() async {
   final results = <BenchmarkResult>[];
-  final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+  final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
   try {
     final products = await db.collection<Product>(
@@ -1116,11 +1116,11 @@ Future<List<BenchmarkResult>> _runQueryOptimizerBenchmarks() async {
 Future<List<BenchmarkResult>> _runIndexPersistenceBenchmarks() async {
   final results = <BenchmarkResult>[];
 
-  final tempDir = await Directory.systemTemp.createTemp('docdb_idx_persist_');
+  final tempDir = await Directory.systemTemp.createTemp('entidb_idx_persist_');
   try {
-    final db = await DocDB.open(
+    final db = await EntiDB.open(
       path: '${tempDir.path}/db',
-      config: DocDBConfig.production(),
+      config: EntiDBConfig.production(),
     );
 
     final products = await db.collection<Product>(
@@ -1172,9 +1172,9 @@ Future<List<BenchmarkResult>> _runIndexPersistenceBenchmarks() async {
     // Re-open database to trigger index load
     results.add(
       await _benchmark('Re-open DB with persisted indexes', 1, () async {
-        final db2 = await DocDB.open(
+        final db2 = await EntiDB.open(
           path: '${tempDir.path}/db',
-          config: DocDBConfig.production(),
+          config: EntiDBConfig.production(),
         );
         await db2.collection<Product>('products', fromMap: Product.fromMap);
         await db2.close();
@@ -1190,11 +1190,11 @@ Future<List<BenchmarkResult>> _runIndexPersistenceBenchmarks() async {
     // Fresh database without existing indexes
     results.add(
       await _benchmark('Cold Start: Fresh DB + index creation', 1, () async {
-        final freshDir = await Directory.systemTemp.createTemp('docdb_cold_');
+        final freshDir = await Directory.systemTemp.createTemp('entidb_cold_');
         try {
-          final freshDb = await DocDB.open(
+          final freshDb = await EntiDB.open(
             path: freshDir.path,
-            config: DocDBConfig.production(),
+            config: EntiDBConfig.production(),
           );
           final coll = await freshDb.collection<Product>(
             'products',

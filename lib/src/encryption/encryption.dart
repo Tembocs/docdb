@@ -1,4 +1,4 @@
-/// DocDB Encryption Module
+/// EntiDB Encryption Module
 ///
 /// Provides data-at-rest encryption services for the database.
 /// Supports AES-GCM authenticated encryption with 128/192/256-bit keys.
@@ -15,7 +15,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/encryption/encryption_module.dart';
+/// import 'package:entidb/src/encryption/encryption_module.dart';
 ///
 /// // Option 1: Direct key
 /// final key = Uint8List(32); // Your 256-bit key

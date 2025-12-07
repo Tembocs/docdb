@@ -8,11 +8,11 @@ import 'dart:io';
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/engine/storage/pager.dart';
-import 'package:docdb/src/engine/storage/recovery.dart';
-import 'package:docdb/src/engine/wal/wal_reader.dart';
-import 'package:docdb/src/engine/wal/wal_record.dart';
-import 'package:docdb/src/engine/wal/wal_writer.dart';
+import 'package:entidb/src/engine/storage/pager.dart';
+import 'package:entidb/src/engine/storage/recovery.dart';
+import 'package:entidb/src/engine/wal/wal_reader.dart';
+import 'package:entidb/src/engine/wal/wal_record.dart';
+import 'package:entidb/src/engine/wal/wal_writer.dart';
 
 void main() {
   group('RecoveryConfig', () {

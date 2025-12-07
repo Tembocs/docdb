@@ -1,13 +1,13 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for encryption-related errors.
 ///
 /// This is the parent class for all encryption exceptions, providing
 /// a common type for catching any encryption-related error.
 @immutable
-class EncryptionException extends DocDBException {
+class EncryptionException extends EntiDBException {
   /// Creates a new [EncryptionException].
   ///
   /// - [message]: A descriptive error message.

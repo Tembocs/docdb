@@ -1,4 +1,4 @@
-/// DocDB Migration Module
+/// EntiDB Migration Module
 ///
 /// Provides schema migration support for entity storage, enabling
 /// seamless upgrades and downgrades between schema versions.
@@ -19,7 +19,7 @@
 /// ### 1. Define Migration Strategies
 ///
 /// ```dart
-/// import 'package:docdb/src/migration/migration.dart';
+/// import 'package:entidb/src/migration/migration.dart';
 ///
 /// class AddEmailFieldMigration extends SingleEntityMigrationStrategy {
 ///   @override

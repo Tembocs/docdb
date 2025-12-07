@@ -1,4 +1,4 @@
-/// DocDB Authorization Module
+/// EntiDB Authorization Module
 ///
 /// Provides role-based access control (RBAC) with permission inheritance,
 /// hierarchical roles, and fine-grained access control.
@@ -37,7 +37,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/docdb.dart';
+/// import 'package:entidb/entidb.dart';
 ///
 /// // Create role storage
 /// final roleStorage = MemoryStorage<Role>(name: 'roles');

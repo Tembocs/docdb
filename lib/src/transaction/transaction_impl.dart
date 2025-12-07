@@ -75,7 +75,7 @@ class Transaction<T extends Entity> {
   final IsolationLevel _isolationLevel;
 
   /// Logger for transaction operations.
-  final DocDBLogger _logger;
+  final EntiDBLogger _logger;
 
   /// The current status of this transaction.
   TransactionStatus _status;
@@ -111,7 +111,7 @@ class Transaction<T extends Entity> {
        _snapshot = snapshot,
        _status = TransactionStatus.active,
        _createdAt = DateTime.now(),
-       _logger = DocDBLogger(LoggerNameConstants.transaction);
+       _logger = EntiDBLogger(LoggerNameConstants.transaction);
 
   /// Creates and starts a new transaction for the given storage.
   ///
@@ -147,7 +147,7 @@ class Transaction<T extends Entity> {
       );
     }
 
-    final logger = DocDBLogger(LoggerNameConstants.transaction);
+    final logger = EntiDBLogger(LoggerNameConstants.transaction);
 
     try {
       // Take snapshot for rollback

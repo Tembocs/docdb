@@ -1,4 +1,4 @@
-/// Query result cache for DocDB.
+/// Query result cache for EntiDB.
 ///
 /// This module provides caching of query results with:
 /// - Time-to-live (TTL) expiration

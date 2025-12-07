@@ -1,4 +1,4 @@
-/// DocDB Backup - Backup Manager
+/// EntiDB Backup - Backup Manager
 ///
 /// Provides a high-level manager for coordinating backup and restore
 /// operations across multiple storage instances.
@@ -8,7 +8,7 @@ import 'dart:convert';
 
 import '../entity/entity.dart';
 import '../exceptions/backup_exceptions.dart';
-import '../logger/docdb_logger.dart';
+import '../logger/entidb_logger.dart';
 import '../storage/storage.dart';
 import '../utils/constants.dart';
 import 'backup_metadata.dart';
@@ -72,7 +72,7 @@ import 'snapshot.dart';
 final class BackupManager<D extends Entity, U extends Entity> {
   final BackupService<D> _dataBackupService;
   final BackupService<U> _userBackupService;
-  final DocDBLogger _logger;
+  final EntiDBLogger _logger;
 
   bool _initialized = false;
 
@@ -90,7 +90,7 @@ final class BackupManager<D extends Entity, U extends Entity> {
     required String dataBackupPath,
     required String userBackupPath,
     BackupConfig? config,
-    DocDBLogger? logger,
+    EntiDBLogger? logger,
   }) : _dataBackupService = BackupService<D>(
          storage: dataStorage,
          config: config ?? BackupConfig(backupDirectory: dataBackupPath),
@@ -99,7 +99,7 @@ final class BackupManager<D extends Entity, U extends Entity> {
          storage: userStorage,
          config: config ?? BackupConfig(backupDirectory: userBackupPath),
        ),
-       _logger = logger ?? DocDBLogger(LoggerNameConstants.backup);
+       _logger = logger ?? EntiDBLogger(LoggerNameConstants.backup);
 
   /// Creates a backup manager with custom configurations.
   ///
@@ -109,7 +109,7 @@ final class BackupManager<D extends Entity, U extends Entity> {
     required Storage<U> userStorage,
     required BackupConfig dataConfig,
     required BackupConfig userConfig,
-    DocDBLogger? logger,
+    EntiDBLogger? logger,
   }) : _dataBackupService = BackupService<D>(
          storage: dataStorage,
          config: dataConfig,
@@ -118,7 +118,7 @@ final class BackupManager<D extends Entity, U extends Entity> {
          storage: userStorage,
          config: userConfig,
        ),
-       _logger = logger ?? DocDBLogger(LoggerNameConstants.backup);
+       _logger = logger ?? EntiDBLogger(LoggerNameConstants.backup);
 
   /// The data backup service.
   BackupService<D> get dataBackupService => _dataBackupService;

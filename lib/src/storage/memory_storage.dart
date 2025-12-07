@@ -1,4 +1,4 @@
-/// DocDB Storage - In-Memory Storage Implementation
+/// EntiDB Storage - In-Memory Storage Implementation
 ///
 /// Provides a fast, volatile storage backend for testing and development.
 /// All data is lost when the storage is closed or the application exits.

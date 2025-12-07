@@ -1,4 +1,4 @@
-/// DocDB Backup - Backup Result
+/// EntiDB Backup - Backup Result
 ///
 /// Represents the outcome of backup and restore operations with
 /// detailed status, timing, and error information.

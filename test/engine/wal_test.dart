@@ -12,10 +12,10 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/engine/wal/wal_constants.dart';
-import 'package:docdb/src/engine/wal/wal_record.dart';
-import 'package:docdb/src/engine/wal/wal_reader.dart';
-import 'package:docdb/src/engine/wal/wal_writer.dart';
+import 'package:entidb/src/engine/wal/wal_constants.dart';
+import 'package:entidb/src/engine/wal/wal_record.dart';
+import 'package:entidb/src/engine/wal/wal_reader.dart';
+import 'package:entidb/src/engine/wal/wal_writer.dart';
 
 void main() {
   group('WalRecordType', () {

@@ -1,4 +1,4 @@
-/// DocDB Backup - Storage Statistics
+/// EntiDB Backup - Storage Statistics
 ///
 /// Provides comprehensive statistics about storage state including
 /// entity counts, memory usage, and performance metrics.

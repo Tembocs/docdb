@@ -1,5 +1,5 @@
 
-# 🔧 Potential Improvements for DocDB
+# 🔧 Potential Improvements for EntiDB
 1. Investigate BTree range query performance - should be faster
 2. Consider query caching for repeated queries
 3. Batch file I/O for better write throughput

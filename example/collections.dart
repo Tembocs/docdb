@@ -3,7 +3,7 @@
 /// Demonstrates working with multiple typed collections.
 ///
 /// Run with: `dart run example/collections.dart`
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 import 'models/models.dart';
 
@@ -12,7 +12,7 @@ Future<void> main() async {
   print('                 Multiple Collections');
   print('═══════════════════════════════════════════════════════════════\n');
 
-  final db = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+  final db = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
   try {
     // =========================================================================

@@ -1,4 +1,4 @@
-/// DocDB Encryption - Encryption Service Interface
+/// EntiDB Encryption - Encryption Service Interface
 ///
 /// Defines the abstract interface for encryption services. All encryption
 /// implementations must implement this interface to ensure consistent

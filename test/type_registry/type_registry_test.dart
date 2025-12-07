@@ -6,10 +6,10 @@ library;
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/exceptions/type_registry_exceptions.dart';
-import 'package:docdb/src/type_registry/builtin_serializers.dart';
-import 'package:docdb/src/type_registry/type_registry.dart';
-import 'package:docdb/src/type_registry/type_serializer.dart';
+import 'package:entidb/src/exceptions/type_registry_exceptions.dart';
+import 'package:entidb/src/type_registry/builtin_serializers.dart';
+import 'package:entidb/src/type_registry/type_registry.dart';
+import 'package:entidb/src/type_registry/type_serializer.dart';
 
 // =============================================================================
 // Custom Test Serializers

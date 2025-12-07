@@ -1,4 +1,4 @@
-# DocDB Release Workflow
+# EntiDB Release Workflow
 #
 # This workflow automates releases to pub.dev when a version tag is pushed.
 # It also creates GitHub releases with changelogs.

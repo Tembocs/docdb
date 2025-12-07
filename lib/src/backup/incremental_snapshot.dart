@@ -1,4 +1,4 @@
-/// DocDB Backup - Incremental Snapshot
+/// EntiDB Backup - Incremental Snapshot
 ///
 /// Represents an incremental backup containing only changes since the
 /// previous backup of any type.

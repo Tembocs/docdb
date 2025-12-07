@@ -1,8 +1,8 @@
-# Dart Document Database (DocDB) - Technical Architecture
+# Dart Document Database (EntiDB) - Technical Architecture
 
 ## 1. Introduction
 
-This document outlines the technical architecture for the next generation of DocDB. The goal is to build a production-grade, embedded document database from scratch in Dart, without relying on external database engines (like SQLite, Hive, or Isar).
+This document outlines the technical architecture for the next generation of EntiDB. The goal is to build a production-grade, embedded document database from scratch in Dart, without relying on external database engines (like SQLite, Hive, or Isar).
 
 The architecture prioritizes **Data Integrity (ACID)**, **Performance**, **Scalability**, and **Security**, addressing limitations in the initial prototype (such as file-per-document storage and lack of index persistence).
 
@@ -23,7 +23,7 @@ The system is layered to separate concerns, from the user-facing API down to the
 
 ```mermaid
 graph TD
-    User[User / Application] --> API[Public API (DocDB)]
+    User[User / Application] --> API[Public API (EntiDB)]
     API --> QM[Query Manager]
     API --> TM[Transaction Manager]
     
@@ -83,7 +83,7 @@ await pager.writePage(page);
 
 #### 3.1.4. Entity Interface (Type-Safe Object Storage)
 
-DocDB uses an **interface-based approach** for storing domain objects directly, without requiring code generation:
+EntiDB uses an **interface-based approach** for storing domain objects directly, without requiring code generation:
 
 ```dart
 /// Base interface for all storable entities
@@ -201,7 +201,7 @@ final dogs = await animals.find(query);  // Returns List<Animal>
 // Configuring encryption
 final key = Uint8List(32); // 256-bit key
 final encryption = EncryptionService(key);
-final db = await DocDB.connect(
+final db = await EntiDB.connect(
   dataPath: 'data/', userPath: 'users/',
   dataEncryption: encryption,
 );
@@ -298,7 +298,7 @@ class Product implements Entity {
 }
 
 // 2. Use typed collections
-final db = await DocDB.open(path: './shop');
+final db = await EntiDB.open(path: './shop');
 final products = await db.collection<Product>('products', fromMap: Product.fromMap);
 
 // 3. Insert, query, update with full type safety
@@ -307,7 +307,7 @@ final widget = await products.findOne(QueryBuilder().whereEquals('name', 'Widget
 print(widget?.price);  // 29.99 - fully typed!
 ```
 
-> **Note**: DocDB is Entity-only by design. There is no schema-less `Document` class or backward compatibility layer. All stored data must be represented by classes implementing the `Entity` interface. This enforces type safety and better code organization.
+> **Note**: EntiDB is Entity-only by design. There is no schema-less `Document` class or backward compatibility layer. All stored data must be represented by classes implementing the `Entity` interface. This enforces type safety and better code organization.
 
 ### 6.2. Separation of User and Data Storage
 
@@ -480,7 +480,7 @@ Provides structured logging capabilities with module-specific contexts.
 
 | File | Purpose |
 |------|---------|
-| `docdb_logger.dart` | Thread-safe logging utility supporting multiple log levels (INFO, WARNING, ERROR, DEBUG). Uses synchronized file access and maintains log sinks per file path. Supports custom log paths for testing. |
+| `entidb_logger.dart` | Thread-safe logging utility supporting multiple log levels (INFO, WARNING, ERROR, DEBUG). Uses synchronized file access and maintains log sinks per file path. Supports custom log paths for testing. |
 
 ---
 
@@ -511,7 +511,7 @@ class Task implements Entity {
 }
 ```
 
-> **Design Decision**: DocDB does not include a schema-less `Document` class. All data must be represented by typed entities implementing the `Entity` interface. This ensures compile-time type safety and encourages proper domain modeling.
+> **Design Decision**: EntiDB does not include a schema-less `Document` class. All data must be represented by typed entities implementing the `Entity` interface. This ensures compile-time type safety and encourages proper domain modeling.
 
 #### **schema**
 Defines validation rules and structure for entities.
@@ -718,15 +718,15 @@ Manages database schema and data migrations.
 ### 7.10. User-Facing Layer
 
 #### **main**
-The primary entry point and public API for DocDB.
+The primary entry point and public API for EntiDB.
 
 | File | Purpose |
 |------|---------|
-| `docdb.dart` | The `DocDB` class providing the main public API. Offers factory methods for initialization: `inMemory()` for testing, `connect()` for production with encryption, and `open()` for rapid setup with secure defaults. Provides generic `collection<T>()` method for type-safe entity storage. |
+| `entidb.dart` | The `EntiDB` class providing the main public API. Offers factory methods for initialization: `inMemory()` for testing, `connect()` for production with encryption, and `open()` for rapid setup with secure defaults. Provides generic `collection<T>()` method for type-safe entity storage. |
 
 ```dart
 // Quick start with secure defaults
-final db = await DocDB.open(path: './mydb');
+final db = await EntiDB.open(path: './mydb');
 
 // Get a typed collection - all data requires Entity implementation
 final animals = await db.collection<Animal>('animals', fromMap: Animal.fromMap);
@@ -752,7 +752,7 @@ The following diagram illustrates the dependency relationships between modules, 
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     main (DocDB)                            │
+│                     main (EntiDB)                            │
 ├─────────────────────────────────────────────────────────────┤
 │  collection<T>   authentication   authorization    backup   │
 ├─────────────────────────────────────────────────────────────┤
@@ -777,7 +777,7 @@ This section illustrates the complete workflow from a developer's perspective, s
 ### 8.1. Complete Code Example
 
 ```dart
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 // Step 1: Define your domain entity
 class Task implements Entity {
@@ -803,13 +803,13 @@ class Task implements Entity {
 
 void main() async {
   // Step 2: Initialize the database
-  final db = await DocDB.open(path: './myapp');
+  final db = await EntiDB.open(path: './myapp');
   
   // Step 3: Get a typed collection
   final tasks = await db.collection<Task>('tasks', fromMap: Task.fromMap);
   
   // Step 4: Insert an entity
-  await tasks.insert(Task(title: 'Learn DocDB', completed: false));
+  await tasks.insert(Task(title: 'Learn EntiDB', completed: false));
   
   // Step 5: Close the database
   await db.close();
@@ -819,10 +819,10 @@ void main() async {
 ### 8.2. Initialization Call Stack
 
 ```
-Developer Code                    DocDB Internals
+Developer Code                    EntiDB Internals
 ─────────────────────────────────────────────────────────────────────────────
 
-DocDB.open(path: './myapp')
+EntiDB.open(path: './myapp')
     │
     ├──► StorageConfig.create()
     │        └── Sets up paths for data/ and users/ subdirectories
@@ -853,13 +853,13 @@ DocDB.open(path: './myapp')
     ├──► RoleManager.init()
     │        └── Defines default roles (admin, user, transaction_manager)
     │
-    └──► Returns DocDB instance (ready to use)
+    └──► Returns EntiDB instance (ready to use)
 ```
 
 ### 8.3. Collection Access Call Stack
 
 ```
-Developer Code                    DocDB Internals
+Developer Code                    EntiDB Internals
 ─────────────────────────────────────────────────────────────────────────────
 
 db.collection<Task>('tasks', fromMap: Task.fromMap)
@@ -890,10 +890,10 @@ db.collection<Task>('tasks', fromMap: Task.fromMap)
 ### 8.4. Insert Operation Call Stack
 
 ```
-Developer Code                    DocDB Internals
+Developer Code                    EntiDB Internals
 ─────────────────────────────────────────────────────────────────────────────
 
-tasks.insert(Task(title: 'Learn DocDB', completed: false))
+tasks.insert(Task(title: 'Learn EntiDB', completed: false))
     │
     ├──► Acquire collection lock (concurrency control)
     │
@@ -901,7 +901,7 @@ tasks.insert(Task(title: 'Learn DocDB', completed: false))
     │        └── UUID v4 generation: "a1b2c3d4-e5f6-..."
     │
     ├──► Entity.toMap()
-    │        └── Task.toMap() → {'title': 'Learn DocDB', 'completed': false}
+    │        └── Task.toMap() → {'title': 'Learn EntiDB', 'completed': false}
     │
     ├──► Schema validation (if schema defined)
     │        └── Validate required fields
@@ -952,14 +952,14 @@ tasks.insert(Task(title: 'Learn DocDB', completed: false))
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                         DEVELOPER CODE                                  │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  final db = await DocDB.open(path: './myapp');                          │
+│  final db = await EntiDB.open(path: './myapp');                          │
 │  final tasks = await db.collection<Task>('tasks', fromMap: ...);        │
-│  await tasks.insert(Task(title: 'Learn DocDB'));                        │
+│  await tasks.insert(Task(title: 'Learn EntiDB'));                        │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         PUBLIC API (DocDB)                              │
+│                         PUBLIC API (EntiDB)                              │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  • open() / connect() / inMemory()                                      │
 │  • collection<T>() - returns typed Collection<T>                        │
@@ -1030,13 +1030,13 @@ tasks.insert(Task(title: 'Learn DocDB', completed: false))
 
 ### 8.6. Summary: Developer Touchpoints
 
-| Step | Developer Action | DocDB Response |
+| Step | Developer Action | EntiDB Response |
 |------|------------------|----------------|
 | **1** | Implement `Entity` interface on domain class | Enables type-safe storage |
-| **2** | Call `DocDB.open()` or `connect()` | Initializes storage, encryption, auth |
+| **2** | Call `EntiDB.open()` or `connect()` | Initializes storage, encryption, auth |
 | **3** | Call `db.collection<T>('name', fromMap: ...)` | Returns typed `Collection<T>` |
 | **4** | Call `collection.insert(entity)` | Serializes, encrypts, indexes, persists |
 | **5** | Call `collection.find(query)` | Deserializes, returns `List<T>` |
 | **6** | Call `db.close()` | Flushes buffers, closes files |
 
-> **Key Insight**: The developer only interacts with the top two layers (Public API and Collection). All complexity—encryption, indexing, storage, concurrency—is handled transparently by DocDB.
+> **Key Insight**: The developer only interacts with the top two layers (Public API and Collection). All complexity—encryption, indexing, storage, concurrency—is handled transparently by EntiDB.

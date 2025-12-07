@@ -1,4 +1,4 @@
-/// DocDB Authentication Module Tests
+/// EntiDB Authentication Module Tests
 ///
 /// Comprehensive tests for the authentication module including:
 /// - AuthenticationService: User registration, login, logout, password management
@@ -9,10 +9,10 @@ library;
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/authentication/authentication.dart';
-import 'package:docdb/src/authorization/authorization.dart';
-import 'package:docdb/src/exceptions/exceptions.dart';
-import 'package:docdb/src/storage/memory_storage.dart';
+import 'package:entidb/src/authentication/authentication.dart';
+import 'package:entidb/src/authorization/authorization.dart';
+import 'package:entidb/src/exceptions/exceptions.dart';
+import 'package:entidb/src/storage/memory_storage.dart';
 
 void main() {
   group('SecurityConfig', () {
@@ -22,7 +22,7 @@ void main() {
       );
 
       expect(config.jwtSecret, equals('test-secret-key-32-chars-long!!'));
-      expect(config.jwtIssuer, equals('docdb'));
+      expect(config.jwtIssuer, equals('entidb'));
       expect(config.tokenExpiry, equals(const Duration(hours: 1)));
       expect(config.refreshTokenExpiry, equals(const Duration(days: 7)));
     });

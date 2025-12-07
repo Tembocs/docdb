@@ -1,4 +1,4 @@
-/// DocDB Migration - User Migration
+/// EntiDB Migration - User Migration
 ///
 /// Provides migration support for user/authentication data storage.
 /// This is a convenience wrapper around [MigrationRunner] for user entities.

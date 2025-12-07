@@ -1,7 +1,7 @@
-/// DocDB User Entity Module
+/// EntiDB User Entity Module
 ///
 /// Provides the [User] entity class that implements [Entity] for storage
-/// in DocDB collections. Users are the primary subjects for authentication
+/// in EntiDB collections. Users are the primary subjects for authentication
 /// and authorization operations.
 ///
 /// ## Overview
@@ -17,7 +17,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/authentication/user.dart';
+/// import 'package:entidb/src/authentication/user.dart';
 ///
 /// // Create a new user
 /// final user = User(
@@ -89,9 +89,9 @@ extension UserStatusExtension on UserStatus {
   }
 }
 
-/// Represents a user in the DocDB authentication system.
+/// Represents a user in the EntiDB authentication system.
 ///
-/// [User] implements [Entity] for seamless integration with DocDB
+/// [User] implements [Entity] for seamless integration with EntiDB
 /// collections. It stores all user-related data including credentials,
 /// roles, and account metadata.
 ///
@@ -239,7 +239,7 @@ class User implements Entity {
 
   /// Converts this user to a map for storage.
   ///
-  /// The [id] is excluded as it's stored separately by DocDB.
+  /// The [id] is excluded as it's stored separately by EntiDB.
   /// All nested objects are serialized to JSON-compatible formats.
   @override
   Map<String, dynamic> toMap() {

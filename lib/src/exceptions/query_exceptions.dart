@@ -1,13 +1,13 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for query-related errors.
 ///
 /// Thrown when query parsing, optimization, or execution fails,
 /// such as invalid query syntax or unsupported operations.
 @immutable
-class QueryException extends DocDBException {
+class QueryException extends EntiDBException {
   /// Creates a new [QueryException].
   ///
   /// - [message]: A descriptive error message.

@@ -14,12 +14,12 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/engine/constants.dart';
-import 'package:docdb/src/engine/buffer/buffer_manager.dart';
-import 'package:docdb/src/engine/buffer/lru_cache.dart';
-import 'package:docdb/src/engine/storage/page.dart';
-import 'package:docdb/src/engine/storage/page_type.dart';
-import 'package:docdb/src/engine/storage/pager.dart';
+import 'package:entidb/src/engine/constants.dart';
+import 'package:entidb/src/engine/buffer/buffer_manager.dart';
+import 'package:entidb/src/engine/buffer/lru_cache.dart';
+import 'package:entidb/src/engine/storage/page.dart';
+import 'package:entidb/src/engine/storage/page_type.dart';
+import 'package:entidb/src/engine/storage/pager.dart';
 
 void main() {
   group('Constants', () {

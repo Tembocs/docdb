@@ -1,4 +1,4 @@
-/// Logger module for DocDB.
+/// Logger module for EntiDB.
 ///
 /// This module provides structured, thread-safe logging capabilities
 /// with multiple log levels, synchronized file access, and optional
@@ -7,13 +7,13 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/logger/logger.dart';
+/// import 'package:entidb/src/logger/logger.dart';
 ///
 /// // Initialize once at startup
-/// await DocDBLogger.initialize();
+/// await EntiDBLogger.initialize();
 ///
 /// // Create a logger for your module
-/// final logger = DocDBLogger('MyModule');
+/// final logger = EntiDBLogger('MyModule');
 ///
 /// // Log messages at various levels
 /// await logger.info('Operation completed');
@@ -22,7 +22,7 @@
 /// await logger.debug('Debug info', {'key': 'value'});
 ///
 /// // Cleanup at shutdown
-/// await DocDBLogger.dispose();
+/// await EntiDBLogger.dispose();
 /// ```
 ///
 /// ## Log Levels
@@ -37,7 +37,7 @@
 /// Use [LoggerConfig] to customize behavior:
 ///
 /// ```dart
-/// await DocDBLogger.initialize(
+/// await EntiDBLogger.initialize(
 ///   config: LoggerConfig(
 ///     logPath: 'custom/logs/app.log',
 ///     minLevel: LogLevel.warning,
@@ -50,13 +50,13 @@
 ///
 /// ```dart
 /// // For production (file only, info level)
-/// await DocDBLogger.initialize(config: LoggerConfig.production);
+/// await EntiDBLogger.initialize(config: LoggerConfig.production);
 ///
 /// // For development (console + file, debug level)
-/// await DocDBLogger.initialize(config: LoggerConfig.development);
+/// await EntiDBLogger.initialize(config: LoggerConfig.development);
 /// ```
 library;
 
-export 'docdb_logger.dart';
+export 'entidb_logger.dart';
 export 'log_level.dart';
 export 'logger_config.dart';

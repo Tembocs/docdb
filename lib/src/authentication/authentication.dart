@@ -1,4 +1,4 @@
-/// DocDB Authentication Module
+/// EntiDB Authentication Module
 ///
 /// Provides comprehensive user authentication with secure credential handling,
 /// session management, and account protection.
@@ -38,7 +38,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/docdb.dart';
+/// import 'package:entidb/entidb.dart';
 ///
 /// // Configure security
 /// final securityConfig = SecurityConfig(

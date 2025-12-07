@@ -1,4 +1,4 @@
-/// DocDB Role Module
+/// EntiDB Role Module
 ///
 /// Provides the [Role] entity class for role-based access control (RBAC).
 /// Roles are collections of permissions that can be assigned to users.
@@ -14,7 +14,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/authorization/roles.dart';
+/// import 'package:entidb/src/authorization/roles.dart';
 ///
 /// // Create a basic role
 /// final userRole = Role(
@@ -53,7 +53,7 @@ import 'permissions.dart';
 
 /// Represents a role in the authorization system.
 ///
-/// [Role] implements [Entity] for storage in DocDB collections.
+/// [Role] implements [Entity] for storage in EntiDB collections.
 /// Roles group permissions together and support inheritance.
 ///
 /// ## Inheritance

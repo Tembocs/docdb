@@ -7,13 +7,13 @@ import 'dart:io';
 
 import 'package:test/test.dart';
 
-import 'package:docdb/src/entity/entity.dart';
-import 'package:docdb/src/exceptions/storage_exceptions.dart';
-import 'package:docdb/src/storage/file_storage.dart';
-import 'package:docdb/src/storage/memory_storage.dart';
-import 'package:docdb/src/storage/paged_storage.dart';
-import 'package:docdb/src/storage/serialization.dart';
-import 'package:docdb/src/storage/storage.dart';
+import 'package:entidb/src/entity/entity.dart';
+import 'package:entidb/src/exceptions/storage_exceptions.dart';
+import 'package:entidb/src/storage/file_storage.dart';
+import 'package:entidb/src/storage/memory_storage.dart';
+import 'package:entidb/src/storage/paged_storage.dart';
+import 'package:entidb/src/storage/serialization.dart';
+import 'package:entidb/src/storage/storage.dart';
 
 /// Test entity implementation.
 class TestProduct implements Entity {

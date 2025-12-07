@@ -1,14 +1,14 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
-/// General database exception for top-level DocDB operations.
+/// General database exception for top-level EntiDB operations.
 ///
-/// Thrown when database operations fail at the DocDB level,
+/// Thrown when database operations fail at the EntiDB level,
 /// such as opening/closing the database, managing collections,
 /// or configuration errors.
 @immutable
-class DatabaseException extends DocDBException {
+class DatabaseException extends EntiDBException {
   /// Creates a new [DatabaseException].
   ///
   /// - [message]: A descriptive error message.

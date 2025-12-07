@@ -1,6 +1,6 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for migration-related errors.
 ///
@@ -8,7 +8,7 @@ import 'docdb_exception.dart';
 /// version upgrade failures, incompatible migrations, or rollback
 /// errors.
 @immutable
-class MigrationException extends DocDBException {
+class MigrationException extends EntiDBException {
   /// Creates a new [MigrationException].
   ///
   /// - [message]: A descriptive error message.

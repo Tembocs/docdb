@@ -1,4 +1,4 @@
-/// DocDB Type Registry - Built-in Serializers
+/// EntiDB Type Registry - Built-in Serializers
 ///
 /// Provides serializers for common Dart types that are not directly
 /// JSON-compatible. These are automatically registered with the TypeRegistry.

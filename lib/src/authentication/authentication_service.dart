@@ -1,4 +1,4 @@
-/// DocDB Authentication Service Module
+/// EntiDB Authentication Service Module
 ///
 /// Provides comprehensive user authentication with session management,
 /// account protection, and integration with the authorization system.
@@ -35,7 +35,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/src/authentication/authentication.dart';
+/// import 'package:entidb/src/authentication/authentication.dart';
 ///
 /// // Configure security
 /// final securityConfig = SecurityConfig(
@@ -213,7 +213,7 @@ class RefreshResult {
   });
 }
 
-/// Comprehensive authentication service for DocDB.
+/// Comprehensive authentication service for EntiDB.
 ///
 /// Provides user authentication with session management, account protection,
 /// and integration with the role-based authorization system.
@@ -253,7 +253,7 @@ class AuthenticationService {
   final AuthenticationConfig _config;
 
   /// Logger for authentication operations.
-  final DocDBLogger _logger;
+  final EntiDBLogger _logger;
 
   /// Lock for user operations.
   final Lock _userLock = Lock();
@@ -305,7 +305,7 @@ class AuthenticationService {
        _security = SecurityService(config: securityConfig),
        _roleManager = roleManager,
        _config = config,
-       _logger = DocDBLogger(LoggerNameConstants.authentication);
+       _logger = EntiDBLogger(LoggerNameConstants.authentication);
 
   /// Creates an [AuthenticationService] with pre-built collections.
   ///
@@ -338,7 +338,7 @@ class AuthenticationService {
        _security = security,
        _roleManager = roleManager,
        _config = config,
-       _logger = DocDBLogger(LoggerNameConstants.authentication);
+       _logger = EntiDBLogger(LoggerNameConstants.authentication);
 
   /// The security service used by this authentication service.
   SecurityService get securityService => _security;

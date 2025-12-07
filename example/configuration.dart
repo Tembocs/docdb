@@ -1,11 +1,11 @@
 /// Configuration Example
 ///
-/// Demonstrates various DocDB configuration options.
+/// Demonstrates various EntiDB configuration options.
 ///
 /// Run with: `dart run example/configuration.dart`
 import 'dart:io';
 
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 import 'models/models.dart';
 
@@ -20,8 +20,8 @@ Future<void> main() async {
   print('🏭 Factory Configuration Presets\n');
 
   // Development configuration - verbose logging, auto-flush
-  final devConfig = DocDBConfig.development();
-  print('   DocDBConfig.development():');
+  final devConfig = EntiDBConfig.development();
+  print('   EntiDBConfig.development():');
   print('     • enableDebugLogging: ${devConfig.enableDebugLogging}');
   print('     • autoFlushOnClose: ${devConfig.autoFlushOnClose}');
   print('     • bufferPoolSize: ${devConfig.bufferPoolSize}');
@@ -29,8 +29,8 @@ Future<void> main() async {
   print('');
 
   // Production configuration - optimized for performance
-  final prodConfig = DocDBConfig.production();
-  print('   DocDBConfig.production():');
+  final prodConfig = EntiDBConfig.production();
+  print('   EntiDBConfig.production():');
   print('     • enableDebugLogging: ${prodConfig.enableDebugLogging}');
   print('     • autoFlushOnClose: ${prodConfig.autoFlushOnClose}');
   print('     • bufferPoolSize: ${prodConfig.bufferPoolSize}');
@@ -38,8 +38,8 @@ Future<void> main() async {
   print('');
 
   // In-memory configuration - for testing
-  final memConfig = DocDBConfig.inMemory();
-  print('   DocDBConfig.inMemory():');
+  final memConfig = EntiDBConfig.inMemory();
+  print('   EntiDBConfig.inMemory():');
   print('     • Storage: ${memConfig.storageBackend}');
   print('     • enableTransactions: ${memConfig.enableTransactions}');
   print('     • Note: Data not persisted');
@@ -50,7 +50,7 @@ Future<void> main() async {
   // =========================================================================
   print('🔧 Custom Configuration with copyWith\n');
 
-  final customConfig = DocDBConfig.development().copyWith(
+  final customConfig = EntiDBConfig.development().copyWith(
     enableDebugLogging: false,
     bufferPoolSize: 512,
   );
@@ -67,7 +67,7 @@ Future<void> main() async {
 
   // In-memory database
   print('   Opening in-memory database...');
-  final memDb = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+  final memDb = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
   final memProducts = await memDb.collection<Product>(
     'products',
@@ -87,12 +87,12 @@ Future<void> main() async {
   print('   Closed (data discarded)\n');
 
   // File-based database
-  final tempDir = await Directory.systemTemp.createTemp('docdb_config_');
+  final tempDir = await Directory.systemTemp.createTemp('entidb_config_');
   try {
     print('   Opening file-based database...');
-    final fileDb = await DocDB.open(
+    final fileDb = await EntiDB.open(
       path: tempDir.path,
-      config: DocDBConfig.development(),
+      config: EntiDBConfig.development(),
     );
 
     final fileProducts = await fileDb.collection<Product>(

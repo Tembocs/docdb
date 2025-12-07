@@ -1,4 +1,4 @@
-/// DocDB Migration - Migration Log
+/// EntiDB Migration - Migration Log
 ///
 /// Provides logging and audit trail for migration operations.
 library;

@@ -1,4 +1,4 @@
-/// DocDB Type Registry Module
+/// EntiDB Type Registry Module
 ///
 /// Provides extensible type serialization support for custom Dart types.
 /// Enables storage of non-primitive types like DateTime, Duration, and
@@ -13,7 +13,7 @@
 /// ## Usage
 ///
 /// ```dart
-/// import 'package:docdb/src/type_registry/type_registry.dart';
+/// import 'package:entidb/src/type_registry/type_registry.dart';
 ///
 /// // Access the global registry
 /// final registry = TypeRegistry.instance;

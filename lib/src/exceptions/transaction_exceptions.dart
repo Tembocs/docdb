@@ -1,13 +1,13 @@
 import 'package:meta/meta.dart';
 
-import 'docdb_exception.dart';
+import 'entidb_exception.dart';
 
 /// Base exception for transaction-related errors.
 ///
 /// Thrown when transaction operations fail, such as commit failures,
 /// rollback errors, or isolation violations.
 @immutable
-class TransactionException extends DocDBException {
+class TransactionException extends EntiDBException {
   /// Creates a new [TransactionException].
   ///
   /// - [message]: A descriptive error message.

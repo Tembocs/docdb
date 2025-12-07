@@ -1,4 +1,4 @@
-/// DocDB Backup - Backup Service
+/// EntiDB Backup - Backup Service
 ///
 /// Provides a robust, generic backup service for entity storage with
 /// integrity verification, compression, and flexible storage options.
@@ -12,7 +12,7 @@ import 'package:path/path.dart' as p;
 
 import '../entity/entity.dart';
 import '../exceptions/backup_exceptions.dart';
-import '../logger/docdb_logger.dart';
+import '../logger/entidb_logger.dart';
 import '../storage/storage.dart';
 import '../utils/constants.dart';
 import 'backup_metadata.dart';
@@ -156,7 +156,7 @@ final class BackupConfig {
 final class BackupService<T extends Entity> {
   final Storage<T> _storage;
   final BackupConfig _config;
-  final DocDBLogger _logger;
+  final EntiDBLogger _logger;
 
   /// Creates a new backup service.
   ///
@@ -166,10 +166,10 @@ final class BackupService<T extends Entity> {
   BackupService({
     required Storage<T> storage,
     required BackupConfig config,
-    DocDBLogger? logger,
+    EntiDBLogger? logger,
   }) : _storage = storage,
        _config = config,
-       _logger = logger ?? DocDBLogger(LoggerNameConstants.backup);
+       _logger = logger ?? EntiDBLogger(LoggerNameConstants.backup);
 
   /// The storage being backed up.
   Storage<T> get storage => _storage;

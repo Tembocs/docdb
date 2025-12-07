@@ -5,7 +5,7 @@
 
 import 'dart:io';
 
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -241,7 +241,7 @@ void main() {
     late IndexPersistence persistence;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('docdb_index_test_');
+      tempDir = await Directory.systemTemp.createTemp('entidb_index_test_');
       persistence = IndexPersistence(directory: tempDir.path);
     });
 
@@ -350,7 +350,7 @@ void main() {
     late IndexManager manager;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('docdb_index_mgr_test_');
+      tempDir = await Directory.systemTemp.createTemp('entidb_index_mgr_test_');
       persistence = IndexPersistence(directory: tempDir.path);
       manager = IndexManager();
     });
@@ -465,7 +465,7 @@ void main() {
     late IndexPersistence persistence;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('docdb_large_idx_test_');
+      tempDir = await Directory.systemTemp.createTemp('entidb_large_idx_test_');
       persistence = IndexPersistence(directory: tempDir.path);
     });
 

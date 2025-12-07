@@ -1,12 +1,12 @@
-/// DocDB Examples Overview
+/// EntiDB Examples Overview
 ///
-/// This directory contains comprehensive examples demonstrating DocDB features.
+/// This directory contains comprehensive examples demonstrating EntiDB features.
 ///
 /// ## Available Examples
 ///
 /// Run each example with: `dart run example/<filename>.dart`
 ///
-/// - **docdb_example.dart** - This file: Complete overview of all features
+/// - **entidb_example.dart** - This file: Complete overview of all features
 /// - **basic_crud.dart** - Create, Read, Update, Delete operations
 /// - **querying.dart** - Query documents using QueryBuilder
 /// - **persistence.dart** - Data persistence across sessions
@@ -16,12 +16,12 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:docdb/docdb.dart';
+/// import 'package:entidb/entidb.dart';
 ///
 /// // Open a database
-/// final db = await DocDB.open(
+/// final db = await EntiDB.open(
 ///   path: './myapp_data',
-///   config: DocDBConfig.production(),
+///   config: EntiDBConfig.production(),
 /// );
 ///
 /// // Get a typed collection
@@ -45,7 +45,7 @@
 /// ```
 import 'dart:io';
 
-import 'package:docdb/docdb.dart';
+import 'package:entidb/entidb.dart';
 
 import 'models/models.dart';
 
@@ -55,12 +55,12 @@ import 'models/models.dart';
 
 Future<void> main() async {
   print('╔════════════════════════════════════════════════════════════════╗');
-  print('║                    DocDB Example                               ║');
+  print('║                    EntiDB Example                               ║');
   print('╚════════════════════════════════════════════════════════════════╝');
   print('');
 
   // Create a temporary directory for the example database
-  final tempDir = await Directory.systemTemp.createTemp('docdb_example_');
+  final tempDir = await Directory.systemTemp.createTemp('entidb_example_');
   final dbPath = tempDir.path;
 
   try {
@@ -70,9 +70,9 @@ Future<void> main() async {
     print('📂 Opening database at: $dbPath');
     print('');
 
-    final db = await DocDB.open(
+    final db = await EntiDB.open(
       path: dbPath,
-      config: DocDBConfig.development(),
+      config: EntiDBConfig.development(),
     );
 
     print('✅ Database opened successfully');
@@ -301,9 +301,9 @@ Future<void> main() async {
     // =========================================================================
     print('🔄 Reopening database to verify persistence...');
 
-    final db2 = await DocDB.open(
+    final db2 = await EntiDB.open(
       path: dbPath,
-      config: DocDBConfig.development(),
+      config: EntiDBConfig.development(),
     );
 
     final products2 = await db2.collection<Product>(
@@ -328,7 +328,7 @@ Future<void> main() async {
     // =========================================================================
     print('🧠 Creating in-memory database...');
 
-    final memDb = await DocDB.open(path: null, config: DocDBConfig.inMemory());
+    final memDb = await EntiDB.open(path: null, config: EntiDBConfig.inMemory());
 
     final memProducts = await memDb.collection<Product>(
       'products',
