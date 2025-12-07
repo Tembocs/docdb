@@ -88,6 +88,11 @@ class Transaction<T extends Entity> {
   /// Queued operations to execute on commit.
   final List<TransactionOperation> _operations = [];
 
+  /// Entities read during this transaction (for serializable isolation).
+  ///
+  /// Used for conflict detection when isolation level is [IsolationLevel.serializable].
+  final Set<String> _readSet = {};
+
   /// Timestamp when the transaction was created/started.
   final DateTime _createdAt;
 
@@ -265,8 +270,14 @@ class Transaction<T extends Entity> {
 
   /// Reads an entity within the transaction context.
   ///
-  /// This reads from the current storage state, not considering
-  /// uncommitted changes in this transaction.
+  /// The read behavior depends on the isolation level:
+  /// - [IsolationLevel.readUncommitted]: Reads latest storage state (may include
+  ///   uncommitted changes from other transactions in concurrent scenarios).
+  /// - [IsolationLevel.readCommitted]: Reads current committed storage state.
+  /// - [IsolationLevel.repeatableRead]: Reads from snapshot taken at transaction
+  ///   start, with pending operations from this transaction applied.
+  /// - [IsolationLevel.serializable]: Same as repeatableRead, with conflict
+  ///   detection on commit.
   ///
   /// - [entityId]: The ID of the entity to read.
   ///
@@ -276,7 +287,7 @@ class Transaction<T extends Entity> {
   Future<Map<String, dynamic>?> get(String entityId) async {
     _ensureActive();
     try {
-      return await _storage.get(entityId);
+      return _getWithIsolation(entityId);
     } catch (e) {
       _logger.error('Transaction $_id: Failed to read entity $entityId', e);
       throw TransactionException(
@@ -286,10 +297,62 @@ class Transaction<T extends Entity> {
     }
   }
 
+  /// Internal method to get entity respecting isolation level.
+  Future<Map<String, dynamic>?> _getWithIsolation(String entityId) async {
+    // Track reads for serializable conflict detection
+    if (_isolationLevel == IsolationLevel.serializable) {
+      _readSet.add(entityId);
+    }
+
+    switch (_isolationLevel) {
+      case IsolationLevel.readUncommitted:
+      case IsolationLevel.readCommitted:
+        // Read from current storage state
+        return await _storage.get(entityId);
+
+      case IsolationLevel.repeatableRead:
+      case IsolationLevel.serializable:
+        // Read from snapshot with pending operations applied
+        return _getFromSnapshotWithPendingOps(entityId);
+    }
+  }
+
+  /// Gets entity from snapshot with pending operations applied.
+  ///
+  /// This provides a consistent view: the snapshot from transaction start
+  /// plus any modifications made within this transaction.
+  Map<String, dynamic>? _getFromSnapshotWithPendingOps(String entityId) {
+    // Start with the snapshot value
+    Map<String, dynamic>? result = _snapshot[entityId];
+    bool deleted = false;
+
+    // Apply pending operations for this entity
+    for (final op in _operations) {
+      if (op.entityId != entityId) continue;
+
+      switch (op.type) {
+        case OperationType.insert:
+        case OperationType.update:
+        case OperationType.upsert:
+          result = Map<String, dynamic>.from(op.data!);
+          deleted = false;
+        case OperationType.delete:
+          result = null;
+          deleted = true;
+      }
+    }
+
+    return deleted ? null : result;
+  }
+
   /// Reads all entities within the transaction context.
   ///
-  /// This reads from the current storage state, not considering
-  /// uncommitted changes in this transaction.
+  /// The read behavior depends on the isolation level:
+  /// - [IsolationLevel.readUncommitted]: Reads latest storage state.
+  /// - [IsolationLevel.readCommitted]: Reads current committed storage state.
+  /// - [IsolationLevel.repeatableRead]: Reads from snapshot with pending
+  ///   operations from this transaction applied.
+  /// - [IsolationLevel.serializable]: Same as repeatableRead.
   ///
   /// Returns a map of entity IDs to their data.
   ///
@@ -297,14 +360,66 @@ class Transaction<T extends Entity> {
   Future<Map<String, Map<String, dynamic>>> getAll() async {
     _ensureActive();
     try {
-      return await _storage.getAll();
+      return _getAllWithIsolation();
     } catch (e) {
       _logger.error('Transaction $_id: Failed to read all entities', e);
       throw TransactionException('Failed to read all entities: $e', cause: e);
     }
   }
 
+  /// Internal method to get all entities respecting isolation level.
+  Future<Map<String, Map<String, dynamic>>> _getAllWithIsolation() async {
+    switch (_isolationLevel) {
+      case IsolationLevel.readUncommitted:
+      case IsolationLevel.readCommitted:
+        // Read from current storage state
+        final result = await _storage.getAll();
+        // Track all reads for serializable (though this is called after switch check)
+        return result;
+
+      case IsolationLevel.repeatableRead:
+      case IsolationLevel.serializable:
+        // Read from snapshot with pending operations applied
+        final result = _getAllFromSnapshotWithPendingOps();
+        // Track all entity IDs for serializable conflict detection
+        if (_isolationLevel == IsolationLevel.serializable) {
+          _readSet.addAll(result.keys);
+          _readSet.addAll(_snapshot.keys);
+        }
+        return result;
+    }
+  }
+
+  /// Gets all entities from snapshot with pending operations applied.
+  Map<String, Map<String, dynamic>> _getAllFromSnapshotWithPendingOps() {
+    // Start with a deep copy of the snapshot
+    final result = <String, Map<String, dynamic>>{};
+    for (final entry in _snapshot.entries) {
+      result[entry.key] = Map<String, dynamic>.from(entry.value);
+    }
+
+    // Apply all pending operations
+    for (final op in _operations) {
+      switch (op.type) {
+        case OperationType.insert:
+        case OperationType.update:
+        case OperationType.upsert:
+          result[op.entityId] = Map<String, dynamic>.from(op.data!);
+        case OperationType.delete:
+          result.remove(op.entityId);
+      }
+    }
+
+    return result;
+  }
+
   /// Checks if an entity exists within the transaction context.
+  ///
+  /// The read behavior depends on the isolation level:
+  /// - [IsolationLevel.readUncommitted] / [IsolationLevel.readCommitted]:
+  ///   Checks current storage state.
+  /// - [IsolationLevel.repeatableRead] / [IsolationLevel.serializable]:
+  ///   Checks snapshot with pending operations applied.
   ///
   /// - [entityId]: The ID of the entity to check.
   ///
@@ -314,7 +429,7 @@ class Transaction<T extends Entity> {
   Future<bool> exists(String entityId) async {
     _ensureActive();
     try {
-      return await _storage.exists(entityId);
+      return _existsWithIsolation(entityId);
     } catch (e) {
       _logger.error(
         'Transaction $_id: Failed to check existence of entity $entityId',
@@ -327,15 +442,41 @@ class Transaction<T extends Entity> {
     }
   }
 
+  /// Internal method to check existence respecting isolation level.
+  Future<bool> _existsWithIsolation(String entityId) async {
+    // Track reads for serializable conflict detection
+    if (_isolationLevel == IsolationLevel.serializable) {
+      _readSet.add(entityId);
+    }
+
+    switch (_isolationLevel) {
+      case IsolationLevel.readUncommitted:
+      case IsolationLevel.readCommitted:
+        return await _storage.exists(entityId);
+
+      case IsolationLevel.repeatableRead:
+      case IsolationLevel.serializable:
+        return _getFromSnapshotWithPendingOps(entityId) != null;
+    }
+  }
+
   /// Commits the transaction, executing all queued operations.
   ///
   /// Operations are executed in the order they were queued. If any
   /// operation fails, the transaction is rolled back automatically.
   ///
+  /// For [IsolationLevel.serializable], conflict detection is performed
+  /// before executing operations. If any entity read during this transaction
+  /// was modified by another transaction since our snapshot was taken,
+  /// a [TransactionConflictException] is thrown.
+  ///
   /// Throws [TransactionException] if:
   /// - Transaction is not active
   /// - Any operation fails
   /// - Rollback fails after operation failure
+  ///
+  /// Throws [TransactionConflictException] if:
+  /// - Serializable isolation level detects a conflict
   Future<void> commit() async {
     _ensureActive();
 
@@ -351,10 +492,23 @@ class Transaction<T extends Entity> {
     );
 
     try {
+      // For serializable isolation, check for conflicts before committing
+      if (_isolationLevel == IsolationLevel.serializable) {
+        await _checkForConflicts();
+      }
+
       await _executeOperations();
       _status = TransactionStatus.committed;
       _completedAt = DateTime.now();
       _logger.info('Transaction $_id committed successfully.');
+    } on TransactionConflictException {
+      // Don't wrap conflict exceptions - they're already the right type
+      _status = TransactionStatus.rolledBack;
+      _completedAt = DateTime.now();
+      _logger.info(
+        'Transaction $_id rolled back due to serializable conflict.',
+      );
+      rethrow;
     } catch (e, stackTrace) {
       _logger.error(
         'Transaction $_id: Commit failed, attempting rollback...',
@@ -387,6 +541,87 @@ class Transaction<T extends Entity> {
         cause: e,
       );
     }
+  }
+
+  /// Checks for serializable conflicts.
+  ///
+  /// Compares the current storage state with the snapshot for all entities
+  /// in the read set. If any entity has changed, throws a conflict exception.
+  Future<void> _checkForConflicts() async {
+    if (_readSet.isEmpty) return;
+
+    final conflicts = <String>[];
+
+    for (final entityId in _readSet) {
+      final snapshotValue = _snapshot[entityId];
+      final currentValue = await _storage.get(entityId);
+
+      // Check if the entity was modified since snapshot
+      if (!_mapsAreEqual(snapshotValue, currentValue)) {
+        conflicts.add(entityId);
+      }
+    }
+
+    if (conflicts.isNotEmpty) {
+      throw TransactionConflictException(
+        'Serializable conflict detected: ${conflicts.length} entity(s) were '
+        'modified by another transaction. Conflicting entities: '
+        '${conflicts.take(5).join(", ")}${conflicts.length > 5 ? "..." : ""}',
+        conflictingIds: conflicts,
+      );
+    }
+  }
+
+  /// Compares two entity maps for equality.
+  bool _mapsAreEqual(Map<String, dynamic>? a, Map<String, dynamic>? b) {
+    if (a == null && b == null) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+
+    for (final key in a.keys) {
+      if (!b.containsKey(key)) return false;
+      final aValue = a[key];
+      final bValue = b[key];
+
+      if (aValue is Map && bValue is Map) {
+        if (!_mapsAreEqual(
+          aValue.cast<String, dynamic>(),
+          bValue.cast<String, dynamic>(),
+        )) {
+          return false;
+        }
+      } else if (aValue is List && bValue is List) {
+        if (!_listsAreEqual(aValue, bValue)) {
+          return false;
+        }
+      } else if (aValue != bValue) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /// Compares two lists for equality.
+  bool _listsAreEqual(List a, List b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] is Map && b[i] is Map) {
+        if (!_mapsAreEqual(
+          (a[i] as Map).cast<String, dynamic>(),
+          (b[i] as Map).cast<String, dynamic>(),
+        )) {
+          return false;
+        }
+      } else if (a[i] is List && b[i] is List) {
+        if (!_listsAreEqual(a[i], b[i])) {
+          return false;
+        }
+      } else if (a[i] != b[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /// Rolls back the transaction, discarding all queued operations.

@@ -30,12 +30,19 @@ library;
 ///
 /// - [hash]: Hash table structure for O(1) exact-match lookups.
 ///   Best for unique identifiers and equality comparisons.
+///
+/// - [fulltext]: Inverted index for full-text search.
+///   Best for text fields requiring word-based search, phrase matching,
+///   and relevance scoring.
 enum IndexType {
   /// B-tree index for ordered data and range queries.
   btree,
 
   /// Hash index for fast exact-match lookups.
   hash,
+
+  /// Full-text index for text search with tokenization.
+  fulltext,
 }
 
 /// Abstract interface for index implementations.

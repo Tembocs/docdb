@@ -5,8 +5,10 @@ import 'package:docdb/src/logger/logger.dart';
 import 'package:docdb/src/utils/constants.dart';
 
 import 'btree.dart';
+import 'fulltext.dart';
 import 'hash.dart';
 import 'i_index.dart';
+import 'index_persistence.dart';
 
 /// Manages multiple indexes for a collection.
 ///
@@ -72,6 +74,7 @@ class IndexManager {
     final IIndex index = switch (indexType) {
       IndexType.btree => BTreeIndex(field),
       IndexType.hash => HashIndex(field),
+      IndexType.fulltext => FullTextIndex(field),
     };
 
     _indices[field] = index;
@@ -280,6 +283,153 @@ class IndexManager {
     return index.lessThanOrEqual(value);
   }
 
+  // ===========================================================================
+  // Full-Text Search Methods
+  // ===========================================================================
+  // These methods provide full-text search capabilities on text fields.
+
+  /// Performs a full-text search for the specified [query] on [field].
+  ///
+  /// Returns entity IDs of documents containing all query terms (AND semantics).
+  /// Only supported for full-text indexes.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a full-text index.
+  List<String> fullTextSearch(String field, String query) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! FullTextIndex) {
+      throw UnsupportedIndexTypeException(
+        'Full-text search not supported for non-fulltext index on field "$field". '
+        'Use a fulltext index for text search.',
+      );
+    }
+
+    return index.search(query);
+  }
+
+  /// Performs a full-text search with OR semantics.
+  ///
+  /// Returns entity IDs of documents containing any query term.
+  /// Only supported for full-text indexes.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a full-text index.
+  List<String> fullTextSearchAny(String field, List<String> terms) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! FullTextIndex) {
+      throw UnsupportedIndexTypeException(
+        'Full-text search not supported for non-fulltext index on field "$field". '
+        'Use a fulltext index for text search.',
+      );
+    }
+
+    return index.searchAny(terms);
+  }
+
+  /// Performs a phrase search (exact sequence of words).
+  ///
+  /// Returns entity IDs of documents containing the exact phrase.
+  /// Requires position tracking to be enabled in the index config.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a full-text index.
+  List<String> fullTextSearchPhrase(String field, String phrase) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! FullTextIndex) {
+      throw UnsupportedIndexTypeException(
+        'Phrase search not supported for non-fulltext index on field "$field". '
+        'Use a fulltext index for phrase search.',
+      );
+    }
+
+    return index.searchPhrase(phrase);
+  }
+
+  /// Performs a proximity search (terms within a certain distance).
+  ///
+  /// Returns entity IDs where all terms appear within [maxDistance] of each other.
+  /// Requires position tracking to be enabled in the index config.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a full-text index.
+  List<String> fullTextSearchProximity(
+    String field,
+    List<String> terms,
+    int maxDistance,
+  ) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! FullTextIndex) {
+      throw UnsupportedIndexTypeException(
+        'Proximity search not supported for non-fulltext index on field "$field". '
+        'Use a fulltext index for proximity search.',
+      );
+    }
+
+    return index.searchProximity(terms, maxDistance);
+  }
+
+  /// Performs a prefix search for terms starting with the given prefix.
+  ///
+  /// Returns entity IDs containing any term starting with [prefix].
+  /// Only supported for full-text indexes.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a full-text index.
+  List<String> fullTextSearchPrefix(String field, String prefix) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! FullTextIndex) {
+      throw UnsupportedIndexTypeException(
+        'Prefix search not supported for non-fulltext index on field "$field". '
+        'Use a fulltext index for prefix search.',
+      );
+    }
+
+    return index.searchPrefix(prefix);
+  }
+
+  /// Performs a ranked full-text search using TF-IDF scoring.
+  ///
+  /// Returns a list of [ScoredResult] sorted by relevance (highest first).
+  /// Only supported for full-text indexes.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  /// Throws [UnsupportedIndexTypeException] if the index is not a full-text index.
+  List<ScoredResult> fullTextSearchRanked(String field, String query) {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+
+    if (index is! FullTextIndex) {
+      throw UnsupportedIndexTypeException(
+        'Ranked search not supported for non-fulltext index on field "$field". '
+        'Use a fulltext index for ranked search.',
+      );
+    }
+
+    return index.searchRanked(query);
+  }
+
   /// Checks if an index exists on the specified [field].
   bool hasIndex(String field) => _indices.containsKey(field);
 
@@ -291,6 +441,7 @@ class IndexManager {
     return switch (indexType) {
       IndexType.btree => index is BTreeIndex,
       IndexType.hash => index is HashIndex,
+      IndexType.fulltext => index is FullTextIndex,
     };
   }
 
@@ -301,8 +452,49 @@ class IndexManager {
 
     if (index is BTreeIndex) return IndexType.btree;
     if (index is HashIndex) return IndexType.hash;
+    if (index is FullTextIndex) return IndexType.fulltext;
 
     return null;
+  }
+
+  // ===========================================================================
+  // Index Statistics Methods
+  // ===========================================================================
+  // These methods provide statistics for query optimization.
+
+  /// Returns the cardinality (number of unique keys) for the index on [field].
+  ///
+  /// Cardinality indicates how many distinct values exist in the index.
+  /// Higher cardinality generally means better selectivity.
+  /// For full-text indexes, returns the number of unique terms.
+  ///
+  /// Returns 0 if no index exists on [field].
+  int getCardinality(String field) {
+    final index = _indices[field];
+    if (index == null) return 0;
+
+    if (index is BTreeIndex) return index.keyCount;
+    if (index is HashIndex) return index.keyCount;
+    if (index is FullTextIndex) return index.termCount;
+
+    return 0;
+  }
+
+  /// Returns the total number of entries (entity references) in the index.
+  ///
+  /// This may be greater than cardinality if multiple entities share keys.
+  /// For full-text indexes, returns the number of indexed documents.
+  ///
+  /// Returns 0 if no index exists on [field].
+  int getTotalEntries(String field) {
+    final index = _indices[field];
+    if (index == null) return 0;
+
+    if (index is BTreeIndex) return index.entryCount;
+    if (index is HashIndex) return index.entryCount;
+    if (index is FullTextIndex) return index.entryCount;
+
+    return 0;
   }
 
   /// Returns a list of all indexed field names.
@@ -556,5 +748,209 @@ class IndexManager {
     }
     _indices.clear();
     _logger.info('Removed all indexes.');
+  }
+
+  // ===========================================================================
+  // Persistence Support
+  // ===========================================================================
+
+  /// Gets an index by field name for direct access.
+  ///
+  /// Returns null if no index exists on the field.
+  IIndex? getIndex(String field) => _indices[field];
+
+  /// Gets all indexes as field-to-index entries for iteration.
+  Iterable<MapEntry<String, IIndex>> get allIndexes => _indices.entries;
+
+  /// Registers a pre-existing index (used during restoration).
+  ///
+  /// This bypasses normal creation and directly registers an index.
+  /// Typically used when loading persisted indexes from disk.
+  ///
+  /// Throws [IndexAlreadyExistsException] if an index on [field] already exists.
+  void registerIndex(String field, IIndex index) {
+    if (_indices.containsKey(field)) {
+      throw IndexAlreadyExistsException(
+        'Index on field "$field" already exists.',
+      );
+    }
+    _indices[field] = index;
+    _logger.info('Registered restored index on field "$field".');
+  }
+
+  /// Saves all indexes to disk using the provided persistence manager.
+  ///
+  /// - [collectionName]: The collection these indexes belong to.
+  /// - [persistence]: The persistence manager to use.
+  ///
+  /// ## Example
+  ///
+  /// ```dart
+  /// final persistence = IndexPersistence(directory: './data/indexes');
+  /// await manager.saveAllIndexes('users', persistence);
+  /// ```
+  Future<void> saveAllIndexes(
+    String collectionName,
+    IndexPersistence persistence,
+  ) async {
+    for (final entry in _indices.entries) {
+      await persistence.saveIndex(collectionName, entry.key, entry.value);
+      _logger.info(
+        'Saved index on field "${entry.key}" for collection "$collectionName".',
+      );
+    }
+  }
+
+  /// Loads all persisted indexes for a collection.
+  ///
+  /// Clears existing indexes and loads from disk.
+  ///
+  /// - [collectionName]: The collection to load indexes for.
+  /// - [persistence]: The persistence manager to use.
+  ///
+  /// Returns the number of indexes loaded.
+  ///
+  /// ## Example
+  ///
+  /// ```dart
+  /// final persistence = IndexPersistence(directory: './data/indexes');
+  /// final count = await manager.loadAllIndexes('users', persistence);
+  /// print('Loaded $count indexes');
+  /// ```
+  Future<int> loadAllIndexes(
+    String collectionName,
+    IndexPersistence persistence,
+  ) async {
+    final fields = await persistence.listIndexes(collectionName);
+    var loadedCount = 0;
+
+    for (final field in fields) {
+      final data = await persistence.loadIndex(collectionName, field);
+      if (data == null) continue;
+
+      // Handle full-text indexes separately
+      if (data is SerializedFullTextIndex) {
+        final index = FullTextIndex(field);
+        index.restoreFromMap(data.data);
+
+        if (!_indices.containsKey(field)) {
+          _indices[field] = index;
+          loadedCount++;
+          _logger.info(
+            'Loaded fulltext index on field "$field" for collection "$collectionName".',
+          );
+        }
+        continue;
+      }
+
+      // Handle btree and hash indexes
+      final serializedIndex = data as SerializedIndex;
+
+      // Create the appropriate index type
+      final IIndex index = switch (serializedIndex.type) {
+        IndexType.btree => BTreeIndex(field),
+        IndexType.hash => HashIndex(field),
+        IndexType.fulltext => FullTextIndex(field),
+      };
+
+      // Restore the data
+      switch (index) {
+        case BTreeIndex btree:
+          btree.restoreFromMap(serializedIndex.entries);
+        case HashIndex hash:
+          hash.restoreFromMap(serializedIndex.entries);
+        case FullTextIndex _:
+          // Already handled above
+          continue;
+      }
+
+      // Register without overwriting
+      if (!_indices.containsKey(field)) {
+        _indices[field] = index;
+        loadedCount++;
+        _logger.info(
+          'Loaded index on field "$field" for collection "$collectionName".',
+        );
+      }
+    }
+
+    return loadedCount;
+  }
+
+  /// Saves a single index to disk.
+  ///
+  /// - [collectionName]: The collection this index belongs to.
+  /// - [field]: The field name of the index to save.
+  /// - [persistence]: The persistence manager to use.
+  ///
+  /// Throws [IndexNotFoundException] if no index exists on [field].
+  Future<void> saveIndex(
+    String collectionName,
+    String field,
+    IndexPersistence persistence,
+  ) async {
+    final index = _indices[field];
+    if (index == null) {
+      throw IndexNotFoundException('No index exists on field "$field".');
+    }
+    await persistence.saveIndex(collectionName, field, index);
+    _logger.info(
+      'Saved index on field "$field" for collection "$collectionName".',
+    );
+  }
+
+  /// Loads a single index from disk.
+  ///
+  /// - [collectionName]: The collection this index belongs to.
+  /// - [field]: The field name of the index to load.
+  /// - [persistence]: The persistence manager to use.
+  ///
+  /// Returns true if the index was loaded, false if it doesn't exist on disk.
+  Future<bool> loadIndex(
+    String collectionName,
+    String field,
+    IndexPersistence persistence,
+  ) async {
+    final data = await persistence.loadIndex(collectionName, field);
+    if (data == null) return false;
+
+    // Handle full-text indexes separately
+    if (data is SerializedFullTextIndex) {
+      final index = FullTextIndex(field);
+      index.restoreFromMap(data.data);
+      _indices[field] = index;
+      _logger.info(
+        'Loaded fulltext index on field "$field" for collection "$collectionName".',
+      );
+      return true;
+    }
+
+    // Handle btree and hash indexes
+    final serializedIndex = data as SerializedIndex;
+
+    // Create the appropriate index type
+    final IIndex index = switch (serializedIndex.type) {
+      IndexType.btree => BTreeIndex(field),
+      IndexType.hash => HashIndex(field),
+      IndexType.fulltext => FullTextIndex(field),
+    };
+
+    // Restore the data
+    switch (index) {
+      case BTreeIndex btree:
+        btree.restoreFromMap(serializedIndex.entries);
+      case HashIndex hash:
+        hash.restoreFromMap(serializedIndex.entries);
+      case FullTextIndex _:
+        // Already handled above
+        return false;
+    }
+
+    // Register (or replace existing)
+    _indices[field] = index;
+    _logger.info(
+      'Loaded index on field "$field" for collection "$collectionName".',
+    );
+    return true;
   }
 }

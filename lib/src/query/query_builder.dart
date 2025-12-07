@@ -255,6 +255,111 @@ class QueryBuilder {
     );
   }
 
+  // ===========================================================================
+  // Full-Text Search Methods
+  // ===========================================================================
+
+  /// Adds a full-text search condition matching ALL terms (AND semantics).
+  ///
+  /// The search text is tokenized, and documents must contain all terms.
+  /// Best used with a full-text index on the field for optimal performance.
+  ///
+  /// ```dart
+  /// builder.whereFullText('description', 'quick brown fox');
+  /// // Matches documents containing all: quick, brown, fox
+  /// ```
+  QueryBuilder whereFullText(
+    String field,
+    String searchText, {
+    bool caseSensitive = false,
+  }) {
+    return _addQuery(
+      FullTextQuery(field, searchText, caseSensitive: caseSensitive),
+    );
+  }
+
+  /// Adds a full-text phrase search condition (exact sequence).
+  ///
+  /// Matches documents containing the exact phrase.
+  /// Best used with a full-text index with position tracking.
+  ///
+  /// ```dart
+  /// builder.whereFullTextPhrase('content', 'quick brown');
+  /// // Matches "the quick brown fox" but not "brown quick fox"
+  /// ```
+  QueryBuilder whereFullTextPhrase(
+    String field,
+    String phrase, {
+    bool caseSensitive = false,
+  }) {
+    return _addQuery(
+      FullTextPhraseQuery(field, phrase, caseSensitive: caseSensitive),
+    );
+  }
+
+  /// Adds a full-text search condition matching ANY term (OR semantics).
+  ///
+  /// Matches documents containing at least one of the terms.
+  /// Best used with a full-text index on the field.
+  ///
+  /// ```dart
+  /// builder.whereFullTextAny('tags', ['urgent', 'important']);
+  /// // Matches documents containing 'urgent' OR 'important'
+  /// ```
+  QueryBuilder whereFullTextAny(
+    String field,
+    List<String> terms, {
+    bool caseSensitive = false,
+  }) {
+    return _addQuery(
+      FullTextAnyQuery(field, terms, caseSensitive: caseSensitive),
+    );
+  }
+
+  /// Adds a full-text prefix search condition.
+  ///
+  /// Matches documents containing terms starting with the prefix.
+  /// Best used with a full-text index on the field.
+  ///
+  /// ```dart
+  /// builder.whereFullTextPrefix('content', 'qui');
+  /// // Matches documents with "quick", "quiet", "quintessential"
+  /// ```
+  QueryBuilder whereFullTextPrefix(
+    String field,
+    String prefix, {
+    bool caseSensitive = false,
+  }) {
+    return _addQuery(
+      FullTextPrefixQuery(field, prefix, caseSensitive: caseSensitive),
+    );
+  }
+
+  /// Adds a full-text proximity search condition.
+  ///
+  /// Matches documents where terms appear within [maxDistance] of each other.
+  /// Best used with a full-text index with position tracking.
+  ///
+  /// ```dart
+  /// builder.whereFullTextProximity('content', ['quick', 'fox'], 3);
+  /// // Matches "quick brown fox" but not "quick lazy brown dog fox"
+  /// ```
+  QueryBuilder whereFullTextProximity(
+    String field,
+    List<String> terms,
+    int maxDistance, {
+    bool caseSensitive = false,
+  }) {
+    return _addQuery(
+      FullTextProximityQuery(
+        field,
+        terms,
+        maxDistance,
+        caseSensitive: caseSensitive,
+      ),
+    );
+  }
+
   /// Negates a query.
   ///
   /// ```dart

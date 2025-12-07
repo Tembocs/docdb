@@ -187,6 +187,15 @@ class Collection<T extends Entity> {
   /// Index manager for this collection.
   final IndexManager _indexManager = IndexManager();
 
+  /// Query optimizer for this collection.
+  late final QueryOptimizer _queryOptimizer;
+
+  /// Query result cache for this collection.
+  QueryCache<T>? _queryCache;
+
+  /// Whether query result caching is enabled.
+  bool _queryCacheEnabled = false;
+
   /// Whether the collection has been disposed.
   bool _disposed = false;
 
@@ -197,6 +206,9 @@ class Collection<T extends Entity> {
   /// - [storage]: The storage backend for persistence.
   /// - [fromMap]: Factory function to deserialize entities.
   /// - [name]: The collection name (used for logging).
+  /// - [enableQueryPlanCaching]: Whether to cache query plans (default: true).
+  /// - [enableQueryResultCaching]: Whether to cache query results (default: false).
+  /// - [queryCacheConfig]: Configuration for query result caching.
   ///
   /// ## Example
   ///
@@ -211,10 +223,26 @@ class Collection<T extends Entity> {
     required Storage<T> storage,
     required EntityFromMap<T> fromMap,
     required String name,
+    bool enableQueryPlanCaching = true,
+    bool enableQueryResultCaching = false,
+    QueryCacheConfig? queryCacheConfig,
   }) : _storage = storage,
        _fromMap = fromMap,
        _name = name,
-       _logger = DocDBLogger('${LoggerNameConstants.collection}.$name');
+       _logger = DocDBLogger('${LoggerNameConstants.collection}.$name') {
+    _queryOptimizer = QueryOptimizer(
+      _indexManager,
+      enableCaching: enableQueryPlanCaching,
+    );
+
+    // Initialize query result cache if enabled
+    if (enableQueryResultCaching) {
+      _queryCacheEnabled = true;
+      _queryCache = QueryCache<T>(
+        config: queryCacheConfig ?? const QueryCacheConfig(),
+      );
+    }
+  }
 
   /// The collection name.
   String get name => _name;
@@ -237,6 +265,52 @@ class Collection<T extends Entity> {
 
   /// The number of indexes on this collection.
   int get indexCount => _indexManager.indexCount;
+
+  /// Whether query result caching is enabled.
+  bool get isQueryCacheEnabled => _queryCacheEnabled;
+
+  /// Gets the query cache statistics.
+  ///
+  /// Returns null if query caching is not enabled.
+  CacheStatistics? get queryCacheStatistics => _queryCache?.statistics;
+
+  /// Enables query result caching with the specified configuration.
+  ///
+  /// If caching is already enabled, the existing cache is cleared and
+  /// reconfigured with the new settings.
+  ///
+  /// ## Parameters
+  ///
+  /// - [config]: Configuration for the query cache. Uses defaults if null.
+  void enableQueryCache({QueryCacheConfig? config}) {
+    _queryCacheEnabled = true;
+    _queryCache = QueryCache<T>(config: config ?? const QueryCacheConfig());
+    _logger.info('Query result caching enabled.');
+  }
+
+  /// Disables query result caching and clears the cache.
+  void disableQueryCache() {
+    _queryCacheEnabled = false;
+    _queryCache?.clear();
+    _queryCache = null;
+    _logger.info('Query result caching disabled.');
+  }
+
+  /// Clears all cached query results.
+  ///
+  /// Does nothing if caching is not enabled.
+  void clearQueryCache() {
+    _queryCache?.invalidateAll();
+  }
+
+  /// Removes expired entries from the query cache.
+  ///
+  /// ## Returns
+  ///
+  /// The number of expired entries removed, or 0 if caching is not enabled.
+  int pruneQueryCache() {
+    return _queryCache?.removeExpired() ?? 0;
+  }
 
   // ---------------------------------------------------------------------------
   // Index Management
@@ -282,6 +356,9 @@ class Collection<T extends Entity> {
       // Populate index with existing entities
       await _populateIndex(field);
 
+      // Invalidate cached query plans for this field
+      _queryOptimizer.invalidateField(field);
+
       _logger.info('Created ${indexType.name} index on field "$field".');
     });
   }
@@ -301,6 +378,10 @@ class Collection<T extends Entity> {
 
     await _collectionLock.synchronized(() async {
       _indexManager.removeIndex(field);
+
+      // Invalidate cached query plans for this field
+      _queryOptimizer.invalidateField(field);
+
       _logger.info('Removed index on field "$field".');
     });
   }
@@ -385,6 +466,10 @@ class Collection<T extends Entity> {
         await _storage.insert(entityId, data);
         _indexManager.insert(entityId, data);
         _entityVersions[entityId] = 1;
+
+        // Invalidate query cache for affected fields
+        _invalidateCacheForFields(data.keys.toSet());
+
         _logger.debug('Inserted entity "$entityId".');
       } catch (e, stackTrace) {
         _logger.error('Failed to insert entity "$entityId"', e, stackTrace);
@@ -435,11 +520,18 @@ class Collection<T extends Entity> {
       try {
         await _storage.insertMany(entitiesToInsert);
 
+        // Collect all affected fields
+        final affectedFields = <String>{};
+
         // Index all entities
         for (final entry in entitiesToInsert.entries) {
           _indexManager.insert(entry.key, entry.value);
           _entityVersions[entry.key] = 1;
+          affectedFields.addAll(entry.value.keys);
         }
+
+        // Invalidate query cache for affected fields
+        _invalidateCacheForFields(affectedFields);
 
         _logger.info('Inserted ${entities.length} entities.');
       } catch (e, stackTrace) {
@@ -679,6 +771,10 @@ class Collection<T extends Entity> {
       // Increment version in memory
       _entityVersions[entityId] = newVersion;
 
+      // Invalidate query cache for affected fields (both old and new)
+      final affectedFields = <String>{...oldData.keys, ...newData.keys};
+      _invalidateCacheForFields(affectedFields);
+
       _logger.debug('Updated entity "$entityId".');
     } catch (e, stackTrace) {
       if (e is EntityNotFoundException || e is ConcurrencyException) rethrow;
@@ -759,6 +855,7 @@ class Collection<T extends Entity> {
       try {
         // Check if exists for index update
         final oldData = await _storage.get(entityId);
+        Set<String> affectedFields;
 
         if (oldData != null) {
           // Update existing entity with new version
@@ -766,14 +863,20 @@ class Collection<T extends Entity> {
           data['__version'] = newVersion;
           _indexManager.update(entityId, oldData, data);
           _entityVersions[entityId] = newVersion;
+          affectedFields = {...oldData.keys, ...data.keys};
         } else {
           // Insert new entity with version 1
           data['__version'] = 1;
           _indexManager.insert(entityId, data);
           _entityVersions[entityId] = 1;
+          affectedFields = data.keys.toSet();
         }
 
         await _storage.upsert(entityId, data);
+
+        // Invalidate query cache for affected fields
+        _invalidateCacheForFields(affectedFields);
+
         _logger.debug('Upserted entity "$entityId".');
       } catch (e, stackTrace) {
         _logger.error('Failed to upsert entity "$entityId"', e, stackTrace);
@@ -812,6 +915,9 @@ class Collection<T extends Entity> {
         await _storage.delete(id);
         _entityVersions.remove(id);
         _entityLocks.remove(id);
+
+        // Invalidate query cache for affected fields
+        _invalidateCacheForFields(data.keys.toSet());
 
         _logger.debug('Deleted entity "$id".');
         return true;
@@ -877,6 +983,10 @@ class Collection<T extends Entity> {
       _indexManager.clearAllEntries();
       _entityVersions.clear();
       _entityLocks.clear();
+
+      // Invalidate entire query cache
+      _queryCache?.invalidateAll();
+
       _logger.info('Deleted all $count entities.');
       return count;
     });
@@ -889,11 +999,13 @@ class Collection<T extends Entity> {
   /// Finds entities matching the given query.
   ///
   /// The query is automatically optimized to use available indexes
-  /// when possible.
+  /// when possible. If query result caching is enabled, cached results
+  /// are returned when available.
   ///
   /// ## Parameters
   ///
   /// - [query]: The query to execute.
+  /// - [bypassCache]: If true, bypasses the query cache even if enabled.
   ///
   /// ## Returns
   ///
@@ -919,25 +1031,196 @@ class Collection<T extends Entity> {
   ///     .whereBetween('price', 100.0, 500.0)
   ///     .build(),
   /// );
+  ///
+  /// // Bypass cache for fresh results
+  /// final fresh = await collection.find(query, bypassCache: true);
   /// ```
-  Future<List<T>> find(IQuery query) async {
+  Future<List<T>> find(IQuery query, {bool bypassCache = false}) async {
     _checkNotDisposed();
 
     return await _collectionLock.synchronized(() async {
-      // Try to use index for optimized query
-      final indexResult = await _tryIndexedQuery(query);
-      if (indexResult != null) {
-        return indexResult;
+      // Check query cache first
+      if (_queryCacheEnabled && !bypassCache && _queryCache != null) {
+        final cached = _queryCache!.get(query);
+        if (cached != null) {
+          _logger.debug('Query cache hit, returning ${cached.length} results.');
+          return cached;
+        }
       }
 
-      // Fall back to full scan
-      _logger.debug('Performing full scan for query.');
-      final allData = await _storage.getAll();
-      return allData.entries
-          .where((entry) => query.matches(entry.value))
-          .map((entry) => _fromMap(entry.key, entry.value))
-          .toList();
+      // Use query optimizer to generate execution plan
+      final totalEntities = await _storage.count;
+      final plan = _queryOptimizer.optimize(query, totalEntities);
+
+      _logger.debug(
+        'Executing query with plan: ${plan.strategy.name}, '
+        'estimated cost: ${plan.estimatedCost.toStringAsFixed(2)}',
+      );
+
+      // Execute based on plan strategy
+      final results = await _executePlan(plan);
+
+      // Cache results if caching is enabled
+      if (_queryCacheEnabled && _queryCache != null) {
+        _queryCache!.put(query, results);
+        _logger.debug('Cached query results (${results.length} entities).');
+      }
+
+      return results;
     });
+  }
+
+  /// Executes a query plan and returns matching entities.
+  Future<List<T>> _executePlan(QueryPlan plan) async {
+    switch (plan.strategy) {
+      case ExecutionStrategy.fullScan:
+        return _executeFullScan(plan.query);
+
+      case ExecutionStrategy.indexScan:
+        return _executeIndexScan(plan);
+
+      case ExecutionStrategy.indexScanWithFilter:
+        return _executeIndexScanWithFilter(plan);
+
+      case ExecutionStrategy.multiIndexIntersect:
+        return _executeMultiIndexIntersect(plan);
+
+      case ExecutionStrategy.multiIndexUnion:
+        return _executeMultiIndexUnion(plan);
+    }
+  }
+
+  /// Executes a full scan query.
+  Future<List<T>> _executeFullScan(IQuery query) async {
+    _logger.debug('Performing full scan for query.');
+    final allData = await _storage.getAll();
+    return allData.entries
+        .where((entry) => query.matches(entry.value))
+        .map((entry) => _fromMap(entry.key, entry.value))
+        .toList();
+  }
+
+  /// Executes an index scan query.
+  Future<List<T>> _executeIndexScan(QueryPlan plan) async {
+    final field = plan.indexField!;
+
+    List<String> ids;
+
+    // Handle different index scan types
+    if (plan.inValues != null) {
+      // IN query - multiple lookups
+      _logger.debug('Using index on field "$field" for IN query.');
+      final allIds = <String>{};
+      for (final value in plan.inValues!) {
+        allIds.addAll(_indexManager.search(field, value));
+      }
+      ids = allIds.toList();
+    } else if (plan.rangeBounds != null) {
+      // Range query
+      final bounds = plan.rangeBounds!;
+      _logger.debug('Using btree index on field "$field" for range query.');
+
+      if (bounds.lower != null && bounds.upper != null) {
+        // Between query
+        ids = _indexManager.rangeSearch(
+          field,
+          bounds.lower,
+          bounds.upper,
+          includeLower: bounds.includeLower,
+          includeUpper: bounds.includeUpper,
+        );
+      } else if (bounds.lower != null) {
+        // Greater than (or equal)
+        if (bounds.includeLower) {
+          ids = _indexManager.greaterThanOrEqual(field, bounds.lower);
+        } else {
+          ids = _indexManager.greaterThan(field, bounds.lower);
+        }
+      } else {
+        // Less than (or equal)
+        if (bounds.includeUpper) {
+          ids = _indexManager.lessThanOrEqual(field, bounds.upper);
+        } else {
+          ids = _indexManager.lessThan(field, bounds.upper);
+        }
+      }
+    } else {
+      // Equality query
+      _logger.debug(
+        'Using ${plan.indexType?.name ?? "index"} on field "$field" for equality query.',
+      );
+      ids = _indexManager.search(field, plan.indexValue);
+    }
+
+    return _getEntitiesByIds(ids);
+  }
+
+  /// Executes an index scan with post-filter.
+  Future<List<T>> _executeIndexScanWithFilter(QueryPlan plan) async {
+    // First, execute the index scan
+    final indexResults = await _executeIndexScan(plan);
+
+    // Then apply the post-filter
+    if (plan.postFilter == null) {
+      return indexResults;
+    }
+
+    _logger.debug('Applying post-filter to ${indexResults.length} results.');
+    return indexResults
+        .where((entity) => plan.postFilter!.matches(entity.toMap()))
+        .toList();
+  }
+
+  /// Executes a multi-index intersection (AND).
+  Future<List<T>> _executeMultiIndexIntersect(QueryPlan plan) async {
+    if (plan.subPlans == null || plan.subPlans!.isEmpty) {
+      return [];
+    }
+
+    _logger.debug(
+      'Executing multi-index intersection with ${plan.subPlans!.length} sub-plans.',
+    );
+
+    // Execute first sub-plan to get initial set
+    Set<String>? resultIds;
+
+    for (final subPlan in plan.subPlans!) {
+      final subResults = await _executePlan(subPlan);
+      final subIds = subResults.map((e) => e.id!).toSet();
+
+      if (resultIds == null) {
+        resultIds = subIds;
+      } else {
+        resultIds = resultIds.intersection(subIds);
+      }
+
+      // Early exit if intersection is empty
+      if (resultIds.isEmpty) {
+        return [];
+      }
+    }
+
+    return _getEntitiesByIds(resultIds?.toList() ?? []);
+  }
+
+  /// Executes a multi-index union (OR).
+  Future<List<T>> _executeMultiIndexUnion(QueryPlan plan) async {
+    if (plan.subPlans == null || plan.subPlans!.isEmpty) {
+      return [];
+    }
+
+    _logger.debug(
+      'Executing multi-index union with ${plan.subPlans!.length} sub-plans.',
+    );
+
+    final resultIds = <String>{};
+
+    for (final subPlan in plan.subPlans!) {
+      final subResults = await _executePlan(subPlan);
+      resultIds.addAll(subResults.map((e) => e.id!));
+    }
+
+    return _getEntitiesByIds(resultIds.toList());
   }
 
   /// Finds a single entity matching the query.
@@ -1150,95 +1433,6 @@ class Collection<T extends Entity> {
     return null;
   }
 
-  /// Tries to execute the query using an available index.
-  ///
-  /// Returns null if no suitable index is available.
-  Future<List<T>?> _tryIndexedQuery(IQuery query) async {
-    // Handle EqualsQuery with hash index
-    if (query is EqualsQuery) {
-      if (_indexManager.hasIndexOfType(query.field, IndexType.hash)) {
-        _logger.debug(
-          'Using hash index on field "${query.field}" for EqualsQuery.',
-        );
-        final ids = _indexManager.search(query.field, query.value);
-        return _getEntitiesByIds(ids);
-      }
-      // Fall through to check btree
-      if (_indexManager.hasIndexOfType(query.field, IndexType.btree)) {
-        _logger.debug(
-          'Using btree index on field "${query.field}" for EqualsQuery.',
-        );
-        final ids = _indexManager.search(query.field, query.value);
-        return _getEntitiesByIds(ids);
-      }
-    }
-
-    // Handle range queries with btree index using optimized methods
-    if (query is GreaterThanQuery &&
-        _indexManager.hasIndexOfType(query.field, IndexType.btree)) {
-      _logger.debug(
-        'Using btree index on field "${query.field}" for GreaterThanQuery.',
-      );
-      final ids = _indexManager.greaterThan(query.field, query.value);
-      return _getEntitiesByIds(ids);
-    }
-
-    if (query is GreaterThanOrEqualsQuery &&
-        _indexManager.hasIndexOfType(query.field, IndexType.btree)) {
-      _logger.debug(
-        'Using btree index on field "${query.field}" for GreaterThanOrEqualsQuery.',
-      );
-      final ids = _indexManager.greaterThanOrEqual(query.field, query.value);
-      return _getEntitiesByIds(ids);
-    }
-
-    if (query is LessThanQuery &&
-        _indexManager.hasIndexOfType(query.field, IndexType.btree)) {
-      _logger.debug(
-        'Using btree index on field "${query.field}" for LessThanQuery.',
-      );
-      final ids = _indexManager.lessThan(query.field, query.value);
-      return _getEntitiesByIds(ids);
-    }
-
-    if (query is LessThanOrEqualsQuery &&
-        _indexManager.hasIndexOfType(query.field, IndexType.btree)) {
-      _logger.debug(
-        'Using btree index on field "${query.field}" for LessThanOrEqualsQuery.',
-      );
-      final ids = _indexManager.lessThanOrEqual(query.field, query.value);
-      return _getEntitiesByIds(ids);
-    }
-
-    if (query is BetweenQuery &&
-        _indexManager.hasIndexOfType(query.field, IndexType.btree)) {
-      _logger.debug(
-        'Using btree index on field "${query.field}" for BetweenQuery.',
-      );
-      final ids = _indexManager.rangeSearch(
-        query.field,
-        query.lowerBound,
-        query.upperBound,
-        includeLower: query.includeLower,
-        includeUpper: query.includeUpper,
-      );
-      return _getEntitiesByIds(ids);
-    }
-
-    if (query is InQuery) {
-      if (_indexManager.hasIndex(query.field)) {
-        _logger.debug('Using index on field "${query.field}" for InQuery.');
-        final allIds = <String>{};
-        for (final value in query.values) {
-          allIds.addAll(_indexManager.search(query.field, value));
-        }
-        return _getEntitiesByIds(allIds.toList());
-      }
-    }
-
-    return null;
-  }
-
   /// Retrieves entities by their IDs.
   Future<List<T>> _getEntitiesByIds(List<String> ids) async {
     if (ids.isEmpty) return [];
@@ -1247,6 +1441,53 @@ class Collection<T extends Entity> {
     return dataMap.entries
         .map((entry) => _fromMap(entry.key, entry.value))
         .toList();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Query Optimizer Methods
+  // ---------------------------------------------------------------------------
+
+  /// Gets the query optimizer for this collection.
+  ///
+  /// Use this to inspect query plans or configure optimization behavior.
+  @visibleForTesting
+  QueryOptimizer get queryOptimizer => _queryOptimizer;
+
+  /// Generates an execution plan for the query without executing it.
+  ///
+  /// Useful for analyzing query performance and index utilization.
+  ///
+  /// ## Returns
+  ///
+  /// A [QueryPlan] describing how the query would be executed.
+  ///
+  /// ## Example
+  ///
+  /// ```dart
+  /// final plan = await collection.explain(query);
+  /// print('Strategy: ${plan.strategy}');
+  /// print('Estimated cost: ${plan.estimatedCost}');
+  /// print('Uses index: ${plan.usesIndex}');
+  /// ```
+  Future<QueryPlan> explain(IQuery query) async {
+    _checkNotDisposed();
+    final totalEntities = await _storage.count;
+    return _queryOptimizer.optimize(query, totalEntities);
+  }
+
+  /// Gets statistics for all indexes in this collection.
+  ///
+  /// Returns information about cardinality, selectivity, and entry counts
+  /// for each index.
+  List<IndexStatistics> getIndexStatistics() {
+    return _queryOptimizer.getAllIndexStatistics();
+  }
+
+  /// Clears the query plan cache.
+  ///
+  /// Forces re-optimization of all queries on next execution.
+  void clearQueryPlanCache() {
+    _queryOptimizer.clearCache();
   }
 
   // ---------------------------------------------------------------------------
@@ -1262,6 +1503,18 @@ class Collection<T extends Entity> {
   void _checkNotDisposed() {
     if (_disposed) {
       throw CollectionException('Collection "$_name" has been disposed.');
+    }
+  }
+
+  /// Invalidates query cache entries for queries using the given fields.
+  ///
+  /// If selective invalidation is disabled, invalidates the entire cache.
+  void _invalidateCacheForFields(Set<String> fields) {
+    if (!_queryCacheEnabled || _queryCache == null) return;
+
+    final count = _queryCache!.invalidateFields(fields);
+    if (count > 0) {
+      _logger.debug('Invalidated $count cached queries for fields: $fields');
     }
   }
 

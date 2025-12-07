@@ -1,22 +1,31 @@
 /// DocDB Storage - Binary Serialization Module
 ///
-/// Provides CBOR-based binary serialization with optional encryption support.
-/// This module serves as the serialization layer for all storage implementations.
+/// Provides CBOR-based binary serialization with optional compression and
+/// encryption support. This module serves as the serialization layer for
+/// all storage implementations.
 ///
 /// ## Features
 ///
 /// - CBOR (RFC 8949) binary encoding for compact, efficient storage
+/// - Optional gzip compression for reduced storage size
 /// - Optional AES-GCM encryption for data-at-rest security
 /// - Support for all Dart types including DateTime and binary data
 /// - Streaming-friendly design for large documents
 ///
 /// ## Data Format
 ///
-/// ### Unencrypted
+/// ### Unencrypted (uncompressed)
 /// ```
 /// ┌────────────────────────────────────────────────────────┐
 /// │ Magic (2)  │ Version (1) │ Flags (1) │ CBOR Data (var) │
 /// └────────────────────────────────────────────────────────┘
+/// ```
+///
+/// ### Compressed (unencrypted)
+/// ```
+/// ┌─────────────────────────────────────────────────────────────────┐
+/// │ Magic (2) │ Version (1) │ Flags (1) │ Orig Size (4) │ Gzip (var) │
+/// └─────────────────────────────────────────────────────────────────┘
 /// ```
 ///
 /// ### Encrypted
@@ -27,6 +36,7 @@
 /// ```
 library;
 
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cbor/cbor.dart';
@@ -60,34 +70,82 @@ const int _headerSize = 4; // magic (2) + version (1) + flags (1)
 /// IV size for AES-GCM encryption.
 const int _ivSize = 12;
 
+/// Minimum data size to consider compression worthwhile.
+const int _compressionThreshold = 64;
+
 /// Configuration for the serialization service.
 @immutable
 class SerializationConfig {
   /// The encryption service to use (null for no encryption).
   final EncryptionService? encryptionService;
 
+  /// Whether compression is enabled.
+  final bool compressionEnabled;
+
+  /// Compression level (1-9, where 9 is maximum compression).
+  /// Only used when compressionEnabled is true.
+  final int compressionLevel;
+
   /// Whether to enable encryption.
   bool get encryptionEnabled =>
       encryptionService != null && encryptionService!.isEnabled;
 
   /// Creates a new serialization configuration.
-  const SerializationConfig({this.encryptionService});
+  const SerializationConfig({
+    this.encryptionService,
+    this.compressionEnabled = false,
+    this.compressionLevel = 6,
+  });
 
-  /// Default configuration (no encryption).
+  /// Default configuration (no encryption, no compression).
   static const SerializationConfig defaults = SerializationConfig();
 
-  /// Creates a configuration with encryption.
+  /// Creates a configuration with encryption only.
   factory SerializationConfig.encrypted(EncryptionService service) {
     return SerializationConfig(encryptionService: service);
+  }
+
+  /// Creates a configuration with compression only.
+  factory SerializationConfig.compressed({int level = 6}) {
+    return SerializationConfig(
+      compressionEnabled: true,
+      compressionLevel: level,
+    );
+  }
+
+  /// Creates a configuration with both compression and encryption.
+  factory SerializationConfig.compressedAndEncrypted(
+    EncryptionService service, {
+    int compressionLevel = 6,
+  }) {
+    return SerializationConfig(
+      encryptionService: service,
+      compressionEnabled: true,
+      compressionLevel: compressionLevel,
+    );
   }
 
   /// Creates a configuration without encryption (explicit).
   factory SerializationConfig.unencrypted() {
     return const SerializationConfig(encryptionService: NoEncryptionService());
   }
+
+  /// Creates a copy with modified settings.
+  SerializationConfig copyWith({
+    EncryptionService? encryptionService,
+    bool? compressionEnabled,
+    int? compressionLevel,
+  }) {
+    return SerializationConfig(
+      encryptionService: encryptionService ?? this.encryptionService,
+      compressionEnabled: compressionEnabled ?? this.compressionEnabled,
+      compressionLevel: compressionLevel ?? this.compressionLevel,
+    );
+  }
 }
 
-/// Binary serialization service using CBOR with optional encryption.
+/// Binary serialization service using CBOR with optional compression and
+/// encryption.
 ///
 /// This service provides the core serialization functionality for all
 /// storage implementations in DocDB.
@@ -95,10 +153,16 @@ class SerializationConfig {
 /// ## Usage
 ///
 /// ```dart
-/// // Without encryption
+/// // Without encryption or compression
 /// final serializer = BinarySerializer();
 /// final bytes = await serializer.serialize({'name': 'Alice', 'age': 30});
 /// final data = await serializer.deserialize(bytes);
+///
+/// // With compression only
+/// final compressedSerializer = BinarySerializer(
+///   config: SerializationConfig.compressed(),
+/// );
+/// final compressed = await compressedSerializer.serialize(data);
 ///
 /// // With encryption
 /// final key = await deriveKey(password, salt);
@@ -108,6 +172,13 @@ class SerializationConfig {
 ///   ),
 /// );
 /// final encrypted = await encryptedSerializer.serialize(data);
+///
+/// // With both compression and encryption
+/// final secureSerializer = BinarySerializer(
+///   config: SerializationConfig.compressedAndEncrypted(
+///     AesGcmEncryptionService.fromBytes(key),
+///   ),
+/// );
 /// ```
 class BinarySerializer {
   /// The serialization configuration.
@@ -119,9 +190,13 @@ class BinarySerializer {
   /// Whether encryption is enabled.
   bool get encryptionEnabled => config.encryptionEnabled;
 
+  /// Whether compression is enabled.
+  bool get compressionEnabled => config.compressionEnabled;
+
   /// Serializes a Map to binary format.
   ///
-  /// The data is first encoded to CBOR, then optionally encrypted.
+  /// The data is first encoded to CBOR, optionally compressed, then
+  /// optionally encrypted.
   ///
   /// - [data]: The map to serialize.
   /// - [aad]: Optional additional authenticated data for encryption.
@@ -136,12 +211,25 @@ class BinarySerializer {
     try {
       // Convert to CBOR
       final cborValue = _mapToCbor(data);
-      final cborBytes = Uint8List.fromList(cbor.encode(cborValue));
+      var cborBytes = Uint8List.fromList(cbor.encode(cborValue));
+
+      // Apply compression if enabled and data is large enough
+      final shouldCompress =
+          config.compressionEnabled &&
+          cborBytes.length >= _compressionThreshold;
+
+      if (shouldCompress) {
+        cborBytes = _compress(cborBytes);
+      }
 
       if (config.encryptionEnabled) {
-        return await _serializeEncrypted(cborBytes, aad: aad);
+        return await _serializeEncrypted(
+          cborBytes,
+          aad: aad,
+          compressed: shouldCompress,
+        );
       } else {
-        return _serializeUnencrypted(cborBytes);
+        return _serializeUnencrypted(cborBytes, compressed: shouldCompress);
       }
     } catch (e, st) {
       if (e is StorageException) rethrow;
@@ -189,13 +277,19 @@ class BinarySerializer {
 
       final flags = bytes[3];
       final isEncrypted = (flags & SerializationFlags.encrypted) != 0;
+      final isCompressed = (flags & SerializationFlags.compressed) != 0;
 
       Uint8List cborBytes;
 
       if (isEncrypted) {
         cborBytes = await _deserializeEncrypted(bytes, aad: aad);
       } else {
-        cborBytes = _deserializeUnencrypted(bytes);
+        cborBytes = _deserializeUnencrypted(bytes, compressed: isCompressed);
+      }
+
+      // Decompress if needed
+      if (isCompressed) {
+        cborBytes = _decompress(cborBytes);
       }
 
       // Decode CBOR
@@ -211,17 +305,37 @@ class BinarySerializer {
     }
   }
 
+  /// Compresses data using gzip.
+  Uint8List _compress(Uint8List data) {
+    final codec = GZipCodec(level: config.compressionLevel);
+    return Uint8List.fromList(codec.encode(data));
+  }
+
+  /// Decompresses gzip-compressed data.
+  Uint8List _decompress(Uint8List data) {
+    try {
+      return Uint8List.fromList(gzip.decode(data));
+    } catch (e) {
+      throw SerializationException('Failed to decompress data: $e', cause: e);
+    }
+  }
+
   /// Serializes without encryption.
-  Uint8List _serializeUnencrypted(Uint8List cborBytes) {
+  Uint8List _serializeUnencrypted(
+    Uint8List cborBytes, {
+    bool compressed = false,
+  }) {
     final result = Uint8List(_headerSize + cborBytes.length);
 
     // Write header
     result[0] = (_serializationMagic >> 8) & 0xFF;
     result[1] = _serializationMagic & 0xFF;
     result[2] = _serializationVersion;
-    result[3] = SerializationFlags.none;
+    result[3] = compressed
+        ? SerializationFlags.compressed
+        : SerializationFlags.none;
 
-    // Write CBOR data
+    // Write CBOR data (compressed or not)
     result.setRange(_headerSize, result.length, cborBytes);
 
     return result;
@@ -231,6 +345,7 @@ class BinarySerializer {
   Future<Uint8List> _serializeEncrypted(
     Uint8List cborBytes, {
     Uint8List? aad,
+    bool compressed = false,
   }) async {
     final encryptionResult = await config.encryptionService!.encrypt(
       cborBytes,
@@ -241,11 +356,13 @@ class BinarySerializer {
       _headerSize + _ivSize + encryptionResult.ciphertext.length,
     );
 
-    // Write header
+    // Write header with combined flags
     result[0] = (_serializationMagic >> 8) & 0xFF;
     result[1] = _serializationMagic & 0xFF;
     result[2] = _serializationVersion;
-    result[3] = SerializationFlags.encrypted;
+    result[3] =
+        SerializationFlags.encrypted |
+        (compressed ? SerializationFlags.compressed : 0);
 
     // Write IV
     result.setRange(_headerSize, _headerSize + _ivSize, encryptionResult.iv);
@@ -261,7 +378,12 @@ class BinarySerializer {
   }
 
   /// Deserializes unencrypted data.
-  Uint8List _deserializeUnencrypted(Uint8List bytes) {
+  Uint8List _deserializeUnencrypted(
+    Uint8List bytes, {
+    bool compressed = false,
+  }) {
+    // For uncompressed data, just return bytes after header
+    // For compressed data, return the compressed bytes (decompression happens later)
     return Uint8List.sublistView(bytes, _headerSize);
   }
 

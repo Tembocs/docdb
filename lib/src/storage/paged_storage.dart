@@ -72,6 +72,8 @@ import '../engine/constants.dart';
 import '../engine/storage/page.dart';
 import '../engine/storage/page_type.dart';
 import '../engine/storage/pager.dart';
+import '../engine/storage/recovery.dart';
+import '../engine/wal/wal_writer.dart';
 import '../entity/entity.dart';
 import '../exceptions/storage_exceptions.dart';
 import 'storage.dart';
@@ -97,9 +99,21 @@ class PagedStorageConfig {
   /// Encryption service for data-at-rest encryption (null = no encryption).
   final EncryptionService? encryptionService;
 
+  /// Path to WAL directory (null = WAL disabled).
+  final String? walDirectory;
+
+  /// WAL configuration (used if walDirectory is set).
+  final WalConfig? walConfig;
+
+  /// Recovery configuration.
+  final RecoveryConfig recoveryConfig;
+
   /// Whether encryption is enabled.
   bool get encryptionEnabled =>
       encryptionService != null && encryptionService!.isEnabled;
+
+  /// Whether WAL is enabled.
+  bool get walEnabled => walDirectory != null;
 
   /// Creates a PagedStorage configuration.
   const PagedStorageConfig({
@@ -109,6 +123,9 @@ class PagedStorageConfig {
     this.pageSize = 4096,
     this.maxEntitySize = 1024 * 1024, // 1MB
     this.encryptionService,
+    this.walDirectory,
+    this.walConfig,
+    this.recoveryConfig = const RecoveryConfig(),
   });
 
   /// Default configuration.
@@ -199,6 +216,12 @@ final class PagedStorage<T extends Entity> extends Storage<T>
   /// The root catalog page ID.
   int _catalogPageId = 0;
 
+  /// WAL writer for transaction durability.
+  WalWriter? _walWriter;
+
+  /// Recovery result if recovery was performed on open.
+  RecoveryResult? _recoveryResult;
+
   /// Creates a new PagedStorage instance.
   ///
   /// Use [open] to initialize the storage.
@@ -255,6 +278,20 @@ final class PagedStorage<T extends Entity> extends Storage<T>
       // Load or initialize catalog
       await _loadCatalog();
 
+      // Perform recovery if needed
+      if (_pager!.recoveredFromDirtyShutdown &&
+          config.recoveryConfig.isEnabled) {
+        await _performRecovery();
+      }
+
+      // Initialize WAL writer if configured
+      if (config.walEnabled) {
+        final walConfig =
+            config.walConfig ?? WalConfig(walDirectory: config.walDirectory!);
+        _walWriter = WalWriter(config: walConfig);
+        await _walWriter!.open();
+      }
+
       _isOpen = true;
     } catch (e, st) {
       await _cleanup();
@@ -267,6 +304,40 @@ final class PagedStorage<T extends Entity> extends Storage<T>
     }
   }
 
+  /// Performs recovery from WAL after a dirty shutdown.
+  Future<void> _performRecovery() async {
+    final handler = StorageRecoveryHandler(
+      onInsert: (collection, id, data) async {
+        // Only recover entities for this storage
+        if (collection == name && data != null) {
+          await _writeEntity(id, data);
+        }
+      },
+      onUpdate: (collection, id, data) async {
+        if (collection == name && data != null) {
+          await _updateEntity(id, data);
+        }
+      },
+      onDelete: (collection, id, data) async {
+        if (collection == name) {
+          await _deleteEntity(id);
+        }
+      },
+    );
+
+    _recoveryResult = await _pager!.performRecovery(
+      config.recoveryConfig,
+      handler,
+    );
+
+    // Flush recovered data
+    await _saveCatalog();
+    await _bufferManager?.flushAll();
+  }
+
+  /// Returns the recovery result if recovery was performed, null otherwise.
+  RecoveryResult? get recoveryResult => _recoveryResult;
+
   @override
   Future<void> close() async {
     if (!_isOpen) return;
@@ -274,6 +345,10 @@ final class PagedStorage<T extends Entity> extends Storage<T>
     if (inTransaction) {
       await rollback();
     }
+
+    // Close WAL writer
+    await _walWriter?.close();
+    _walWriter = null;
 
     // Flush and save catalog
     await _saveCatalog();
@@ -284,6 +359,8 @@ final class PagedStorage<T extends Entity> extends Storage<T>
   }
 
   Future<void> _cleanup() async {
+    await _walWriter?.close();
+    _walWriter = null;
     await _bufferManager?.close();
     await _pager?.close();
     _bufferManager = null;
@@ -544,7 +621,49 @@ final class PagedStorage<T extends Entity> extends Storage<T>
       throw NoActiveTransactionException(storageName: name);
     }
 
+    int? walTxnId;
+
     try {
+      // Begin WAL transaction if available
+      if (_walWriter != null) {
+        walTxnId = await _walWriter!.beginTransaction();
+
+        // Log all operations to WAL
+        for (final entry in _transaction!.pendingInserts.entries) {
+          await _walWriter!.logInsert(
+            transactionId: walTxnId,
+            collectionName: name,
+            entityId: entry.key,
+            data: entry.value,
+          );
+        }
+
+        for (final entry in _transaction!.pendingUpdates.entries) {
+          final before =
+              _transaction!.originalData[entry.key] ?? <String, dynamic>{};
+          await _walWriter!.logUpdate(
+            transactionId: walTxnId,
+            collectionName: name,
+            entityId: entry.key,
+            before: before,
+            after: entry.value,
+          );
+        }
+
+        for (final id in _transaction!.deletedIds) {
+          final before = _transaction!.originalData[id] ?? <String, dynamic>{};
+          await _walWriter!.logDelete(
+            transactionId: walTxnId,
+            collectionName: name,
+            entityId: id,
+            data: before,
+          );
+        }
+
+        // Commit WAL transaction (makes operations durable)
+        await _walWriter!.commitTransaction(walTxnId);
+      }
+
       // Apply pending inserts
       for (final entry in _transaction!.pendingInserts.entries) {
         await _writeEntity(entry.key, entry.value);
@@ -566,6 +685,15 @@ final class PagedStorage<T extends Entity> extends Storage<T>
 
       _transaction = null;
     } catch (e, st) {
+      // Abort WAL transaction if started
+      if (walTxnId != null && _walWriter != null) {
+        try {
+          await _walWriter!.abortTransaction(walTxnId);
+        } catch (_) {
+          // Ignore abort errors
+        }
+      }
+
       // On failure, rollback changes in memory
       await _rollbackInMemory();
       throw StorageWriteException(

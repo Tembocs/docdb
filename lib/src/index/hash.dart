@@ -123,4 +123,37 @@ class HashIndex implements IIndex {
   void clear() {
     _index.clear();
   }
+
+  // ===========================================================================
+  // Serialization Support
+  // ===========================================================================
+
+  /// Exports the index state as a map for persistence.
+  ///
+  /// Returns a copy of the internal index structure suitable for
+  /// serialization. Each key maps to a set of entity IDs.
+  ///
+  /// See also: [restoreFromMap] for restoring state.
+  Map<dynamic, Set<String>> toMap() {
+    // Create a deep copy to prevent external modifications
+    return Map.fromEntries(
+      _index.entries.map((e) => MapEntry(e.key, Set<String>.from(e.value))),
+    );
+  }
+
+  /// Restores the index state from a serialized map.
+  ///
+  /// Clears existing entries and populates from the provided [data].
+  /// This is used during index recovery from disk.
+  ///
+  /// - [data]: Map of indexed values to entity ID sets.
+  ///
+  /// See also: [toMap] for exporting state.
+  void restoreFromMap(Map<dynamic, Set<String>> data) {
+    _index.clear();
+    for (final entry in data.entries) {
+      // Ensure we use a fresh set copy for safety
+      _index[entry.key] = Set<String>.from(entry.value);
+    }
+  }
 }

@@ -65,6 +65,14 @@
 library;
 
 export 'btree.dart' show BTreeIndex;
+export 'fulltext.dart'
+    show FullTextIndex, FullTextConfig, TermPosting, ScoredResult;
 export 'hash.dart' show HashIndex;
 export 'i_index.dart' show IIndex, IndexType;
 export 'index_manager.dart' show IndexManager;
+export 'index_persistence.dart'
+    show
+        IndexPersistence,
+        SerializedIndex,
+        SerializedFullTextIndex,
+        IndexMetadata;

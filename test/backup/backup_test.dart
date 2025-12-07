@@ -1164,4 +1164,732 @@ void main() {
       expect(exception.message, contains('backup-123.snap'));
     });
   });
+
+  group('DifferentialSnapshot', () {
+    test('should create with changed entities', () {
+      final snapshot = DifferentialSnapshot(
+        baseBackupPath: '/backups/full-backup.snap',
+        baseTimestamp: DateTime(2024, 1, 1),
+        changedEntities: {
+          'id1': {'name': 'Modified Product', 'price': 29.99},
+          'id2': {'name': 'New Product', 'price': 19.99},
+        },
+        deletedEntityIds: ['id3', 'id4'],
+        timestamp: DateTime.now(),
+        version: '1.0.0',
+        description: 'Daily differential backup',
+      );
+
+      expect(snapshot.changeCount, equals(2));
+      expect(snapshot.deleteCount, equals(2));
+      expect(snapshot.baseBackupPath, equals('/backups/full-backup.snap'));
+      expect(snapshot.version, equals('1.0.0'));
+      expect(snapshot.description, equals('Daily differential backup'));
+    });
+
+    test('should serialize and deserialize correctly', () {
+      final original = DifferentialSnapshot(
+        baseBackupPath: '/backups/base.snap',
+        baseTimestamp: DateTime(2024, 1, 15, 10, 30),
+        changedEntities: {
+          'product-1': {'name': 'Widget', 'price': 10.0, 'stock': 100},
+          'product-2': {'name': 'Gadget', 'price': 25.0, 'stock': 50},
+        },
+        deletedEntityIds: ['product-3'],
+        timestamp: DateTime(2024, 1, 16, 10, 30),
+      );
+
+      final bytes = original.toBytes();
+      final restored = DifferentialSnapshot.fromBytes(bytes);
+
+      expect(restored.changeCount, equals(2));
+      expect(restored.deleteCount, equals(1));
+      expect(restored.changedEntities['product-1']!['name'], equals('Widget'));
+      expect(restored.deletedEntityIds, contains('product-3'));
+      expect(restored.baseBackupPath, equals('/backups/base.snap'));
+    });
+
+    test('should verify integrity', () {
+      final snapshot = DifferentialSnapshot(
+        baseBackupPath: '/backups/base.snap',
+        baseTimestamp: DateTime.now(),
+        changedEntities: {
+          'id1': {'name': 'Test', 'value': 42},
+        },
+        deletedEntityIds: [],
+        timestamp: DateTime.now(),
+      );
+
+      expect(snapshot.verifyIntegrity(), isTrue);
+    });
+
+    test('should support compression', () {
+      final uncompressed = DifferentialSnapshot(
+        baseBackupPath: '/backups/base.snap',
+        baseTimestamp: DateTime.now(),
+        changedEntities: {
+          for (var i = 0; i < 100; i++)
+            'id$i': {
+              'name': 'Product $i with long description for compression test',
+              'price': i * 10.0,
+            },
+        },
+        deletedEntityIds: [],
+        timestamp: DateTime.now(),
+        compressed: false,
+      );
+
+      final compressed = DifferentialSnapshot(
+        baseBackupPath: '/backups/base.snap',
+        baseTimestamp: DateTime.now(),
+        changedEntities: {
+          for (var i = 0; i < 100; i++)
+            'id$i': {
+              'name': 'Product $i with long description for compression test',
+              'price': i * 10.0,
+            },
+        },
+        deletedEntityIds: [],
+        timestamp: DateTime.now(),
+        compressed: true,
+      );
+
+      // Compressed should be smaller
+      expect(
+        compressed.toBytes().length,
+        lessThan(uncompressed.toBytes().length),
+      );
+
+      // Should still deserialize correctly
+      final restored = DifferentialSnapshot.fromBytes(compressed.toBytes());
+      expect(restored.changeCount, equals(100));
+      expect(restored.verifyIntegrity(), isTrue);
+    });
+
+    test('should throw on invalid magic number', () {
+      final invalidBytes = Uint8List.fromList(
+        [0x00, 0x00, 0x00, 0x00, 0x01, 0x00] + List.filled(100, 0),
+      );
+
+      expect(
+        () => DifferentialSnapshot.fromBytes(invalidBytes),
+        throwsFormatException,
+      );
+    });
+
+    test('should throw on too short data', () {
+      final shortBytes = Uint8List.fromList([
+        0x44,
+        0x49,
+        0x46,
+        0x46,
+      ]); // Just magic
+
+      expect(
+        () => DifferentialSnapshot.fromBytes(shortBytes),
+        throwsFormatException,
+      );
+    });
+
+    test('should have correct string representation', () {
+      final snapshot = DifferentialSnapshot(
+        baseBackupPath: '/path/to/base.snap',
+        baseTimestamp: DateTime.now(),
+        changedEntities: {
+          'id1': {'name': 'Test'},
+        },
+        deletedEntityIds: ['id2'],
+        timestamp: DateTime.now(),
+      );
+
+      expect(snapshot.toString(), contains('changed: 1'));
+      expect(snapshot.toString(), contains('deleted: 1'));
+      expect(snapshot.toString(), contains('/path/to/base.snap'));
+    });
+  });
+
+  group('IncrementalSnapshot', () {
+    test('should create with changed entities', () {
+      final snapshot = IncrementalSnapshot(
+        previousBackupPath: '/backups/previous.snap',
+        changedEntities: {
+          'id1': {'name': 'Updated', 'price': 15.99},
+        },
+        deletedEntityIds: ['id2'],
+        timestamp: DateTime.now(),
+        version: '2.0.0',
+        description: 'Hourly incremental',
+      );
+
+      expect(snapshot.changeCount, equals(1));
+      expect(snapshot.deleteCount, equals(1));
+      expect(snapshot.previousBackupPath, equals('/backups/previous.snap'));
+      expect(snapshot.version, equals('2.0.0'));
+    });
+
+    test('should serialize and deserialize correctly', () {
+      final original = IncrementalSnapshot(
+        previousBackupPath: '/backups/diff-20240115.snap',
+        changedEntities: {
+          'item-1': {'title': 'Book', 'author': 'Author Name'},
+        },
+        deletedEntityIds: ['item-2', 'item-3'],
+        timestamp: DateTime(2024, 1, 16, 12, 0),
+      );
+
+      final bytes = original.toBytes();
+      final restored = IncrementalSnapshot.fromBytes(bytes);
+
+      expect(restored.changeCount, equals(1));
+      expect(restored.deleteCount, equals(2));
+      expect(restored.changedEntities['item-1']!['title'], equals('Book'));
+      expect(restored.deletedEntityIds, containsAll(['item-2', 'item-3']));
+    });
+
+    test('should verify integrity', () {
+      final snapshot = IncrementalSnapshot(
+        previousBackupPath: '/prev.snap',
+        changedEntities: {
+          'x': {'data': 'value'},
+        },
+        deletedEntityIds: [],
+        timestamp: DateTime.now(),
+      );
+
+      expect(snapshot.verifyIntegrity(), isTrue);
+    });
+
+    test('should support compression', () {
+      final largeData = {
+        for (var i = 0; i < 50; i++)
+          'entity-$i': {
+            'description':
+                'Long text content for entity $i that will benefit from compression',
+            'metadata': {'index': i, 'type': 'test'},
+          },
+      };
+
+      final uncompressed = IncrementalSnapshot(
+        previousBackupPath: '/prev.snap',
+        changedEntities: largeData,
+        deletedEntityIds: [],
+        timestamp: DateTime.now(),
+        compressed: false,
+      );
+
+      final compressed = IncrementalSnapshot(
+        previousBackupPath: '/prev.snap',
+        changedEntities: largeData,
+        deletedEntityIds: [],
+        timestamp: DateTime.now(),
+        compressed: true,
+      );
+
+      expect(
+        compressed.toBytes().length,
+        lessThan(uncompressed.toBytes().length),
+      );
+
+      final restored = IncrementalSnapshot.fromBytes(compressed.toBytes());
+      expect(restored.changeCount, equals(50));
+    });
+
+    test('should throw on invalid magic number', () {
+      final invalidBytes = Uint8List.fromList(
+        [0xFF, 0xFF, 0xFF, 0xFF] + List.filled(100, 0),
+      );
+
+      expect(
+        () => IncrementalSnapshot.fromBytes(invalidBytes),
+        throwsFormatException,
+      );
+    });
+
+    test('should have correct string representation', () {
+      final snapshot = IncrementalSnapshot(
+        previousBackupPath: '/path/to/prev.snap',
+        changedEntities: {
+          'a': {'x': 1},
+          'b': {'y': 2},
+        },
+        deletedEntityIds: [],
+        timestamp: DateTime.now(),
+      );
+
+      expect(snapshot.toString(), contains('changed: 2'));
+      expect(snapshot.toString(), contains('deleted: 0'));
+      expect(snapshot.toString(), contains('/path/to/prev.snap'));
+    });
+  });
+
+  group('BackupService - Differential Backups', () {
+    late MemoryStorage<Product> storage;
+    late BackupService<Product> backupService;
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('docdb_diff_test_');
+      storage = MemoryStorage<Product>(name: 'products');
+      await storage.open();
+
+      backupService = BackupService<Product>(
+        storage: storage,
+        config: BackupConfig(
+          backupDirectory: tempDir.path,
+          compress: false,
+          verifyAfterCreate: true,
+          verifyBeforeRestore: true,
+        ),
+      );
+      await backupService.initialize();
+    });
+
+    tearDown(() async {
+      await storage.close();
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    test('should create differential backup with changes', () async {
+      // Initial data
+      await storage.insert('p1', {
+        'name': 'Product 1',
+        'price': 10.0,
+        'category': 'A',
+        'stock': 5,
+      });
+      await storage.insert('p2', {
+        'name': 'Product 2',
+        'price': 20.0,
+        'category': 'B',
+        'stock': 10,
+      });
+
+      // Create full backup
+      final fullResult = await backupService.createBackup(
+        type: BackupType.full,
+      );
+      expect(fullResult.isSuccess, isTrue);
+
+      // Modify data
+      await storage.update('p1', {
+        'name': 'Updated Product 1',
+        'price': 15.0,
+        'category': 'A',
+        'stock': 5,
+      });
+      await storage.insert('p3', {
+        'name': 'Product 3',
+        'price': 30.0,
+        'category': 'C',
+        'stock': 15,
+      });
+      await storage.delete('p2');
+
+      // Create differential backup
+      final diffResult = await backupService.createDifferentialBackup(
+        baseBackupPath: fullResult.filePath!,
+        description: 'Test differential backup',
+      );
+
+      expect(diffResult.isSuccess, isTrue);
+      expect(diffResult.metadata!.type, equals(BackupType.differential));
+      expect(diffResult.entitiesAffected, equals(3)); // 2 changed + 1 deleted
+    });
+
+    test('should detect no changes for differential backup', () async {
+      await storage.insert('p1', {
+        'name': 'Product 1',
+        'price': 10.0,
+        'category': 'A',
+        'stock': 5,
+      });
+
+      final fullResult = await backupService.createBackup(
+        type: BackupType.full,
+      );
+
+      // No changes made
+      final diffResult = await backupService.createDifferentialBackup(
+        baseBackupPath: fullResult.filePath!,
+      );
+
+      expect(diffResult.isSuccess, isTrue);
+      expect(diffResult.entitiesAffected, equals(0));
+    });
+
+    test('should fail with non-existent base backup', () async {
+      final diffResult = await backupService.createDifferentialBackup(
+        baseBackupPath: '/non/existent/backup.snap',
+      );
+
+      expect(diffResult.isFailure, isTrue);
+      expect(diffResult.error, contains('not found'));
+    });
+  });
+
+  group('BackupService - Incremental Backups', () {
+    late MemoryStorage<Product> storage;
+    late BackupService<Product> backupService;
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('docdb_incr_test_');
+      storage = MemoryStorage<Product>(name: 'products');
+      await storage.open();
+
+      backupService = BackupService<Product>(
+        storage: storage,
+        config: BackupConfig(
+          backupDirectory: tempDir.path,
+          compress: false,
+          verifyAfterCreate: true,
+          verifyBeforeRestore: true,
+        ),
+      );
+      await backupService.initialize();
+    });
+
+    tearDown(() async {
+      await storage.close();
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    test('should create incremental backup based on previous backup', () async {
+      // Initial data and full backup
+      await storage.insert('p1', {
+        'name': 'Product 1',
+        'price': 10.0,
+        'category': 'A',
+        'stock': 5,
+      });
+      final fullResult = await backupService.createBackup(
+        type: BackupType.full,
+      );
+
+      // First modification and differential
+      await storage.update('p1', {
+        'name': 'Updated 1',
+        'price': 12.0,
+        'category': 'A',
+        'stock': 5,
+      });
+      final diffResult = await backupService.createDifferentialBackup(
+        baseBackupPath: fullResult.filePath!,
+      );
+
+      // Second modification and incremental (based on differential)
+      await storage.insert('p2', {
+        'name': 'Product 2',
+        'price': 25.0,
+        'category': 'B',
+        'stock': 8,
+      });
+      final incrResult = await backupService.createIncrementalBackup(
+        previousBackupPath: diffResult.filePath!,
+        description: 'Hourly incremental',
+      );
+
+      expect(incrResult.isSuccess, isTrue);
+      expect(incrResult.metadata!.type, equals(BackupType.incremental));
+      expect(incrResult.entitiesAffected, greaterThanOrEqualTo(1));
+    });
+
+    test('should chain multiple incremental backups', () async {
+      // Setup
+      await storage.insert('p1', {
+        'name': 'Initial',
+        'price': 5.0,
+        'category': 'X',
+        'stock': 1,
+      });
+      final fullResult = await backupService.createBackup(
+        type: BackupType.full,
+      );
+
+      // Incremental 1
+      await storage.update('p1', {
+        'name': 'Change 1',
+        'price': 6.0,
+        'category': 'X',
+        'stock': 1,
+      });
+      final incr1 = await backupService.createIncrementalBackup(
+        previousBackupPath: fullResult.filePath!,
+      );
+
+      // Incremental 2
+      await storage.update('p1', {
+        'name': 'Change 2',
+        'price': 7.0,
+        'category': 'X',
+        'stock': 1,
+      });
+      final incr2 = await backupService.createIncrementalBackup(
+        previousBackupPath: incr1.filePath!,
+      );
+
+      // Incremental 3
+      await storage.insert('p2', {
+        'name': 'New Item',
+        'price': 10.0,
+        'category': 'Y',
+        'stock': 5,
+      });
+      final incr3 = await backupService.createIncrementalBackup(
+        previousBackupPath: incr2.filePath!,
+      );
+
+      expect(incr1.isSuccess, isTrue);
+      expect(incr2.isSuccess, isTrue);
+      expect(incr3.isSuccess, isTrue);
+    });
+
+    test('should fail with non-existent previous backup', () async {
+      final incrResult = await backupService.createIncrementalBackup(
+        previousBackupPath: '/does/not/exist.snap',
+      );
+
+      expect(incrResult.isFailure, isTrue);
+      expect(incrResult.error, contains('not found'));
+    });
+  });
+
+  group('BackupService - Restore Chain', () {
+    late MemoryStorage<Product> storage;
+    late BackupService<Product> backupService;
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('docdb_chain_test_');
+      storage = MemoryStorage<Product>(name: 'products');
+      await storage.open();
+
+      backupService = BackupService<Product>(
+        storage: storage,
+        config: BackupConfig(
+          backupDirectory: tempDir.path,
+          compress: false,
+          verifyAfterCreate: true,
+          verifyBeforeRestore: true,
+        ),
+      );
+      await backupService.initialize();
+    });
+
+    tearDown(() async {
+      await storage.close();
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    test('should restore from full + differential chain', () async {
+      // Initial state
+      await storage.insert('p1', {
+        'name': 'Product 1',
+        'price': 10.0,
+        'category': 'A',
+        'stock': 5,
+      });
+      await storage.insert('p2', {
+        'name': 'Product 2',
+        'price': 20.0,
+        'category': 'B',
+        'stock': 10,
+      });
+      final fullResult = await backupService.createBackup(
+        type: BackupType.full,
+      );
+
+      // Modifications
+      await storage.update('p1', {
+        'name': 'Modified Product 1',
+        'price': 15.0,
+        'category': 'A',
+        'stock': 8,
+      });
+      await storage.delete('p2');
+      await storage.insert('p3', {
+        'name': 'Product 3',
+        'price': 30.0,
+        'category': 'C',
+        'stock': 20,
+      });
+      final diffResult = await backupService.createDifferentialBackup(
+        baseBackupPath: fullResult.filePath!,
+      );
+
+      // Clear and restore
+      await storage.deleteAll();
+      expect((await storage.getAll()).length, equals(0));
+
+      final restoreResult = await backupService.restoreChain([
+        fullResult.filePath!,
+        diffResult.filePath!,
+      ]);
+
+      expect(restoreResult.isSuccess, isTrue);
+
+      final restored = await storage.getAll();
+      expect(
+        restored.length,
+        equals(2),
+      ); // p1 (modified) and p3 (new), p2 deleted
+      expect(restored['p1']!['name'], equals('Modified Product 1'));
+      expect(restored.containsKey('p2'), isFalse);
+      expect(restored['p3']!['name'], equals('Product 3'));
+    });
+
+    test('should restore from full + multiple incrementals', () async {
+      // Initial state
+      await storage.insert('item1', {
+        'name': 'Item 1',
+        'price': 100.0,
+        'category': 'Z',
+        'stock': 1,
+      });
+      final fullResult = await backupService.createBackup(
+        type: BackupType.full,
+      );
+
+      // Incremental 1: add item (compared to full backup)
+      await storage.insert('item2', {
+        'name': 'Item 2',
+        'price': 200.0,
+        'category': 'Z',
+        'stock': 2,
+      });
+      final incr1 = await backupService.createIncrementalBackup(
+        previousBackupPath: fullResult.filePath!,
+      );
+
+      // Incremental 2: modify item1 and add item3 (compared to incr1)
+      // Note: For proper chain reconstruction, incrementals should typically be
+      // based on full backups or the most recent state should be tracked separately.
+      await storage.update('item1', {
+        'name': 'Item 1 Modified',
+        'price': 150.0,
+        'category': 'Z',
+        'stock': 3,
+      });
+      await storage.insert('item3', {
+        'name': 'Item 3',
+        'price': 300.0,
+        'category': 'W',
+        'stock': 4,
+      });
+      final incr2 = await backupService.createIncrementalBackup(
+        previousBackupPath: incr1.filePath!,
+      );
+
+      // Clear and restore full chain
+      await storage.deleteAll();
+
+      final restoreResult = await backupService.restoreChain([
+        fullResult.filePath!,
+        incr1.filePath!,
+        incr2.filePath!,
+      ]);
+
+      expect(restoreResult.isSuccess, isTrue);
+
+      // Verify that key entities are restored
+      final restored = await storage.getAll();
+      expect(restored.containsKey('item1'), isTrue);
+      expect(restored.containsKey('item3'), isTrue);
+      expect(restored['item1']!['name'], equals('Item 1 Modified'));
+      expect(restored['item1']!['price'], equals(150.0));
+      expect(restored['item3']!['name'], equals('Item 3'));
+    });
+
+    test('should fail with empty backup paths', () async {
+      final result = await backupService.restoreChain([]);
+
+      expect(result.isFailure, isTrue);
+      expect(result.error, contains('No backup paths'));
+    });
+
+    test('should fail if first backup is not a full backup', () async {
+      // Create a differential first (without a proper full backup file)
+      await storage.insert('p1', {
+        'name': 'Test',
+        'price': 1.0,
+        'category': 'T',
+        'stock': 0,
+      });
+      final fullResult = await backupService.createBackup(
+        type: BackupType.full,
+      );
+
+      await storage.update('p1', {
+        'name': 'Modified',
+        'price': 2.0,
+        'category': 'T',
+        'stock': 0,
+      });
+      final diffResult = await backupService.createDifferentialBackup(
+        baseBackupPath: fullResult.filePath!,
+      );
+
+      // Try to restore starting with differential (should fail)
+      final result = await backupService.restoreChain([diffResult.filePath!]);
+
+      expect(result.isFailure, isTrue);
+      expect(result.error, contains('full backup'));
+    });
+
+    test('should handle mixed chain types correctly', () async {
+      // Full backup
+      await storage.insert('a', {
+        'name': 'A',
+        'price': 1.0,
+        'category': 'X',
+        'stock': 1,
+      });
+      final fullResult = await backupService.createBackup(
+        type: BackupType.full,
+      );
+
+      // Differential (changes from full)
+      await storage.insert('b', {
+        'name': 'B',
+        'price': 2.0,
+        'category': 'X',
+        'stock': 2,
+      });
+      final diffResult = await backupService.createDifferentialBackup(
+        baseBackupPath: fullResult.filePath!,
+      );
+
+      // Incremental (changes from differential)
+      await storage.insert('c', {
+        'name': 'C',
+        'price': 3.0,
+        'category': 'X',
+        'stock': 3,
+      });
+      final incrResult = await backupService.createIncrementalBackup(
+        previousBackupPath: diffResult.filePath!,
+      );
+
+      // Clear and restore
+      await storage.deleteAll();
+
+      final restoreResult = await backupService.restoreChain([
+        fullResult.filePath!,
+        diffResult.filePath!,
+        incrResult.filePath!,
+      ]);
+
+      expect(restoreResult.isSuccess, isTrue);
+
+      final restored = await storage.getAll();
+      expect(restored.length, equals(3));
+      expect(restored.keys, containsAll(['a', 'b', 'c']));
+    });
+  });
 }

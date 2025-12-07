@@ -692,4 +692,326 @@ void main() {
       await txn.rollback();
     });
   });
+
+  group('Isolation Level Behavior', () {
+    late MemoryStorage<TestEntity> storage;
+
+    setUp(() async {
+      storage = MemoryStorage<TestEntity>(name: 'isolation_test');
+      await storage.open();
+    });
+
+    tearDown(() async {
+      if (storage.isOpen) {
+        await storage.close();
+      }
+    });
+
+    group('readCommitted', () {
+      test('should read current storage state', () async {
+        // Insert initial data
+        await storage.insert('entity-1', {'name': 'Original', 'value': 1});
+
+        // Start transaction with readCommitted
+        final txn = await Transaction.create(
+          storage,
+          isolationLevel: IsolationLevel.readCommitted,
+        );
+
+        // Read should see current storage state
+        final data = await txn.get('entity-1');
+        expect(data, isNotNull);
+        expect(data!['name'], equals('Original'));
+
+        // Modify storage directly (simulating another transaction commit)
+        await storage.update('entity-1', {'name': 'Modified', 'value': 2});
+
+        // Read should see the new value
+        final newData = await txn.get('entity-1');
+        expect(newData!['name'], equals('Modified'));
+
+        await txn.rollback();
+      });
+    });
+
+    group('repeatableRead', () {
+      test('should read from snapshot, not seeing external changes', () async {
+        // Insert initial data
+        await storage.insert('entity-1', {'name': 'Original', 'value': 1});
+
+        // Start transaction with repeatableRead
+        final txn = await Transaction.create(
+          storage,
+          isolationLevel: IsolationLevel.repeatableRead,
+        );
+
+        // Read should see snapshot state
+        final data = await txn.get('entity-1');
+        expect(data, isNotNull);
+        expect(data!['name'], equals('Original'));
+
+        // Modify storage directly (simulating another transaction commit)
+        await storage.update('entity-1', {'name': 'Modified', 'value': 2});
+
+        // Read should still see the original value from snapshot
+        final snapshotData = await txn.get('entity-1');
+        expect(snapshotData!['name'], equals('Original'));
+        expect(snapshotData['value'], equals(1));
+
+        await txn.rollback();
+      });
+
+      test('should see pending operations from this transaction', () async {
+        // Insert initial data
+        await storage.insert('entity-1', {'name': 'Original', 'value': 1});
+
+        // Start transaction with repeatableRead
+        final txn = await Transaction.create(
+          storage,
+          isolationLevel: IsolationLevel.repeatableRead,
+        );
+
+        // Queue an update in the transaction
+        txn.update('entity-1', {'name': 'Updated', 'value': 10});
+
+        // Read should see the pending update
+        final data = await txn.get('entity-1');
+        expect(data!['name'], equals('Updated'));
+        expect(data['value'], equals(10));
+
+        await txn.rollback();
+      });
+
+      test('should see pending inserts from this transaction', () async {
+        final txn = await Transaction.create(
+          storage,
+          isolationLevel: IsolationLevel.repeatableRead,
+        );
+
+        // Queue an insert
+        txn.insert('new-entity', {'name': 'New', 'value': 42});
+
+        // Read should see the pending insert
+        final data = await txn.get('new-entity');
+        expect(data, isNotNull);
+        expect(data!['name'], equals('New'));
+
+        // Exists should also work
+        final exists = await txn.exists('new-entity');
+        expect(exists, isTrue);
+
+        await txn.rollback();
+      });
+
+      test('should not see deleted entities from this transaction', () async {
+        await storage.insert('entity-1', {'name': 'ToDelete', 'value': 1});
+
+        final txn = await Transaction.create(
+          storage,
+          isolationLevel: IsolationLevel.repeatableRead,
+        );
+
+        // Queue a delete
+        txn.delete('entity-1');
+
+        // Read should return null for deleted entity
+        final data = await txn.get('entity-1');
+        expect(data, isNull);
+
+        // Exists should return false
+        final exists = await txn.exists('entity-1');
+        expect(exists, isFalse);
+
+        await txn.rollback();
+      });
+
+      test('getAll should return snapshot with pending operations', () async {
+        await storage.insert('entity-1', {'name': 'One', 'value': 1});
+        await storage.insert('entity-2', {'name': 'Two', 'value': 2});
+
+        final txn = await Transaction.create(
+          storage,
+          isolationLevel: IsolationLevel.repeatableRead,
+        );
+
+        // Queue various operations
+        txn.update('entity-1', {'name': 'OneUpdated', 'value': 10});
+        txn.delete('entity-2');
+        txn.insert('entity-3', {'name': 'Three', 'value': 3});
+
+        // Modify storage directly (should not be visible)
+        await storage.insert('entity-4', {'name': 'Four', 'value': 4});
+
+        final all = await txn.getAll();
+
+        // Should see updated entity-1
+        expect(all['entity-1']?['name'], equals('OneUpdated'));
+        // Should NOT see deleted entity-2
+        expect(all.containsKey('entity-2'), isFalse);
+        // Should see inserted entity-3
+        expect(all['entity-3']?['name'], equals('Three'));
+        // Should NOT see entity-4 (added after snapshot)
+        expect(all.containsKey('entity-4'), isFalse);
+
+        await txn.rollback();
+      });
+    });
+
+    group('serializable', () {
+      test('should detect conflict when entity was modified', () async {
+        await storage.insert('entity-1', {'name': 'Original', 'value': 1});
+
+        final txn = await Transaction.create(
+          storage,
+          isolationLevel: IsolationLevel.serializable,
+        );
+
+        // Read the entity (adds to read set)
+        final data = await txn.get('entity-1');
+        expect(data!['name'], equals('Original'));
+
+        // Modify storage directly (simulating another transaction commit)
+        await storage.update('entity-1', {
+          'name': 'ConflictingUpdate',
+          'value': 99,
+        });
+
+        // Queue an update
+        txn.update('entity-1', {'name': 'OurUpdate', 'value': 10});
+
+        // Commit should fail with conflict exception
+        expect(
+          () => txn.commit(),
+          throwsA(isA<TransactionConflictException>()),
+        );
+      });
+
+      test('should detect conflict when entity was deleted', () async {
+        await storage.insert('entity-1', {'name': 'ToBeDeleted', 'value': 1});
+
+        final txn = await Transaction.create(
+          storage,
+          isolationLevel: IsolationLevel.serializable,
+        );
+
+        // Read the entity (adds to read set)
+        final data = await txn.get('entity-1');
+        expect(data, isNotNull);
+
+        // Delete from storage directly
+        await storage.delete('entity-1');
+
+        // Queue any operation
+        txn.insert('entity-2', {'name': 'New', 'value': 2});
+
+        // Commit should fail because entity-1 was in read set and changed
+        expect(
+          () => txn.commit(),
+          throwsA(isA<TransactionConflictException>()),
+        );
+      });
+
+      test('should detect conflict when entity was inserted', () async {
+        final txn = await Transaction.create(
+          storage,
+          isolationLevel: IsolationLevel.serializable,
+        );
+
+        // Read non-existent entity (adds to read set)
+        final data = await txn.get('entity-1');
+        expect(data, isNull);
+
+        // Insert into storage directly (simulating another transaction)
+        await storage.insert('entity-1', {'name': 'Inserted', 'value': 1});
+
+        // Queue an operation
+        txn.insert('entity-2', {'name': 'Ours', 'value': 2});
+
+        // Commit should fail because entity-1 now exists
+        expect(
+          () => txn.commit(),
+          throwsA(isA<TransactionConflictException>()),
+        );
+      });
+
+      test('should commit successfully when no conflicts', () async {
+        await storage.insert('entity-1', {'name': 'Original', 'value': 1});
+        await storage.insert('entity-2', {'name': 'Other', 'value': 2});
+
+        final txn = await Transaction.create(
+          storage,
+          isolationLevel: IsolationLevel.serializable,
+        );
+
+        // Read entity-1
+        final data = await txn.get('entity-1');
+        expect(data, isNotNull);
+
+        // Modify entity-2 directly (not in our read set)
+        await storage.update('entity-2', {'name': 'Modified', 'value': 99});
+
+        // Queue update on entity-1
+        txn.update('entity-1', {'name': 'Updated', 'value': 10});
+
+        // Should NOT fail because entity-1 wasn't modified externally
+        // However, we need to undo the external change for the test
+        await storage.update('entity-1', {'name': 'Original', 'value': 1});
+
+        // Commit should succeed
+        await txn.commit();
+
+        // Verify the update was applied
+        final updated = await storage.get('entity-1');
+        expect(updated!['name'], equals('Updated'));
+      });
+
+      test('should not conflict if no reads were made', () async {
+        await storage.insert('entity-1', {'name': 'Original', 'value': 1});
+
+        final txn = await Transaction.create(
+          storage,
+          isolationLevel: IsolationLevel.serializable,
+        );
+
+        // Modify storage directly
+        await storage.update('entity-1', {'name': 'Modified', 'value': 99});
+
+        // Queue insert without reading anything
+        txn.insert('entity-2', {'name': 'New', 'value': 2});
+
+        // Commit should succeed (empty read set means no conflicts possible)
+        await txn.commit();
+
+        expect(await storage.exists('entity-2'), isTrue);
+      });
+
+      test('conflict exception should contain entity IDs', () async {
+        await storage.insert('entity-1', {'name': 'One', 'value': 1});
+        await storage.insert('entity-2', {'name': 'Two', 'value': 2});
+
+        final txn = await Transaction.create(
+          storage,
+          isolationLevel: IsolationLevel.serializable,
+        );
+
+        // Read both entities
+        await txn.get('entity-1');
+        await txn.get('entity-2');
+
+        // Modify both externally
+        await storage.update('entity-1', {'name': 'Modified1', 'value': 10});
+        await storage.update('entity-2', {'name': 'Modified2', 'value': 20});
+
+        // Queue any operation
+        txn.insert('entity-3', {'name': 'New', 'value': 3});
+
+        try {
+          await txn.commit();
+          fail('Expected TransactionConflictException');
+        } on TransactionConflictException catch (e) {
+          expect(e.conflictingIds, containsAll(['entity-1', 'entity-2']));
+        }
+      });
+    });
+  });
 }

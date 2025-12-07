@@ -77,6 +77,11 @@ abstract interface class IQuery {
       'IsNullQuery' => IsNullQuery._fromMap(map),
       'IsNotNullQuery' => IsNotNullQuery._fromMap(map),
       'AllQuery' => const AllQuery(),
+      'FullTextQuery' => FullTextQuery._fromMap(map),
+      'FullTextPhraseQuery' => FullTextPhraseQuery._fromMap(map),
+      'FullTextAnyQuery' => FullTextAnyQuery._fromMap(map),
+      'FullTextPrefixQuery' => FullTextPrefixQuery._fromMap(map),
+      'FullTextProximityQuery' => FullTextProximityQuery._fromMap(map),
       _ => throw ArgumentError.value(type, 'type', 'Unknown query type'),
     };
   }
@@ -957,4 +962,405 @@ int _compareValues(dynamic a, dynamic b) {
 
   // Cannot compare, treat as equal
   return 0;
+}
+
+// =============================================================================
+// Full-Text Search Query Types
+// =============================================================================
+
+/// Query for full-text search matching all terms (AND semantics).
+///
+/// This query tokenizes the search text and matches documents containing
+/// all the search terms. Designed to be used with [FullTextIndex].
+///
+/// ## Example
+///
+/// ```dart
+/// final query = FullTextQuery('content', 'quick brown fox');
+/// // Matches documents where 'content' contains all: quick, brown, fox
+/// ```
+@immutable
+class FullTextQuery implements IQuery {
+  /// The field name to search in.
+  final String field;
+
+  /// The search text (will be tokenized).
+  final String searchText;
+
+  /// Whether matching should be case-sensitive.
+  final bool caseSensitive;
+
+  /// Creates a [FullTextQuery] for the given [field] and [searchText].
+  const FullTextQuery(
+    this.field,
+    this.searchText, {
+    this.caseSensitive = false,
+  });
+
+  factory FullTextQuery._fromMap(Map<String, dynamic> map) {
+    return FullTextQuery(
+      map['field'] as String,
+      map['searchText'] as String,
+      caseSensitive: map['caseSensitive'] as bool? ?? false,
+    );
+  }
+
+  @override
+  bool matches(Map<String, dynamic> data) {
+    final fieldValue = _getNestedField(data, field);
+    if (fieldValue is! String) return false;
+
+    // Tokenize both field value and search text
+    final normalizedField = caseSensitive
+        ? fieldValue
+        : fieldValue.toLowerCase();
+    final normalizedSearch = caseSensitive
+        ? searchText
+        : searchText.toLowerCase();
+
+    final searchTerms = _tokenize(normalizedSearch);
+    if (searchTerms.isEmpty) return true;
+
+    // Check if all search terms appear in the field
+    for (final term in searchTerms) {
+      if (!normalizedField.contains(term)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /// Simple tokenization by whitespace and punctuation.
+  static List<String> _tokenize(String text) {
+    return text
+        .split(RegExp(r'[\s\p{P}]+', unicode: true))
+        .where((t) => t.length >= 2)
+        .toList();
+  }
+
+  @override
+  Map<String, dynamic> toMap() => {
+    'type': 'FullTextQuery',
+    'field': field,
+    'searchText': searchText,
+    'caseSensitive': caseSensitive,
+  };
+}
+
+/// Query for full-text phrase search (exact sequence of words).
+///
+/// Matches documents containing the exact phrase (words in sequence).
+/// Designed to be used with [FullTextIndex] with position tracking enabled.
+///
+/// ## Example
+///
+/// ```dart
+/// final query = FullTextPhraseQuery('content', 'quick brown');
+/// // Matches "the quick brown fox" but not "brown quick fox"
+/// ```
+@immutable
+class FullTextPhraseQuery implements IQuery {
+  /// The field name to search in.
+  final String field;
+
+  /// The exact phrase to search for.
+  final String phrase;
+
+  /// Whether matching should be case-sensitive.
+  final bool caseSensitive;
+
+  /// Creates a [FullTextPhraseQuery] for the given [field] and [phrase].
+  const FullTextPhraseQuery(
+    this.field,
+    this.phrase, {
+    this.caseSensitive = false,
+  });
+
+  factory FullTextPhraseQuery._fromMap(Map<String, dynamic> map) {
+    return FullTextPhraseQuery(
+      map['field'] as String,
+      map['phrase'] as String,
+      caseSensitive: map['caseSensitive'] as bool? ?? false,
+    );
+  }
+
+  @override
+  bool matches(Map<String, dynamic> data) {
+    final fieldValue = _getNestedField(data, field);
+    if (fieldValue is! String) return false;
+
+    final normalizedField = caseSensitive
+        ? fieldValue
+        : fieldValue.toLowerCase();
+    final normalizedPhrase = caseSensitive ? phrase : phrase.toLowerCase();
+
+    return normalizedField.contains(normalizedPhrase);
+  }
+
+  @override
+  Map<String, dynamic> toMap() => {
+    'type': 'FullTextPhraseQuery',
+    'field': field,
+    'phrase': phrase,
+    'caseSensitive': caseSensitive,
+  };
+}
+
+/// Query for full-text search matching any term (OR semantics).
+///
+/// Matches documents containing at least one of the search terms.
+/// Designed to be used with [FullTextIndex].
+///
+/// ## Example
+///
+/// ```dart
+/// final query = FullTextAnyQuery('content', ['quick', 'slow']);
+/// // Matches documents containing 'quick' OR 'slow'
+/// ```
+@immutable
+class FullTextAnyQuery implements IQuery {
+  /// The field name to search in.
+  final String field;
+
+  /// The list of terms to search for.
+  final List<String> terms;
+
+  /// Whether matching should be case-sensitive.
+  final bool caseSensitive;
+
+  /// Creates a [FullTextAnyQuery] for the given [field] and [terms].
+  const FullTextAnyQuery(this.field, this.terms, {this.caseSensitive = false});
+
+  factory FullTextAnyQuery._fromMap(Map<String, dynamic> map) {
+    return FullTextAnyQuery(
+      map['field'] as String,
+      (map['terms'] as List).cast<String>(),
+      caseSensitive: map['caseSensitive'] as bool? ?? false,
+    );
+  }
+
+  @override
+  bool matches(Map<String, dynamic> data) {
+    final fieldValue = _getNestedField(data, field);
+    if (fieldValue is! String) return false;
+
+    if (terms.isEmpty) return true;
+
+    final normalizedField = caseSensitive
+        ? fieldValue
+        : fieldValue.toLowerCase();
+
+    for (final term in terms) {
+      final normalizedTerm = caseSensitive ? term : term.toLowerCase();
+      if (normalizedField.contains(normalizedTerm)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  @override
+  Map<String, dynamic> toMap() => {
+    'type': 'FullTextAnyQuery',
+    'field': field,
+    'terms': terms,
+    'caseSensitive': caseSensitive,
+  };
+}
+
+/// Query for full-text prefix search.
+///
+/// Matches documents containing terms starting with the given prefix.
+/// Designed to be used with [FullTextIndex].
+///
+/// ## Example
+///
+/// ```dart
+/// final query = FullTextPrefixQuery('content', 'qui');
+/// // Matches "quick", "quiet", "quintessential"
+/// ```
+@immutable
+class FullTextPrefixQuery implements IQuery {
+  /// The field name to search in.
+  final String field;
+
+  /// The prefix to search for.
+  final String prefix;
+
+  /// Whether matching should be case-sensitive.
+  final bool caseSensitive;
+
+  /// Creates a [FullTextPrefixQuery] for the given [field] and [prefix].
+  const FullTextPrefixQuery(
+    this.field,
+    this.prefix, {
+    this.caseSensitive = false,
+  });
+
+  factory FullTextPrefixQuery._fromMap(Map<String, dynamic> map) {
+    return FullTextPrefixQuery(
+      map['field'] as String,
+      map['prefix'] as String,
+      caseSensitive: map['caseSensitive'] as bool? ?? false,
+    );
+  }
+
+  @override
+  bool matches(Map<String, dynamic> data) {
+    final fieldValue = _getNestedField(data, field);
+    if (fieldValue is! String) return false;
+
+    final normalizedField = caseSensitive
+        ? fieldValue
+        : fieldValue.toLowerCase();
+    final normalizedPrefix = caseSensitive ? prefix : prefix.toLowerCase();
+
+    // Tokenize the field and check if any token starts with prefix
+    final tokens = normalizedField.split(RegExp(r'[\s\p{P}]+', unicode: true));
+    for (final token in tokens) {
+      if (token.startsWith(normalizedPrefix)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  @override
+  Map<String, dynamic> toMap() => {
+    'type': 'FullTextPrefixQuery',
+    'field': field,
+    'prefix': prefix,
+    'caseSensitive': caseSensitive,
+  };
+}
+
+/// Query for full-text proximity search.
+///
+/// Matches documents where specified terms appear within a certain
+/// distance of each other. Designed to be used with [FullTextIndex]
+/// with position tracking enabled.
+///
+/// ## Example
+///
+/// ```dart
+/// final query = FullTextProximityQuery('content', ['quick', 'fox'], 3);
+/// // Matches "quick brown fox" (distance 2) but not "quick lazy brown dog fox"
+/// ```
+@immutable
+class FullTextProximityQuery implements IQuery {
+  /// The field name to search in.
+  final String field;
+
+  /// The terms that should appear near each other.
+  final List<String> terms;
+
+  /// Maximum number of words between terms.
+  final int maxDistance;
+
+  /// Whether matching should be case-sensitive.
+  final bool caseSensitive;
+
+  /// Creates a [FullTextProximityQuery].
+  const FullTextProximityQuery(
+    this.field,
+    this.terms,
+    this.maxDistance, {
+    this.caseSensitive = false,
+  });
+
+  factory FullTextProximityQuery._fromMap(Map<String, dynamic> map) {
+    return FullTextProximityQuery(
+      map['field'] as String,
+      (map['terms'] as List).cast<String>(),
+      map['maxDistance'] as int,
+      caseSensitive: map['caseSensitive'] as bool? ?? false,
+    );
+  }
+
+  @override
+  bool matches(Map<String, dynamic> data) {
+    final fieldValue = _getNestedField(data, field);
+    if (fieldValue is! String) return false;
+
+    if (terms.length < 2) {
+      // Need at least 2 terms for proximity
+      return terms.isEmpty ||
+          fieldValue.toLowerCase().contains(terms.first.toLowerCase());
+    }
+
+    final normalizedField = caseSensitive
+        ? fieldValue
+        : fieldValue.toLowerCase();
+
+    // Tokenize the field
+    final tokens = normalizedField
+        .split(RegExp(r'[\s\p{P}]+', unicode: true))
+        .toList();
+
+    // Find positions of each term
+    final positions = <int, List<int>>{};
+    for (var i = 0; i < terms.length; i++) {
+      final normalizedTerm = caseSensitive ? terms[i] : terms[i].toLowerCase();
+      positions[i] = [];
+      for (var j = 0; j < tokens.length; j++) {
+        if (tokens[j] == normalizedTerm) {
+          positions[i]!.add(j);
+        }
+      }
+      // If any term is not found, no match
+      if (positions[i]!.isEmpty) return false;
+    }
+
+    // Check if all terms can appear within maxDistance
+    return _checkProximity(positions, maxDistance);
+  }
+
+  /// Checks if all terms can appear within the proximity window.
+  bool _checkProximity(Map<int, List<int>> positions, int maxDist) {
+    // Use sliding window to check proximity
+    final pointers = List<int>.filled(positions.length, 0);
+
+    while (true) {
+      // Get current positions for each term
+      int minPos = positions[0]![pointers[0]];
+      int maxPos = minPos;
+      int minIdx = 0;
+
+      for (var i = 1; i < positions.length; i++) {
+        final pos = positions[i]![pointers[i]];
+        if (pos < minPos) {
+          minPos = pos;
+          minIdx = i;
+        }
+        if (pos > maxPos) {
+          maxPos = pos;
+        }
+      }
+
+      // Check if current window satisfies proximity
+      if (maxPos - minPos <= maxDist) {
+        return true;
+      }
+
+      // Advance the pointer at minimum position
+      pointers[minIdx]++;
+      if (pointers[minIdx] >= positions[minIdx]!.length) {
+        break;
+      }
+    }
+
+    return false;
+  }
+
+  @override
+  Map<String, dynamic> toMap() => {
+    'type': 'FullTextProximityQuery',
+    'field': field,
+    'terms': terms,
+    'maxDistance': maxDistance,
+    'caseSensitive': caseSensitive,
+  };
 }

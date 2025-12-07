@@ -1,6 +1,6 @@
 /// Storage Implementation Tests.
 ///
-/// Comprehensive tests for FileStorage and PagedStorage implementations.
+/// Comprehensive tests for FileStorage, PagedStorage, and BinarySerializer.
 library;
 
 import 'dart:io';
@@ -12,6 +12,7 @@ import 'package:docdb/src/exceptions/storage_exceptions.dart';
 import 'package:docdb/src/storage/file_storage.dart';
 import 'package:docdb/src/storage/memory_storage.dart';
 import 'package:docdb/src/storage/paged_storage.dart';
+import 'package:docdb/src/storage/serialization.dart';
 import 'package:docdb/src/storage/storage.dart';
 
 /// Test entity implementation.
@@ -1016,6 +1017,247 @@ void main() {
         expect(record.toString(), contains('test-id'));
         expect(record.toString(), contains('key'));
       });
+    });
+  });
+
+  group('BinarySerializer - Compression', () {
+    test('should serialize and deserialize without compression', () async {
+      final serializer = BinarySerializer();
+
+      final data = {
+        'name': 'Test Product',
+        'price': 29.99,
+        'tags': ['electronics', 'sale'],
+      };
+
+      final bytes = await serializer.serialize(data);
+      final restored = await serializer.deserialize(bytes);
+
+      expect(restored['name'], equals('Test Product'));
+      expect(restored['price'], equals(29.99));
+      expect(restored['tags'], equals(['electronics', 'sale']));
+    });
+
+    test('should serialize and deserialize with compression', () async {
+      final serializer = BinarySerializer(
+        config: SerializationConfig.compressed(level: 6),
+      );
+
+      final data = {
+        'name': 'Test Product with a very long name for compression testing',
+        'description': 'A long description that repeats many times: ' * 20,
+        'price': 29.99,
+        'tags': List.generate(50, (i) => 'tag$i'),
+      };
+
+      final bytes = await serializer.serialize(data);
+      final restored = await serializer.deserialize(bytes);
+
+      expect(restored['name'], equals(data['name']));
+      expect(restored['description'], equals(data['description']));
+      expect(restored['price'], equals(29.99));
+      expect(restored['tags'], equals(data['tags']));
+    });
+
+    test(
+      'should produce smaller output with compression for large data',
+      () async {
+        final uncompressedSerializer = BinarySerializer();
+        final compressedSerializer = BinarySerializer(
+          config: SerializationConfig.compressed(level: 9),
+        );
+
+        // Data that compresses well (repetitive content)
+        final data = {
+          'content': 'The quick brown fox jumps over the lazy dog. ' * 100,
+          'metadata': {
+            for (var i = 0; i < 50; i++)
+              'field$i': 'value$i with repeated text',
+          },
+        };
+
+        final uncompressed = await uncompressedSerializer.serialize(data);
+        final compressed = await compressedSerializer.serialize(data);
+
+        expect(
+          compressed.length,
+          lessThan(uncompressed.length),
+          reason: 'Compressed data should be smaller than uncompressed',
+        );
+
+        // Both should deserialize correctly
+        final restoredUncompressed = await uncompressedSerializer.deserialize(
+          uncompressed,
+        );
+        final restoredCompressed = await compressedSerializer.deserialize(
+          compressed,
+        );
+
+        expect(restoredUncompressed['content'], equals(data['content']));
+        expect(restoredCompressed['content'], equals(data['content']));
+      },
+    );
+
+    test('should skip compression for small data', () async {
+      final serializer = BinarySerializer(
+        config: SerializationConfig.compressed(),
+      );
+
+      // Small data below threshold (64 bytes)
+      final data = {'x': 1, 'y': 2};
+
+      final bytes = await serializer.serialize(data);
+
+      // Check that compressed flag is not set (byte at position 3)
+      expect(
+        bytes[3] & 0x02,
+        equals(0),
+        reason: 'Compressed flag should not be set for small data',
+      );
+    });
+
+    test(
+      'should deserialize uncompressed data with compressed serializer',
+      () async {
+        final uncompressedSerializer = BinarySerializer();
+        final compressedSerializer = BinarySerializer(
+          config: SerializationConfig.compressed(),
+        );
+
+        final data = {'key': 'value', 'count': 42};
+
+        // Serialize without compression
+        final bytes = await uncompressedSerializer.serialize(data);
+
+        // Deserialize with compressed serializer (should auto-detect)
+        final restored = await compressedSerializer.deserialize(bytes);
+
+        expect(restored['key'], equals('value'));
+        expect(restored['count'], equals(42));
+      },
+    );
+
+    test(
+      'should deserialize compressed data with uncompressed serializer',
+      () async {
+        final compressedSerializer = BinarySerializer(
+          config: SerializationConfig.compressed(),
+        );
+        final uncompressedSerializer = BinarySerializer();
+
+        // Large data that will be compressed
+        final data = {'content': 'Repeated text for compression. ' * 50};
+
+        // Serialize with compression
+        final bytes = await compressedSerializer.serialize(data);
+
+        // Deserialize with uncompressed serializer (should auto-detect)
+        final restored = await uncompressedSerializer.deserialize(bytes);
+
+        expect(restored['content'], equals(data['content']));
+      },
+    );
+
+    test('should handle various compression levels', () async {
+      final data = {'content': 'Test data for compression levels. ' * 100};
+
+      for (var level = 1; level <= 9; level++) {
+        final serializer = BinarySerializer(
+          config: SerializationConfig.compressed(level: level),
+        );
+
+        final bytes = await serializer.serialize(data);
+        final restored = await serializer.deserialize(bytes);
+
+        expect(restored['content'], equals(data['content']));
+      }
+    });
+
+    test('should support copyWith for SerializationConfig', () {
+      const original = SerializationConfig(
+        compressionEnabled: true,
+        compressionLevel: 6,
+      );
+
+      final modified = original.copyWith(compressionLevel: 9);
+
+      expect(original.compressionEnabled, isTrue);
+      expect(original.compressionLevel, equals(6));
+      expect(modified.compressionEnabled, isTrue);
+      expect(modified.compressionLevel, equals(9));
+    });
+
+    test('compressionEnabled getter should reflect config', () {
+      final serializer1 = BinarySerializer();
+      final serializer2 = BinarySerializer(
+        config: SerializationConfig.compressed(),
+      );
+
+      expect(serializer1.compressionEnabled, isFalse);
+      expect(serializer2.compressionEnabled, isTrue);
+    });
+
+    test('should handle empty data with compression', () async {
+      final serializer = BinarySerializer(
+        config: SerializationConfig.compressed(),
+      );
+
+      final data = <String, dynamic>{};
+
+      final bytes = await serializer.serialize(data);
+      final restored = await serializer.deserialize(bytes);
+
+      expect(restored, isEmpty);
+    });
+
+    test('should handle nested maps with compression', () async {
+      final serializer = BinarySerializer(
+        config: SerializationConfig.compressed(),
+      );
+
+      final data = {
+        'level1': {
+          'level2': {
+            'level3': {
+              'value':
+                  'deeply nested content that benefits from compression ' * 10,
+            },
+          },
+        },
+      };
+
+      final bytes = await serializer.serialize(data);
+      final restored = await serializer.deserialize(bytes);
+
+      expect(
+        (((restored['level1'] as Map)['level2'] as Map)['level3']
+            as Map)['value'],
+        equals(data['level1']!['level2']!['level3']!['value']),
+      );
+    });
+
+    test('should handle DateTime with compression', () async {
+      final serializer = BinarySerializer(
+        config: SerializationConfig.compressed(),
+      );
+
+      // CBOR DateTime serialization uses second precision
+      final now = DateTime.now();
+      final data = {
+        'timestamp': now,
+        'padding': 'data to make it compressible ' * 10,
+      };
+
+      final bytes = await serializer.serialize(data);
+      final restored = await serializer.deserialize(bytes);
+
+      // Compare at second precision since CBOR DateTime uses epoch seconds
+      final restoredTimestamp = restored['timestamp'] as DateTime;
+      expect(
+        restoredTimestamp.difference(now).inSeconds.abs(),
+        lessThanOrEqualTo(1),
+        reason: 'DateTime should be within 1 second of original',
+      );
     });
   });
 }

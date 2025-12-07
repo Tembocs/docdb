@@ -159,6 +159,10 @@ export 'backup_metadata.dart' show BackupMetadata, BackupType;
 export 'backup_result.dart' show BackupResult, BackupOperation;
 export 'storage_statistics.dart' show StorageStatistics, StorageStats;
 
+// Differential and Incremental snapshots
+export 'differential_snapshot.dart' show DifferentialSnapshot;
+export 'incremental_snapshot.dart' show IncrementalSnapshot;
+
 // Services
 export 'backup_service.dart' show BackupService, BackupConfig;
 export 'backup_manager.dart'

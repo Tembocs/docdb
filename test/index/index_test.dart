@@ -6,20 +6,24 @@ library;
 
 import 'package:test/test.dart';
 
+import 'package:docdb/src/exceptions/exceptions.dart';
 import 'package:docdb/src/index/index.dart';
+import 'package:docdb/src/query/query_types.dart';
 
 void main() {
   group('IIndex Interface', () {
     group('IndexType Enum', () {
-      test('should have btree and hash types', () {
+      test('should have btree, hash, and fulltext types', () {
         expect(IndexType.values, contains(IndexType.btree));
         expect(IndexType.values, contains(IndexType.hash));
-        expect(IndexType.values.length, equals(2));
+        expect(IndexType.values, contains(IndexType.fulltext));
+        expect(IndexType.values.length, equals(3));
       });
 
       test('should have correct string representations', () {
         expect(IndexType.btree.toString(), contains('btree'));
         expect(IndexType.hash.toString(), contains('hash'));
+        expect(IndexType.fulltext.toString(), contains('fulltext'));
       });
     });
   });
@@ -649,6 +653,515 @@ void main() {
 
       expect(btree.keyCount, equals(0));
       expect(hash.keyCount, equals(0));
+    });
+  });
+
+  // ===========================================================================
+  // FullTextIndex Tests
+  // ===========================================================================
+  group('FullTextIndex', () {
+    late FullTextIndex index;
+
+    setUp(() {
+      index = FullTextIndex('content');
+    });
+
+    group('Construction', () {
+      test('should create index with field name', () {
+        expect(index.field, equals('content'));
+        expect(index.termCount, equals(0));
+        expect(index.entryCount, equals(0));
+      });
+
+      test('should create index with custom config', () {
+        final customIndex = FullTextIndex(
+          'body',
+          config: const FullTextConfig(minTokenLength: 3, caseSensitive: true),
+        );
+        expect(customIndex.field, equals('body'));
+        expect(customIndex.config.minTokenLength, equals(3));
+        expect(customIndex.config.caseSensitive, isTrue);
+      });
+
+      test('should create index with no stop words config', () {
+        final noStopIndex = FullTextIndex(
+          'text',
+          config: const FullTextConfig.noStopWords(),
+        );
+        expect(noStopIndex.config.stopWords, isEmpty);
+      });
+    });
+
+    group('Insert Operations', () {
+      test('should insert and tokenize document', () {
+        index.insert('doc-1', {'content': 'The quick brown fox'});
+        expect(index.documentCount, equals(1));
+        expect(index.termCount, greaterThan(0));
+      });
+
+      test('should not insert null content', () {
+        index.insert('doc-1', {'other': 'value'});
+        expect(index.documentCount, equals(0));
+      });
+
+      test('should filter stop words', () {
+        index.insert('doc-1', {'content': 'the and or is'});
+        // All stop words, nothing should be indexed
+        expect(index.termCount, equals(0));
+      });
+
+      test('should filter short tokens', () {
+        index.insert('doc-1', {'content': 'a b c de'});
+        // Only 'de' is >= 2 chars
+        expect(index.termCount, equals(1));
+      });
+
+      test('should track term positions', () {
+        index.insert('doc-1', {'content': 'quick brown quick'});
+        // 'quick' appears at positions 0 and 2
+        expect(index.documentCount, equals(1));
+      });
+
+      test('should handle multiple documents', () {
+        index.insert('doc-1', {'content': 'The quick brown fox'});
+        index.insert('doc-2', {'content': 'A lazy brown dog'});
+        index.insert('doc-3', {'content': 'Fast red rabbit'});
+        expect(index.documentCount, equals(3));
+      });
+    });
+
+    group('Remove Operations', () {
+      test('should remove document from index', () {
+        index.insert('doc-1', {'content': 'quick brown fox'});
+        expect(index.documentCount, equals(1));
+
+        index.remove('doc-1', {'content': 'quick brown fox'});
+        expect(index.documentCount, equals(0));
+      });
+
+      test('should remove terms when document is removed', () {
+        index.insert('doc-1', {'content': 'unique term here'});
+        expect(index.termCount, equals(3));
+
+        index.remove('doc-1', {'content': 'unique term here'});
+        expect(index.termCount, equals(0));
+      });
+
+      test('should not remove terms used by other documents', () {
+        index.insert('doc-1', {'content': 'shared term'});
+        index.insert('doc-2', {'content': 'shared word'});
+
+        index.remove('doc-1', {'content': 'shared term'});
+        expect(index.documentCount, equals(1));
+        expect(index.getDocumentFrequency('shared'), equals(1));
+      });
+    });
+
+    group('Basic Search', () {
+      setUp(() {
+        index.insert('doc-1', {'content': 'The quick brown fox jumps'});
+        index.insert('doc-2', {'content': 'A lazy brown dog sleeps'});
+        index.insert('doc-3', {'content': 'Fast red rabbit runs'});
+      });
+
+      test('should find single term', () {
+        final results = index.search('brown');
+        expect(results, containsAll(['doc-1', 'doc-2']));
+        expect(results.length, equals(2));
+      });
+
+      test('should find documents with all terms (AND)', () {
+        final results = index.search('brown fox');
+        expect(results, equals(['doc-1']));
+      });
+
+      test('should be case-insensitive by default', () {
+        final results = index.search('BROWN');
+        expect(results, containsAll(['doc-1', 'doc-2']));
+      });
+
+      test('should return empty for non-existent term', () {
+        final results = index.search('nonexistent');
+        expect(results, isEmpty);
+      });
+
+      test('should return empty for null search', () {
+        final results = index.search(null);
+        expect(results, isEmpty);
+      });
+    });
+
+    group('searchAll (AND semantics)', () {
+      setUp(() {
+        index.insert('doc-1', {'content': 'quick brown fox'});
+        index.insert('doc-2', {'content': 'lazy brown dog'});
+        index.insert('doc-3', {'content': 'quick red rabbit'});
+      });
+
+      test('should find documents containing all terms', () {
+        final results = index.searchAll(['quick', 'brown']);
+        expect(results, equals(['doc-1']));
+      });
+
+      test('should return empty if any term is missing', () {
+        final results = index.searchAll(['quick', 'zebra']);
+        expect(results, isEmpty);
+      });
+
+      test('should handle empty terms list', () {
+        final results = index.searchAll([]);
+        expect(results, isEmpty);
+      });
+    });
+
+    group('searchAny (OR semantics)', () {
+      setUp(() {
+        index.insert('doc-1', {'content': 'quick brown fox'});
+        index.insert('doc-2', {'content': 'lazy brown dog'});
+        index.insert('doc-3', {'content': 'fast red rabbit'});
+      });
+
+      test('should find documents containing any term', () {
+        final results = index.searchAny(['quick', 'fast']);
+        expect(results, containsAll(['doc-1', 'doc-3']));
+        expect(results.length, equals(2));
+      });
+
+      test('should return empty if no terms match', () {
+        final results = index.searchAny(['zebra', 'elephant']);
+        expect(results, isEmpty);
+      });
+    });
+
+    group('Phrase Search', () {
+      setUp(() {
+        index.insert('doc-1', {'content': 'the quick brown fox'});
+        index.insert('doc-2', {'content': 'brown quick fox'});
+        index.insert('doc-3', {'content': 'quick red fox'});
+      });
+
+      test('should find exact phrase', () {
+        final results = index.searchPhrase('quick brown');
+        expect(results, equals(['doc-1']));
+      });
+
+      test('should not match wrong order', () {
+        final results = index.searchPhrase('brown quick');
+        expect(results, equals(['doc-2']));
+      });
+
+      test('should find single word phrase', () {
+        final results = index.searchPhrase('quick');
+        expect(results.length, equals(3));
+      });
+
+      test('should return empty for non-matching phrase', () {
+        final results = index.searchPhrase('lazy dog');
+        expect(results, isEmpty);
+      });
+    });
+
+    group('Proximity Search', () {
+      setUp(() {
+        index.insert('doc-1', {'content': 'quick brown fox'});
+        index.insert('doc-2', {'content': 'quick lazy brown sleepy fox'});
+      });
+
+      test('should find terms within distance', () {
+        final results = index.searchProximity(['quick', 'fox'], 2);
+        expect(results, equals(['doc-1']));
+      });
+
+      test('should find terms within larger distance', () {
+        final results = index.searchProximity(['quick', 'fox'], 5);
+        expect(results, containsAll(['doc-1', 'doc-2']));
+      });
+
+      test('should not find terms beyond distance', () {
+        final results = index.searchProximity(['quick', 'fox'], 1);
+        expect(results, isEmpty);
+      });
+    });
+
+    group('Prefix Search', () {
+      setUp(() {
+        index.insert('doc-1', {'content': 'quicksand quickly quote'});
+        index.insert('doc-2', {'content': 'slow steady'});
+      });
+
+      test('should find terms with matching prefix', () {
+        final results = index.searchPrefix('qui');
+        expect(results, equals(['doc-1']));
+      });
+
+      test('should return empty for non-matching prefix', () {
+        final results = index.searchPrefix('xyz');
+        expect(results, isEmpty);
+      });
+
+      test('should handle empty prefix', () {
+        final results = index.searchPrefix('');
+        expect(results, isEmpty);
+      });
+    });
+
+    group('Ranked Search (TF-IDF)', () {
+      setUp(() {
+        // doc-1 has 'brown' once
+        index.insert('doc-1', {'content': 'quick brown fox'});
+        // doc-2 has 'brown' multiple times (higher TF)
+        index.insert('doc-2', {'content': 'brown brown brown dog'});
+        // doc-3 has different terms
+        index.insert('doc-3', {'content': 'red blue green'});
+      });
+
+      test('should return scored results', () {
+        final results = index.searchRanked('brown');
+        expect(results.length, equals(2));
+        expect(results.first.entityId, isIn(['doc-1', 'doc-2']));
+        expect(results.first.score, greaterThan(0));
+      });
+
+      test('should rank higher TF documents higher', () {
+        final results = index.searchRanked('brown');
+        // doc-2 has 'brown' 3 times, should have higher TF score
+        expect(results.first.entityId, equals('doc-2'));
+      });
+
+      test('should return empty for no matches', () {
+        final results = index.searchRanked('nonexistent');
+        expect(results, isEmpty);
+      });
+    });
+
+    group('Document Frequency', () {
+      setUp(() {
+        index.insert('doc-1', {'content': 'quick brown fox'});
+        index.insert('doc-2', {'content': 'lazy brown dog'});
+        index.insert('doc-3', {'content': 'fast red rabbit'});
+      });
+
+      test('should return correct document frequency', () {
+        expect(index.getDocumentFrequency('brown'), equals(2));
+        expect(index.getDocumentFrequency('quick'), equals(1));
+        expect(index.getDocumentFrequency('nonexistent'), equals(0));
+      });
+    });
+
+    group('Clear', () {
+      test('should clear all entries', () {
+        index.insert('doc-1', {'content': 'quick brown fox'});
+        index.insert('doc-2', {'content': 'lazy brown dog'});
+
+        index.clear();
+
+        expect(index.documentCount, equals(0));
+        expect(index.termCount, equals(0));
+      });
+    });
+
+    group('Serialization', () {
+      test('should export to map', () {
+        index.insert('doc-1', {'content': 'quick brown fox'});
+
+        final map = index.toMap();
+
+        expect(map.containsKey('inverted'), isTrue);
+        expect(map.containsKey('forward'), isTrue);
+        expect(map.containsKey('config'), isTrue);
+      });
+
+      test('should restore from map', () {
+        index.insert('doc-1', {'content': 'quick brown fox'});
+
+        final map = index.toMap();
+
+        final newIndex = FullTextIndex('content');
+        newIndex.restoreFromMap(map);
+
+        expect(newIndex.documentCount, equals(1));
+        expect(newIndex.search('quick'), equals(['doc-1']));
+      });
+    });
+
+    group('FullTextConfig', () {
+      test('case-sensitive config should respect case', () {
+        final csIndex = FullTextIndex(
+          'content',
+          config: const FullTextConfig(caseSensitive: true),
+        );
+
+        csIndex.insert('doc-1', {'content': 'Quick BROWN fox'});
+
+        expect(csIndex.search('Quick'), equals(['doc-1']));
+        expect(csIndex.search('quick'), isEmpty);
+      });
+
+      test('custom min token length should filter short tokens', () {
+        final longIndex = FullTextIndex(
+          'content',
+          config: const FullTextConfig(minTokenLength: 5),
+        );
+
+        longIndex.insert('doc-1', {'content': 'hi there friend'});
+
+        // 'hi' (2), 'there' (5), 'friend' (6)
+        expect(longIndex.termCount, equals(2));
+        expect(longIndex.search('there'), equals(['doc-1']));
+        expect(longIndex.search('hi'), isEmpty);
+      });
+    });
+  });
+
+  // ===========================================================================
+  // Full-Text Query Types Tests
+  // ===========================================================================
+  group('Full-Text Query Types', () {
+    group('FullTextQuery', () {
+      test('should match documents containing all terms', () {
+        final query = FullTextQuery('content', 'quick brown');
+        expect(query.matches({'content': 'The quick brown fox'}), isTrue);
+        expect(query.matches({'content': 'Only quick fox'}), isFalse);
+      });
+
+      test('should be case-insensitive by default', () {
+        final query = FullTextQuery('content', 'QUICK');
+        expect(query.matches({'content': 'quick fox'}), isTrue);
+      });
+
+      test('should serialize and deserialize', () {
+        final query = FullTextQuery('content', 'test search');
+        final map = query.toMap();
+        expect(map['type'], equals('FullTextQuery'));
+        expect(map['field'], equals('content'));
+        expect(map['searchText'], equals('test search'));
+      });
+    });
+
+    group('FullTextPhraseQuery', () {
+      test('should match exact phrase', () {
+        final query = FullTextPhraseQuery('content', 'quick brown');
+        expect(query.matches({'content': 'The quick brown fox'}), isTrue);
+        expect(query.matches({'content': 'The brown quick fox'}), isFalse);
+      });
+
+      test('should serialize correctly', () {
+        final query = FullTextPhraseQuery('content', 'exact phrase');
+        final map = query.toMap();
+        expect(map['type'], equals('FullTextPhraseQuery'));
+        expect(map['phrase'], equals('exact phrase'));
+      });
+    });
+
+    group('FullTextAnyQuery', () {
+      test('should match documents with any term', () {
+        final query = FullTextAnyQuery('content', ['quick', 'slow']);
+        expect(query.matches({'content': 'quick fox'}), isTrue);
+        expect(query.matches({'content': 'slow dog'}), isTrue);
+        expect(query.matches({'content': 'fast rabbit'}), isFalse);
+      });
+
+      test('should serialize correctly', () {
+        final query = FullTextAnyQuery('content', ['a', 'b']);
+        final map = query.toMap();
+        expect(map['type'], equals('FullTextAnyQuery'));
+        expect(map['terms'], equals(['a', 'b']));
+      });
+    });
+
+    group('FullTextPrefixQuery', () {
+      test('should match terms with prefix', () {
+        final query = FullTextPrefixQuery('content', 'qui');
+        expect(query.matches({'content': 'quick fox'}), isTrue);
+        expect(query.matches({'content': 'slow dog'}), isFalse);
+      });
+    });
+
+    group('FullTextProximityQuery', () {
+      test('should match terms within distance', () {
+        final query = FullTextProximityQuery('content', ['quick', 'fox'], 2);
+        expect(query.matches({'content': 'quick brown fox'}), isTrue);
+        expect(query.matches({'content': 'quick a b c d e fox'}), isFalse);
+      });
+    });
+  });
+
+  // ===========================================================================
+  // IndexManager Full-Text Support Tests
+  // ===========================================================================
+  group('IndexManager FullText Support', () {
+    late IndexManager manager;
+
+    setUp(() {
+      manager = IndexManager();
+    });
+
+    test('should create fulltext index', () {
+      manager.createIndex('content', IndexType.fulltext);
+      expect(manager.hasIndex('content'), isTrue);
+      expect(manager.hasIndexOfType('content', IndexType.fulltext), isTrue);
+    });
+
+    test('should return correct index type', () {
+      manager.createIndex('content', IndexType.fulltext);
+      expect(manager.getIndexType('content'), equals(IndexType.fulltext));
+    });
+
+    test('should insert and search fulltext', () {
+      manager.createIndex('content', IndexType.fulltext);
+      manager.insert('doc-1', {'content': 'quick brown fox'});
+      manager.insert('doc-2', {'content': 'lazy brown dog'});
+
+      final results = manager.fullTextSearch('content', 'brown');
+      expect(results, containsAll(['doc-1', 'doc-2']));
+    });
+
+    test('should perform phrase search', () {
+      manager.createIndex('content', IndexType.fulltext);
+      manager.insert('doc-1', {'content': 'quick brown fox'});
+      manager.insert('doc-2', {'content': 'brown quick fox'});
+
+      final results = manager.fullTextSearchPhrase('content', 'quick brown');
+      expect(results, equals(['doc-1']));
+    });
+
+    test('should perform prefix search', () {
+      manager.createIndex('content', IndexType.fulltext);
+      manager.insert('doc-1', {'content': 'quicksand quickly'});
+      manager.insert('doc-2', {'content': 'slow steady'});
+
+      final results = manager.fullTextSearchPrefix('content', 'qui');
+      expect(results, equals(['doc-1']));
+    });
+
+    test('should perform ranked search', () {
+      manager.createIndex('content', IndexType.fulltext);
+      manager.insert('doc-1', {'content': 'brown fox'});
+      manager.insert('doc-2', {'content': 'brown brown brown'});
+
+      final results = manager.fullTextSearchRanked('content', 'brown');
+      expect(results.length, equals(2));
+      // Both documents should be present with scores
+      expect(
+        results.map((r) => r.entityId).toList(),
+        containsAll(['doc-1', 'doc-2']),
+      );
+      expect(results.first.score, greaterThanOrEqualTo(results.last.score));
+    });
+
+    test('should return cardinality for fulltext index', () {
+      manager.createIndex('content', IndexType.fulltext);
+      manager.insert('doc-1', {'content': 'quick brown fox'});
+
+      expect(manager.getCardinality('content'), greaterThan(0));
+    });
+
+    test('should throw on fulltext search for non-fulltext index', () {
+      manager.createIndex('value', IndexType.hash);
+      expect(
+        () => manager.fullTextSearch('value', 'test'),
+        throwsA(isA<UnsupportedIndexTypeException>()),
+      );
     });
   });
 }

@@ -95,6 +95,7 @@ library;
 export 'storage/page.dart';
 export 'storage/page_type.dart';
 export 'storage/pager.dart';
+export 'storage/recovery.dart';
 
 // Buffer management
 export 'buffer/buffer_manager.dart';

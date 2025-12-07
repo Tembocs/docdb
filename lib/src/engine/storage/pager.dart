@@ -8,6 +8,7 @@ import '../../exceptions/storage_exceptions.dart';
 import '../constants.dart';
 import 'page.dart';
 import 'page_type.dart';
+import 'recovery.dart';
 
 /// The disk manager responsible for reading and writing pages to the database file.
 ///
@@ -87,6 +88,12 @@ class Pager {
   /// Whether the pager is currently open.
   bool _isOpen = false;
 
+  /// Whether a dirty shutdown was detected on open.
+  bool _recoveredFromDirtyShutdown = false;
+
+  /// Recovery result if recovery was performed.
+  RecoveryResult? _recoveryResult;
+
   /// Creates a Pager instance (internal constructor).
   ///
   /// Use [Pager.open] or [Pager.create] to instantiate.
@@ -107,6 +114,12 @@ class Pager {
 
   /// The page ID of the first free page (0 if none).
   int get freeListHead => _freeListHead;
+
+  /// Whether this pager was recovered from a dirty shutdown.
+  bool get recoveredFromDirtyShutdown => _recoveredFromDirtyShutdown;
+
+  /// The recovery result if recovery was performed, null otherwise.
+  RecoveryResult? get recoveryResult => _recoveryResult;
 
   /// Opens an existing database file or creates a new one.
   ///
@@ -249,12 +262,40 @@ class Pager {
     // Check for dirty shutdown flag
     final flags = header.getUint32(FileHeaderOffsets.flags, Endian.little);
     if ((flags & FileHeaderFlags.dirtyShutdown) != 0) {
-      // TODO: Trigger recovery process
-      // For now, just clear the flag
+      // Mark that recovery is needed - actual recovery is handled by
+      // the higher-level storage layer that has access to WAL files
+      // and entity data context
+      _recoveredFromDirtyShutdown = true;
+
       if (!readOnly) {
         await _clearDirtyShutdownFlag();
       }
     }
+  }
+
+  /// Performs recovery using the provided configuration and handler.
+  ///
+  /// This should be called after open() if [recoveredFromDirtyShutdown] is true.
+  /// The caller provides a handler that knows how to apply recovered
+  /// operations to the storage layer.
+  ///
+  /// Returns the recovery result.
+  Future<RecoveryResult> performRecovery(
+    RecoveryConfig config,
+    StorageRecoveryHandler handler,
+  ) async {
+    if (!_recoveredFromDirtyShutdown) {
+      return RecoveryResult.noRecoveryNeeded;
+    }
+
+    if (!config.isEnabled) {
+      // No WAL configured, can't recover
+      return RecoveryResult.noRecoveryNeeded;
+    }
+
+    final recovery = DatabaseRecovery(config: config);
+    _recoveryResult = await recovery.recover(handler);
+    return _recoveryResult!;
   }
 
   /// Initializes a new file header.

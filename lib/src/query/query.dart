@@ -111,3 +111,15 @@ export 'query_types.dart'
         ContainsQuery,
         StartsWithQuery,
         EndsWithQuery;
+
+export 'query_optimizer.dart'
+    show
+        QueryOptimizer,
+        QueryPlan,
+        QueryPlanCache,
+        IndexStatistics,
+        ExecutionStrategy,
+        RangeBounds;
+
+export 'query_cache.dart'
+    show QueryCache, QueryCacheConfig, CacheStatistics, QueryCachingExtension;
