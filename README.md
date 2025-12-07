@@ -1,13 +1,13 @@
 # DocDB
 
-An embedded document database for Dart and Flutter applications.
+An embedded, entity-based document database for Dart and Flutter applications.
 
 [![Dart](https://img.shields.io/badge/Dart-%5E3.10.1-blue.svg)](https://dart.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## Overview
 
-DocDB is a local document database written in Dart. It stores data as documents (similar to JSON objects) and provides typed collections, indexing, transactions, and optional encryption. It works with both Dart CLI applications and Flutter apps.
+DocDB is a local, entity-based document database written in Dart. You define entity classes that implement a simple interface, and DocDB handles serialization, storage, and retrieval. It provides typed collections, indexing, transactions, and optional encryption. It works with both Dart CLI applications and Flutter apps.
 
 ## Features
 
