@@ -376,6 +376,9 @@ class Collection<T extends Entity> {
     final entityId = entity.id ?? _uuid.v4();
     final data = entity.toMap();
 
+    // Add version metadata for optimistic concurrency control
+    data['__version'] = 1;
+
     final entityLock = _getEntityLock(entityId);
     await entityLock.synchronized(() async {
       try {
@@ -419,10 +422,12 @@ class Collection<T extends Entity> {
     final ids = <String>[];
     final entitiesToInsert = <String, Map<String, dynamic>>{};
 
-    // Prepare all entities with IDs
+    // Prepare all entities with IDs and version metadata
     for (final entity in entities) {
       final entityId = entity.id ?? _uuid.v4();
-      entitiesToInsert[entityId] = entity.toMap();
+      final data = entity.toMap();
+      data['__version'] = 1;
+      entitiesToInsert[entityId] = data;
       ids.add(entityId);
     }
 
@@ -664,11 +669,15 @@ class Collection<T extends Entity> {
       // Update indexes
       _indexManager.update(entityId, oldData, newData);
 
+      // Store updated version in data
+      final newVersion = expectedVersion + 1;
+      newData['__version'] = newVersion;
+
       // Update storage
       await _storage.update(entityId, newData);
 
-      // Increment version
-      _entityVersions[entityId] = expectedVersion + 1;
+      // Increment version in memory
+      _entityVersions[entityId] = newVersion;
 
       _logger.debug('Updated entity "$entityId".');
     } catch (e, stackTrace) {
@@ -752,9 +761,14 @@ class Collection<T extends Entity> {
         final oldData = await _storage.get(entityId);
 
         if (oldData != null) {
+          // Update existing entity with new version
+          final newVersion = (_entityVersions[entityId] ?? 1) + 1;
+          data['__version'] = newVersion;
           _indexManager.update(entityId, oldData, data);
-          _entityVersions[entityId] = (_entityVersions[entityId] ?? 1) + 1;
+          _entityVersions[entityId] = newVersion;
         } else {
+          // Insert new entity with version 1
+          data['__version'] = 1;
           _indexManager.insert(entityId, data);
           _entityVersions[entityId] = 1;
         }

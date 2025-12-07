@@ -841,22 +841,19 @@ void main() {
     });
 
     group('Logout', () {
-      late LoginResult loginResult;
-
-      setUp(() async {
+      test('should logout successfully', () async {
+        // Create isolated user for this test
         await authService.register(
-          username: 'logoutuser',
+          username: 'logoutuser1',
           password: 'TestPassword123',
           roles: ['user'],
         );
 
-        loginResult = await authService.login(
-          username: 'logoutuser',
+        final loginResult = await authService.login(
+          username: 'logoutuser1',
           password: 'TestPassword123',
         );
-      });
 
-      test('should logout successfully', () async {
         await authService.logout(loginResult.accessToken);
 
         // Session should be revoked
@@ -867,13 +864,25 @@ void main() {
       });
 
       test('should logout all sessions', () async {
-        // Create multiple sessions
-        await authService.login(
-          username: 'logoutuser',
+        // Create isolated user for this test
+        await authService.register(
+          username: 'logoutuser2',
+          password: 'TestPassword123',
+          roles: ['user'],
+        );
+
+        final loginResult1 = await authService.login(
+          username: 'logoutuser2',
           password: 'TestPassword123',
         );
 
-        final revokedCount = await authService.logoutAll(loginResult.user.id!);
+        // Create second session
+        await authService.login(
+          username: 'logoutuser2',
+          password: 'TestPassword123',
+        );
+
+        final revokedCount = await authService.logoutAll(loginResult1.user.id!);
 
         expect(revokedCount, greaterThanOrEqualTo(1));
       });
@@ -920,17 +929,14 @@ void main() {
     });
 
     group('Password Management', () {
-      late User user;
-
-      setUp(() async {
-        user = await authService.register(
-          username: 'passworduser',
+      test('should change password', () async {
+        // Create isolated user for this test
+        final user = await authService.register(
+          username: 'pwduser1',
           password: 'OldPassword123',
           roles: ['user'],
         );
-      });
 
-      test('should change password', () async {
         await authService.changePassword(
           userId: user.id!,
           currentPassword: 'OldPassword123',
@@ -940,7 +946,7 @@ void main() {
         // Old password should not work
         expect(
           () => authService.login(
-            username: 'passworduser',
+            username: 'pwduser1',
             password: 'OldPassword123',
           ),
           throwsA(isA<InvalidUserOrPasswordException>()),
@@ -948,13 +954,20 @@ void main() {
 
         // New password should work
         final result = await authService.login(
-          username: 'passworduser',
+          username: 'pwduser1',
           password: 'NewPassword456',
         );
-        expect(result.user.username, equals('passworduser'));
+        expect(result.user.username, equals('pwduser1'));
       });
 
       test('should throw on wrong current password', () async {
+        // Create isolated user for this test
+        final user = await authService.register(
+          username: 'pwduser2',
+          password: 'OldPassword123',
+          roles: ['user'],
+        );
+
         expect(
           () => authService.changePassword(
             userId: user.id!,
@@ -966,16 +979,23 @@ void main() {
       });
 
       test('should reset password', () async {
+        // Create isolated user for this test
+        final user = await authService.register(
+          username: 'pwduser3',
+          password: 'OldPassword123',
+          roles: ['user'],
+        );
+
         await authService.resetPassword(
           userId: user.id!,
           newPassword: 'ResetPassword789',
         );
 
         final result = await authService.login(
-          username: 'passworduser',
+          username: 'pwduser3',
           password: 'ResetPassword789',
         );
-        expect(result.user.username, equals('passworduser'));
+        expect(result.user.username, equals('pwduser3'));
       });
     });
 
