@@ -7,6 +7,7 @@ library;
 import 'dart:io';
 
 import 'package:cbor/cbor.dart';
+import 'package:path/path.dart' as p;
 
 import 'btree.dart';
 import 'fulltext.dart';
@@ -430,7 +431,7 @@ class IndexPersistence {
               entity.path.endsWith(suffix),
         )
         .map((entity) {
-          final name = entity.path.split('/').last;
+          final name = p.basename(entity.path);
           return name.substring(prefix.length, name.length - suffix.length);
         })
         .toList();

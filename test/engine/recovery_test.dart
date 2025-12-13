@@ -10,7 +10,6 @@ import 'package:test/test.dart';
 
 import 'package:entidb/src/engine/storage/pager.dart';
 import 'package:entidb/src/engine/storage/recovery.dart';
-import 'package:entidb/src/engine/wal/wal_reader.dart';
 import 'package:entidb/src/engine/wal/wal_record.dart';
 import 'package:entidb/src/engine/wal/wal_writer.dart';
 
