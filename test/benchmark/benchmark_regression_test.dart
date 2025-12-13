@@ -124,34 +124,39 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: 'Single insert took ${duration.inMilliseconds}ms, '
+          reason:
+              'Single insert took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
 
-      test('batch insert of 100 entities should complete within threshold', () async {
-        // Threshold: 1000ms for 100 inserts in-memory (very generous)
-        const threshold = Duration(milliseconds: 1000);
-        const count = 100;
+      test(
+        'batch insert of 100 entities should complete within threshold',
+        () async {
+          // Threshold: 1000ms for 100 inserts in-memory (very generous)
+          const threshold = Duration(milliseconds: 1000);
+          const count = 100;
 
-        final entities = List.generate(count, createProduct);
+          final entities = List.generate(count, createProduct);
 
-        final duration = await measure(() async {
-          await products.insertMany(entities);
-        });
+          final duration = await measure(() async {
+            await products.insertMany(entities);
+          });
 
-        expect(
-          duration,
-          lessThan(threshold),
-          reason: 'Batch insert of $count entities took '
-              '${duration.inMilliseconds}ms, '
-              'expected < ${threshold.inMilliseconds}ms',
-        );
+          expect(
+            duration,
+            lessThan(threshold),
+            reason:
+                'Batch insert of $count entities took '
+                '${duration.inMilliseconds}ms, '
+                'expected < ${threshold.inMilliseconds}ms',
+          );
 
-        // Verify data integrity
-        final storedCount = await products.count;
-        expect(storedCount, equals(count));
-      });
+          // Verify data integrity
+          final storedCount = await products.count;
+          expect(storedCount, equals(count));
+        },
+      );
 
       test('batch insert should be faster than sequential inserts', () async {
         const count = 50;
@@ -176,7 +181,8 @@ void main() {
         expect(
           batchDuration.inMicroseconds,
           lessThan(sequentialDuration.inMicroseconds),
-          reason: 'Batch insert (${batchDuration.inMilliseconds}ms) should be '
+          reason:
+              'Batch insert (${batchDuration.inMilliseconds}ms) should be '
               'faster than sequential (${sequentialDuration.inMilliseconds}ms)',
         );
       });
@@ -202,7 +208,8 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: 'Get by ID took ${duration.inMilliseconds}ms, '
+          reason:
+              'Get by ID took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
@@ -218,7 +225,8 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: 'GetAll took ${duration.inMilliseconds}ms, '
+          reason:
+              'GetAll took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
@@ -236,7 +244,8 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: '100 reads took ${duration.inMilliseconds}ms, '
+          reason:
+              '100 reads took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
@@ -262,7 +271,8 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: 'Equality query took ${duration.inMilliseconds}ms, '
+          reason:
+              'Equality query took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
@@ -280,7 +290,8 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: 'Range query took ${duration.inMilliseconds}ms, '
+          reason:
+              'Range query took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
@@ -298,7 +309,8 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: 'Contains query took ${duration.inMilliseconds}ms, '
+          reason:
+              'Contains query took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
@@ -319,7 +331,8 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: 'Complex query took ${duration.inMilliseconds}ms, '
+          reason:
+              'Complex query took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
@@ -341,7 +354,8 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: 'Hash index creation took ${duration.inMilliseconds}ms, '
+          reason:
+              'Hash index creation took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
@@ -361,7 +375,8 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: 'B-tree index creation took ${duration.inMilliseconds}ms, '
+          reason:
+              'B-tree index creation took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
@@ -399,7 +414,8 @@ void main() {
         expect(
           avgIndexedTime,
           lessThan(50000), // 50ms in microseconds
-          reason: 'Average indexed query time (${avgIndexedTime.toStringAsFixed(0)}μs) '
+          reason:
+              'Average indexed query time (${avgIndexedTime.toStringAsFixed(0)}μs) '
               'should be under 50ms',
         );
       });
@@ -426,7 +442,8 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: 'Single update took ${duration.inMilliseconds}ms, '
+          reason:
+              'Single update took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
@@ -447,7 +464,8 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: '50 updates took ${duration.inMilliseconds}ms, '
+          reason:
+              '50 updates took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
@@ -467,31 +485,36 @@ void main() {
         expect(
           duration,
           lessThan(threshold),
-          reason: 'Single delete took ${duration.inMilliseconds}ms, '
+          reason:
+              'Single delete took ${duration.inMilliseconds}ms, '
               'expected < ${threshold.inMilliseconds}ms',
         );
       });
 
-      test('deleteAll of 100 entities should complete within threshold', () async {
-        final entities = List.generate(100, createProduct);
-        await products.insertMany(entities);
+      test(
+        'deleteAll of 100 entities should complete within threshold',
+        () async {
+          final entities = List.generate(100, createProduct);
+          await products.insertMany(entities);
 
-        // Threshold: 500ms for deleteAll
-        const threshold = Duration(milliseconds: 500);
+          // Threshold: 500ms for deleteAll
+          const threshold = Duration(milliseconds: 500);
 
-        final duration = await measure(() async {
-          await products.deleteAll();
-        });
+          final duration = await measure(() async {
+            await products.deleteAll();
+          });
 
-        expect(
-          duration,
-          lessThan(threshold),
-          reason: 'DeleteAll took ${duration.inMilliseconds}ms, '
-              'expected < ${threshold.inMilliseconds}ms',
-        );
+          expect(
+            duration,
+            lessThan(threshold),
+            reason:
+                'DeleteAll took ${duration.inMilliseconds}ms, '
+                'expected < ${threshold.inMilliseconds}ms',
+          );
 
-        expect(await products.count, equals(0));
-      });
+          expect(await products.count, equals(0));
+        },
+      );
     });
   });
 
@@ -531,7 +554,8 @@ void main() {
       expect(
         secondDuration.inMicroseconds,
         lessThanOrEqualTo(firstDuration.inMicroseconds),
-        reason: 'Cached query (${secondDuration.inMicroseconds}μs) should be '
+        reason:
+            'Cached query (${secondDuration.inMicroseconds}μs) should be '
             'faster than first query (${firstDuration.inMicroseconds}μs)',
       );
     });
@@ -580,7 +604,10 @@ void main() {
       await products.deleteAll();
 
       // Insert 500 entities
-      entities = List.generate(largeCount, (i) => createProduct(i + smallCount));
+      entities = List.generate(
+        largeCount,
+        (i) => createProduct(i + smallCount),
+      );
       final largeDuration = await measure(() async {
         await products.insertMany(entities);
       });
@@ -593,39 +620,44 @@ void main() {
       expect(
         largePerEntity,
         lessThan(smallPerEntity * 3),
-        reason: 'Per-entity time should not degrade significantly: '
+        reason:
+            'Per-entity time should not degrade significantly: '
             '${largePerEntity.toStringAsFixed(2)}μs vs '
             '${smallPerEntity.toStringAsFixed(2)}μs',
       );
     });
 
-    test('query performance should not degrade significantly with data size', () async {
-      // Insert 100 entities first
-      var entities = List.generate(100, createProduct);
-      await products.insertMany(entities);
+    test(
+      'query performance should not degrade significantly with data size',
+      () async {
+        // Insert 100 entities first
+        var entities = List.generate(100, createProduct);
+        await products.insertMany(entities);
 
-      final query = QueryBuilder().whereGreaterThan('price', 500.0).build();
+        final query = QueryBuilder().whereGreaterThan('price', 500.0).build();
 
-      final smallDuration = await measure(() async {
-        await products.find(query);
-      });
+        final smallDuration = await measure(() async {
+          await products.find(query);
+        });
 
-      // Add 400 more entities (total 500)
-      entities = List.generate(400, (i) => createProduct(i + 100));
-      await products.insertMany(entities);
+        // Add 400 more entities (total 500)
+        entities = List.generate(400, (i) => createProduct(i + 100));
+        await products.insertMany(entities);
 
-      final largeDuration = await measure(() async {
-        await products.find(query);
-      });
+        final largeDuration = await measure(() async {
+          await products.find(query);
+        });
 
-      // Query time should scale roughly linearly (5x data = max 6x time)
-      expect(
-        largeDuration.inMicroseconds,
-        lessThan(smallDuration.inMicroseconds * 8),
-        reason: 'Query time should scale acceptably: '
-            '${largeDuration.inMicroseconds}μs vs '
-            '${smallDuration.inMicroseconds}μs',
-      );
-    });
+        // Query time should scale roughly linearly (5x data = max 6x time)
+        expect(
+          largeDuration.inMicroseconds,
+          lessThan(smallDuration.inMicroseconds * 8),
+          reason:
+              'Query time should scale acceptably: '
+              '${largeDuration.inMicroseconds}μs vs '
+              '${smallDuration.inMicroseconds}μs',
+        );
+      },
+    );
   });
 }
