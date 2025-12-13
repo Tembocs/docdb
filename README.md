@@ -4,6 +4,8 @@ An embedded, entity-based document database for Dart and Flutter applications.
 
 [![Dart](https://img.shields.io/badge/Dart-%5E3.10.1-blue.svg)](https://dart.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/Tembocs/entidb/actions/workflows/ci.yml/badge.svg)](https://github.com/Tembocs/entidb/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Tembocs/entidb/graph/badge.svg)](https://codecov.io/gh/Tembocs/entidb)
 
 ## Overview
 
